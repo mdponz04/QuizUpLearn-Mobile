@@ -1,13 +1,25 @@
 import 'package:get/get.dart';
 
+import '../modules/badge/bindings/badge_binding.dart';
+import '../modules/badge/views/badge_view.dart';
+import '../modules/find_matching/bindings/find_matching_binding.dart';
+import '../modules/find_matching/views/find_matching_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/on_boarding/bindings/on_boarding_binding.dart';
 import '../modules/on_boarding/views/on_boarding_view.dart';
+import '../modules/play-event/bindings/play_event_binding.dart';
+import '../modules/play-event/views/play_event_view.dart';
+import '../modules/play-multi/bindings/play_multi_binding.dart';
+import '../modules/play-multi/views/play_multi_view.dart';
+import '../modules/play-solo/bindings/play_solo_binding.dart';
+import '../modules/play-solo/views/play_solo_view.dart';
 import '../modules/register/bindings/register_binding.dart';
 import '../modules/register/views/register_view.dart';
+import '../modules/tab-home/bindings/tab_home_binding.dart';
+import '../modules/tab-home/views/tab_home_view.dart';
 
 part 'app_routes.dart';
 
@@ -36,6 +48,36 @@ class AppPages {
       name: _Paths.REGISTER,
       page: () => const RegisterView(),
       binding: RegisterBinding(),
+    ),
+    GetPage(
+      name: _Paths.TAB_HOME,
+      page: () => const TabHomeView(),
+      binding: TabHomeBinding(),
+    ),
+    GetPage(
+      name: _Paths.BADGE,
+      page: () => const BadgeView(),
+      binding: BadgeBinding(),
+    ),
+    GetPage(
+      name: _Paths.PLAY_EVENT,
+      page: () => const PlayEventView(),
+      binding: PlayEventBinding(),
+    ),
+    GetPage(
+      name: _Paths.FIND_MATCHING,
+      page: () => const FindMatchingView(),
+      binding: FindMatchingBinding(),
+    ),
+    GetPage(
+      name: _Paths.PLAY_SOLO,
+      page: () => const PlaySoloView(),
+      binding: PlaySoloBinding(),
+    ),
+    GetPage(
+      name: _Paths.PLAY_MULTI,
+      page: () => const PlayMultiView(),
+      binding: PlayMultiBinding(),
     ),
   ];
 }

@@ -7,6 +7,12 @@ abstract class Routes {
   static const ON_BOARDING = _Paths.ON_BOARDING;
   static const LOGIN = _Paths.LOGIN;
   static const REGISTER = _Paths.REGISTER;
+  static const TAB_HOME = _Paths.TAB_HOME;
+  static const BADGE = _Paths.BADGE;
+  static const PLAY_EVENT = _Paths.PLAY_EVENT;
+  static const FIND_MATCHING = _Paths.FIND_MATCHING;
+  static const PLAY_SOLO = _Paths.PLAY_SOLO;
+  static const PLAY_MULTI = _Paths.PLAY_MULTI;
 }
 
 abstract class _Paths {
@@ -15,4 +21,10 @@ abstract class _Paths {
   static const ON_BOARDING = '/on-boarding';
   static const LOGIN = '/login';
   static const REGISTER = '/register';
+  static const TAB_HOME = '/tab-home';
+  static const BADGE = '/badge';
+  static const PLAY_EVENT = '/play-event';
+  static const FIND_MATCHING = '/find-matching';
+  static const PLAY_SOLO = '/play-solo';
+  static const PLAY_MULTI = '/play-multi';
 }
