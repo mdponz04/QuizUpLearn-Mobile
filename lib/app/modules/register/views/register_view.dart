@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:quizkahoot/app/resource/color_manager.dart';
 import 'package:quizkahoot/app/resource/reponsive_utils.dart';
 import 'package:quizkahoot/app/resource/text_style.dart';
+import 'package:quizkahoot/app/routes/app_pages.dart';
 
 import '../controllers/register_controller.dart';
 
@@ -43,24 +44,26 @@ class RegisterView extends GetView<RegisterController> {
                       Row(
                         children: [
                          
-                          Text(
-                            "Quiz\nUpLearn",
-                            style: GoogleFonts.montserratAlternates(
-                              shadows: [
-                                BoxShadow(
-                                  color: Colors.black87,
-                                  spreadRadius: 10,
-                                  blurRadius: 2,
-                                  offset: Offset(2, 4),
+                          Expanded(
+                            child: Text(
+                              "Quiz\nUpLearn",
+                              style: GoogleFonts.montserratAlternates(
+                                shadows: [
+                                  BoxShadow(
+                                    color: Colors.black87,
+                                    spreadRadius: 10,
+                                    blurRadius: 2,
+                                    offset: Offset(2, 4),
+                                  ),
+                                ],
+                                letterSpacing: 3,
+                                color: Colors.white,
+                                fontSize: UtilsReponsive.formatFontSize(
+                                  36,
+                                  context,
                                 ),
-                              ],
-                              letterSpacing: 3,
-                              color: Colors.white,
-                              fontSize: UtilsReponsive.formatFontSize(
-                                42,
-                                context,
+                                fontWeight: FontWeight.w900,
                               ),
-                              fontWeight: FontWeight.w900,
                             ),
                           ),
                            Image.asset(
@@ -109,7 +112,7 @@ class RegisterView extends GetView<RegisterController> {
             // Welcome title
             TextConstant.titleH1(
               context,
-              text: "Create Account",
+              text: "Tạo tài khoản",
               color: Colors.black,
               size: 24,
               fontWeight: FontWeight.bold,
@@ -119,7 +122,7 @@ class RegisterView extends GetView<RegisterController> {
 
             TextConstant.subTile1(
               context,
-              text: "Sign up to start learning English",
+              text: "Đăng ký để bắt đầu học",
               color: Colors.grey[600]!,
               size: 14,
             ),
@@ -162,9 +165,8 @@ class RegisterView extends GetView<RegisterController> {
             SizedBox(height: UtilsReponsive.height(16, context)),
 
             // Social login buttons
-            _buildSocialButtons(context),
+        //    _buildSocialButtons(context),
 
-            SizedBox(height: UtilsReponsive.height(24, context)),
 
             // Login link
             _buildLoginLink(context),
@@ -182,8 +184,8 @@ class RegisterView extends GetView<RegisterController> {
       validator: controller.validateFullName,
       keyboardType: TextInputType.name,
       decoration: InputDecoration(
-        labelText: "Full Name",
-        hintText: "Enter your full name",
+        labelText: "Họ và tên",
+        hintText: "Nhập họ và tên",
         prefixIcon: const Icon(Icons.person_outline, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -212,7 +214,7 @@ class RegisterView extends GetView<RegisterController> {
       keyboardType: TextInputType.emailAddress,
       decoration: InputDecoration(
         labelText: "Email",
-        hintText: "Enter your email",
+        hintText: "Nhập email",
         prefixIcon: const Icon(Icons.email_outlined, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -241,8 +243,8 @@ class RegisterView extends GetView<RegisterController> {
         validator: controller.validatePassword,
         obscureText: !controller.isPasswordVisible.value,
         decoration: InputDecoration(
-          labelText: "Password",
-          hintText: "Enter your password",
+          labelText: "Mật khẩu",
+          hintText: "Nhập mật khẩu",
           prefixIcon: const Icon(Icons.lock_outline, size: 20),
           suffixIcon: IconButton(
             onPressed: controller.togglePasswordVisibility,
@@ -281,8 +283,8 @@ class RegisterView extends GetView<RegisterController> {
         validator: controller.validateConfirmPassword,
         obscureText: !controller.isConfirmPasswordVisible.value,
         decoration: InputDecoration(
-          labelText: "Confirm Password",
-          hintText: "Confirm your password",
+          labelText: "Xác nhận mật khẩu",
+          hintText: "Xác nhận mật khẩu",
           prefixIcon: const Icon(Icons.lock_outline, size: 20),
           suffixIcon: IconButton(
             onPressed: controller.toggleConfirmPasswordVisibility,
@@ -334,9 +336,9 @@ class RegisterView extends GetView<RegisterController> {
                     fontSize: UtilsReponsive.formatFontSize(12, context),
                   ),
                   children: [
-                    TextSpan(text: "I agree to the "),
+                    TextSpan(text: "Tôi đồng ý với "),
                     TextSpan(
-                      text: "Terms and Conditions",
+                      text: "Điều khoản và điều kiện",
                       style: TextStyle(
                         color: ColorsManager.primary,
                         fontWeight: FontWeight.bold,
@@ -344,7 +346,7 @@ class RegisterView extends GetView<RegisterController> {
                     ),
                     TextSpan(text: " and "),
                     TextSpan(
-                      text: "Privacy Policy",
+                      text: "Chính sách riêng tư",
                       style: TextStyle(
                         color: ColorsManager.primary,
                         fontWeight: FontWeight.bold,
@@ -379,7 +381,7 @@ class RegisterView extends GetView<RegisterController> {
               ? const CircularProgressIndicator(color: Colors.white)
               : TextConstant.subTile1(
                   context,
-                  text: "CREATE ACCOUNT",
+                  text: "TẠO TÀI KHOẢN",
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   size: 16,
@@ -393,16 +395,6 @@ class RegisterView extends GetView<RegisterController> {
     return Row(
       children: [
         Expanded(child: Divider(color: Colors.grey[300])),
-        Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: UtilsReponsive.width(16, context),
-          ),
-          child: TextConstant.subTile2(
-            context,
-            text: "Or",
-            color: Colors.grey[600]!,
-          ),
-        ),
         Expanded(child: Divider(color: Colors.grey[300])),
       ],
     );
@@ -450,14 +442,14 @@ class RegisterView extends GetView<RegisterController> {
         children: [
           TextConstant.subTile2(
             context,
-            text: "Already have an account? ",
+            text: "Đã có tài khoản? ",
             color: Colors.grey[600]!,
           ),
           TextButton(
-            onPressed: () => Get.offAllNamed('/login'),
+            onPressed: () => Get.offAllNamed(Routes.LOGIN),
             child: TextConstant.subTile2(
               context,
-              text: "Sign In",
+              text: "Đăng nhập",
               color: ColorsManager.primary,
               fontWeight: FontWeight.bold,
             ),

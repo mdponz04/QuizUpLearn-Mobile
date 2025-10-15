@@ -1,5 +1,12 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:quizkahoot/app/data/auth_api.dart';
+import 'package:quizkahoot/app/data/base_response.dart';
+import 'package:quizkahoot/app/data/dio_interceptor.dart';
+import 'package:quizkahoot/app/model/register_request.dart';
+import 'package:quizkahoot/app/routes/app_pages.dart';
+import 'package:quizkahoot/app/service/auth_service.dart';
 
 class RegisterController extends GetxController {
   final fullNameController = TextEditingController();
@@ -7,15 +14,19 @@ class RegisterController extends GetxController {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   final formKey = GlobalKey<FormState>();
-  
+
   var isPasswordVisible = false.obs;
   var isConfirmPasswordVisible = false.obs;
   var isLoading = false.obs;
   var agreeToTerms = false.obs;
+  late AuthService authService;
 
   @override
   void onInit() {
     super.onInit();
+    Dio dio = Dio();
+    dio.interceptors.add(DioIntercepTorCustom());
+    authService = AuthService(authApi: AuthApi(dio, baseUrl: baseUrl));
   }
 
   @override
@@ -93,8 +104,8 @@ class RegisterController extends GetxController {
 
     if (!agreeToTerms.value) {
       Get.snackbar(
-        'Error',
-        'Please agree to the terms and conditions',
+        'Lỗi',
+        'Bạn phải đồng ý với điều khoản và điều kiện',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -103,22 +114,37 @@ class RegisterController extends GetxController {
 
     try {
       isLoading.value = true;
-      
-      // Simulate register API call
-      await Future.delayed(const Duration(seconds: 2));
-      
-      // Navigate to login on success
-      Get.offAllNamed('/login');
-      Get.snackbar(
-        'Success',
-        'Registration successful! Please login to continue.',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
+
+      final response = await authService.register(
+        RegisterRequest(
+          fullName: fullNameController.text,
+          email: emailController.text,
+          password: passwordController.text,
+          confirmPassword: confirmPasswordController.text,
+        ),
       );
+      if (response.isSuccess) {
+        // Navigate to login on success
+        Get.back();
+        await Future.delayed(const Duration(seconds: 1));
+        Get.snackbar(
+          'Thông báo',
+          'Đăng ký thành công',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        Get.snackbar(
+          'Lỗi',
+          response.message,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
     } catch (e) {
       Get.snackbar(
-        'Error',
-        'Registration failed. Please try again.',
+        'Lỗi',
+        'Đăng ký thất bại. Vui lòng thử lại.',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

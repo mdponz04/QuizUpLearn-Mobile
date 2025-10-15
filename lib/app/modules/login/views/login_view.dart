@@ -50,24 +50,26 @@ class LoginView extends GetView<LoginController> {
                               height: UtilsReponsive.height(125, context),
                             ),
                           ),
-                          Text(
-                            "Quiz\nUpLearn",
-                            style: GoogleFonts.montserratAlternates(
-                              shadows: [
-                                BoxShadow(
-                                  color: Colors.black87,
-                                  spreadRadius: 10,
-                                  blurRadius: 2,
-                                  offset: Offset(2, 4),
+                          Expanded(
+                            child: Text(
+                              "Quiz\nUpLearn",
+                              style: GoogleFonts.montserratAlternates(
+                                shadows: [
+                                  BoxShadow(
+                                    color: Colors.black87,
+                                    spreadRadius: 10,
+                                    blurRadius: 2,
+                                    offset: Offset(2, 4),
+                                  ),
+                                ],
+                                letterSpacing: 3,
+                                color: Colors.white,
+                                fontSize: UtilsReponsive.formatFontSize(
+                                  36,
+                                  context,
                                 ),
-                              ],
-                              letterSpacing: 3,
-                              color: Colors.white,
-                              fontSize: UtilsReponsive.formatFontSize(
-                                42,
-                                context,
+                                fontWeight: FontWeight.w900,
                               ),
-                              fontWeight: FontWeight.w900,
                             ),
                           ),
                         ],
@@ -110,7 +112,7 @@ class LoginView extends GetView<LoginController> {
             // Welcome Back title
             TextConstant.titleH1(
               context,
-              text: "Welcome Back",
+              text: "Chào mừng bạn trở lại",
               color: Colors.black,
               size: 24,
               fontWeight: FontWeight.bold,
@@ -120,7 +122,7 @@ class LoginView extends GetView<LoginController> {
 
             TextConstant.subTile1(
               context,
-              text: "Sign in to your account",
+              text: "Đăng nhập",
               color: Colors.grey[600]!,
               size: 14,
             ),
@@ -144,7 +146,7 @@ class LoginView extends GetView<LoginController> {
                 onPressed: controller.forgotPassword,
                 child: TextConstant.subTile2(
                   context,
-                  text: "Forgot your password?",
+                  text: "Quên mật khẩu?",
                   color: ColorsManager.primary,
                 ),
               ),
@@ -160,10 +162,10 @@ class LoginView extends GetView<LoginController> {
             // Or divider
             _buildOrDivider(context),
 
-            SizedBox(height: UtilsReponsive.height(16, context)),
+            // SizedBox(height: UtilsReponsive.height(16, context)),
 
-            // Social login buttons
-            _buildSocialButtons(context),
+            // // Social login buttons
+            // _buildSocialButtons(context),
 
             SizedBox(height: UtilsReponsive.height(24, context)),
 
@@ -184,7 +186,7 @@ class LoginView extends GetView<LoginController> {
       keyboardType: TextInputType.emailAddress,
       decoration: InputDecoration(
         labelText: "Email",
-        hintText: "Enter your email",
+        hintText: "Nhập email",
         prefixIcon: const Icon(Icons.email_outlined, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -213,8 +215,8 @@ class LoginView extends GetView<LoginController> {
         validator: controller.validatePassword,
         obscureText: !controller.isPasswordVisible.value,
         decoration: InputDecoration(
-          labelText: "Password",
-          hintText: "Enter your password",
+          labelText: "Mật khẩu",
+          hintText: "Nhập mật khẩu",
           prefixIcon: const Icon(Icons.lock_outline, size: 20),
           suffixIcon: IconButton(
             onPressed: controller.togglePasswordVisibility,
@@ -266,7 +268,7 @@ class LoginView extends GetView<LoginController> {
                   ? const CircularProgressIndicator(color: Colors.white)
                   : TextConstant.subTile1(
                     context,
-                    text: "LOGIN",
+                    text: "ĐĂNG NHẬP",
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     size: 16,
@@ -280,16 +282,6 @@ class LoginView extends GetView<LoginController> {
     return Row(
       children: [
         Expanded(child: Divider(color: Colors.grey[300])),
-        Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: UtilsReponsive.width(16, context),
-          ),
-          child: TextConstant.subTile2(
-            context,
-            text: "Or",
-            color: Colors.grey[600]!,
-          ),
-        ),
         Expanded(child: Divider(color: Colors.grey[300])),
       ],
     );
@@ -337,14 +329,14 @@ class LoginView extends GetView<LoginController> {
         children: [
           TextConstant.subTile2(
             context,
-            text: "Don't have an account? ",
+            text: "Không có tài khoản? ",
             color: Colors.grey[600]!,
           ),
           TextButton(
             onPressed: () => Get.toNamed('/register'),
             child: TextConstant.subTile2(
               context,
-              text: "Sign Up",
+              text: "Đăng ký",
               color: ColorsManager.primary,
               fontWeight: FontWeight.bold,
             ),

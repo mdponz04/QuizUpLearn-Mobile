@@ -1,20 +1,28 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:quizkahoot/app/data/auth_api.dart';
+import 'package:quizkahoot/app/data/base_response.dart';
+import 'package:quizkahoot/app/data/dio_interceptor.dart';
+import 'package:quizkahoot/app/model/login_request.dart';
+import 'package:quizkahoot/app/service/auth_service.dart';
 
 class LoginController extends GetxController {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final formKey = GlobalKey<FormState>();
-  
+
   var isPasswordVisible = false.obs;
   var isLoading = false.obs;
   var rememberMe = false.obs;
+  late AuthService authService;
 
   @override
   void onInit() {
     super.onInit();
-    // Pre-fill email if available
-    emailController.text = "example@gmail.com";
+    Dio dio = Dio();
+    dio.interceptors.add(DioIntercepTorCustom());
+    authService = AuthService(authApi: AuthApi(dio, baseUrl: baseUrl));
   }
 
   @override
@@ -59,18 +67,25 @@ class LoginController extends GetxController {
 
     try {
       isLoading.value = true;
-      
-      // Simulate login API call
-      await Future.delayed(const Duration(seconds: 2));
-      
-      // Navigate to home on success
-      Get.offAllNamed('/home');
-      Get.snackbar(
-        'Success',
-        'Welcome back!',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
+
+      final response = await authService.login(
+        LoginRequest(
+          email: emailController.text,
+          password: passwordController.text,
+        ),
       );
+      if (response.isSuccess) {
+        // Navigate to home on success
+        Get.offAllNamed('/home');
+      } else {
+        Get.snackbar(
+          'Lỗi đăng nhập',
+          response.message,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+     
     } catch (e) {
       Get.snackbar(
         'Error',
