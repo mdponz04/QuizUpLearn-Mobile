@@ -13,6 +13,9 @@ abstract class Routes {
   static const FIND_MATCHING = _Paths.FIND_MATCHING;
   static const PLAY_SOLO = _Paths.PLAY_SOLO;
   static const PLAY_MULTI = _Paths.PLAY_MULTI;
+  static const EXPLORE_QUIZ = _Paths.EXPLORE_QUIZ;
+  static const QUIZ_PLAYING = _Paths.QUIZ_PLAYING;
+  static const QUIZ_RESULT = _Paths.QUIZ_RESULT;
 }
 
 abstract class _Paths {
@@ -27,4 +30,7 @@ abstract class _Paths {
   static const FIND_MATCHING = '/find-matching';
   static const PLAY_SOLO = '/play-solo';
   static const PLAY_MULTI = '/play-multi';
+  static const EXPLORE_QUIZ = '/explore-quiz';
+  static const QUIZ_PLAYING = '/quiz-playing';
+  static const QUIZ_RESULT = '/quiz-result';
 }

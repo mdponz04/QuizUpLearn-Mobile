@@ -11,12 +11,8 @@ class TabHomeController extends GetxController {
 
   // Quick action methods
   void startQuiz() {
-    // TODO: Navigate to quiz selection
-    Get.snackbar(
-      "Coming Soon",
-      "Quiz feature will be available soon!",
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    // Navigate to explore quiz page
+    Get.toNamed('/explore-quiz');
   }
 
   void startPractice() {

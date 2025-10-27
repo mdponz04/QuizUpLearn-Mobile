@@ -20,6 +20,11 @@ import '../modules/register/bindings/register_binding.dart';
 import '../modules/register/views/register_view.dart';
 import '../modules/tab-home/bindings/tab_home_binding.dart';
 import '../modules/tab-home/views/tab_home_view.dart';
+import '../modules/explore-quiz/bindings/explore_quiz_binding.dart';
+import '../modules/explore-quiz/views/explore_quiz_view.dart';
+import '../modules/single-mode/bindings/single_mode_binding.dart';
+import '../modules/single-mode/views/quiz_playing_view.dart';
+import '../modules/single-mode/views/quiz_result_view.dart';
 
 part 'app_routes.dart';
 
@@ -78,6 +83,20 @@ class AppPages {
       name: _Paths.PLAY_MULTI,
       page: () => const PlayMultiView(),
       binding: PlayMultiBinding(),
+    ),
+    GetPage(
+      name: _Paths.EXPLORE_QUIZ,
+      page: () => const ExploreQuizView(),
+      binding: ExploreQuizBinding(),
+    ),
+    GetPage(
+      name: _Paths.QUIZ_PLAYING,
+      page: () => const QuizPlayingView(),
+      binding: SingleModeBinding(),
+    ),
+    GetPage(
+      name: _Paths.QUIZ_RESULT,
+      page: () => QuizResultView(result: Get.arguments),
     ),
   ];
 }

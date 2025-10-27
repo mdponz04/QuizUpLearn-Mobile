@@ -57,7 +57,7 @@ class TabHomeView extends GetView<TabHomeController> {
                 Expanded(
                   child: _buildActionCard(
                     context,
-                    "Start Quiz",
+                    "Explore Quiz",
                     'assets/images/do_quiz.png',
                     ColorsManager.primary,
                     controller.startQuiz,

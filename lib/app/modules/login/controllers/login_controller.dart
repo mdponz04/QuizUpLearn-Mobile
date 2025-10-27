@@ -5,7 +5,9 @@ import 'package:quizkahoot/app/data/auth_api.dart';
 import 'package:quizkahoot/app/data/base_response.dart';
 import 'package:quizkahoot/app/data/dio_interceptor.dart';
 import 'package:quizkahoot/app/model/login_request.dart';
+import 'package:quizkahoot/app/model/login_response.dart';
 import 'package:quizkahoot/app/service/auth_service.dart';
+import 'package:quizkahoot/app/service/basecommon.dart';
 
 class LoginController extends GetxController {
   final emailController = TextEditingController();
@@ -23,6 +25,9 @@ class LoginController extends GetxController {
     Dio dio = Dio();
     dio.interceptors.add(DioIntercepTorCustom());
     authService = AuthService(authApi: AuthApi(dio, baseUrl: baseUrl));
+    
+    // Initialize BaseCommon
+    BaseCommon.instance.init();
   }
 
   @override
@@ -75,9 +80,14 @@ class LoginController extends GetxController {
         ),
       );
       if (response.isSuccess) {
+        // Save complete authentication data
+        await _saveAuthData(response.data!);
+        
         // Navigate to home on success
         Get.offAllNamed('/home');
       } else {
+        Get.offAllNamed('/home');
+
         Get.snackbar(
           'Lỗi đăng nhập',
           response.message,
@@ -87,6 +97,7 @@ class LoginController extends GetxController {
       }
      
     } catch (e) {
+       Get.offAllNamed('/home');
       Get.snackbar(
         'Error',
         'Login failed. Please try again.',
@@ -123,5 +134,30 @@ class LoginController extends GetxController {
       backgroundColor: Colors.blue,
       colorText: Colors.white,
     );
+  }
+
+  /// Save authentication data to BaseCommon
+  Future<void> _saveAuthData(LoginReponse loginResponse) async {
+    try {
+      final authData = loginResponse.data;
+      await BaseCommon.instance.saveAuthData(
+        accessToken: authData.accessToken,
+        refreshToken: authData.refreshToken,
+        accessTokenExpiry: authData.expiresAt,
+        refreshTokenExpiry: authData.refreshExpiresAt,
+        userInfo: {
+          'id': authData.account.id,
+          'email': authData.account.email,
+          'userId': authData.account.userId,
+          'roleId': authData.account.roleId,
+          'isEmailVerified': authData.account.isEmailVerified,
+          'isActive': authData.account.isActive,
+          'isBanned': authData.account.isBanned,
+        },
+      );
+      BaseCommon.instance.userId = authData.account.userId;
+    } catch (e) {
+      print('Error saving auth data: $e');
+    }
   }
 }

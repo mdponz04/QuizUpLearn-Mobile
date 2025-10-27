@@ -1,4 +1,4 @@
-const baseUrl = 'http://10.0.2.2:5004/api';
+const baseUrl = 'https://qul-api.onrender.com/api';
 
 class BaseResponse <T>{
   final bool isSuccess;

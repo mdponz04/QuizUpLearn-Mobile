@@ -2,14 +2,20 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:dio/dio.dart';
+import 'package:quizkahoot/app/service/basecommon.dart';
 
 class DioIntercepTorCustom extends Interceptor {
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // Thêm headers, token nếu cần
-    // options.headers["Authorization"] = "Bearer YOUR_TOKEN";
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    // Thêm Authorization header nếu có token
+    final authHeader = await BaseCommon.instance.getAuthorizationHeader();
+    if (authHeader != null) {
+      options.headers["Authorization"] = authHeader;
+    }
+    
     final fullUrl = options.uri.toString();
     log('➡️ [API - ${DateTime.now()}][REQUEST] ${options.method} $fullUrl');
+     
     super.onRequest(options, handler);
   }
 
@@ -34,7 +40,7 @@ class DioIntercepTorCustom extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    log("onError");
+    log("onError ${err.response?.data}");
     String errorMessage = "No connection";
 
     if (err.response != null) {

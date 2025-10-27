@@ -7,6 +7,7 @@ import 'package:quizkahoot/app/data/dio_interceptor.dart';
 import 'package:quizkahoot/app/model/register_request.dart';
 import 'package:quizkahoot/app/routes/app_pages.dart';
 import 'package:quizkahoot/app/service/auth_service.dart';
+import 'package:quizkahoot/app/service/basecommon.dart';
 
 class RegisterController extends GetxController {
   final fullNameController = TextEditingController();
@@ -27,6 +28,9 @@ class RegisterController extends GetxController {
     Dio dio = Dio();
     dio.interceptors.add(DioIntercepTorCustom());
     authService = AuthService(authApi: AuthApi(dio, baseUrl: baseUrl));
+    
+    // Initialize BaseCommon
+    BaseCommon.instance.init();
   }
 
   @override
