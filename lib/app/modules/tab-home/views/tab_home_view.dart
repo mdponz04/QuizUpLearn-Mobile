@@ -6,8 +6,12 @@ import 'package:quizkahoot/app/resource/text_style.dart';
 
 import '../controllers/tab_home_controller.dart';
 
-class TabHomeView extends GetView<TabHomeController> {
-  const TabHomeView({super.key});
+class TabHomeView extends StatelessWidget {
+  final TabHomeController? controller;
+  
+  const TabHomeView({super.key, this.controller});
+  
+  TabHomeController get tabController => controller ?? Get.find<TabHomeController>();
   
   @override
   Widget build(BuildContext context) {
@@ -24,7 +28,7 @@ class TabHomeView extends GetView<TabHomeController> {
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: controller.showNotifications,
+            onPressed: tabController.showNotifications,
             icon: Icon(
               Icons.notifications_outlined,
               color: ColorsManager.primary,
@@ -60,7 +64,7 @@ class TabHomeView extends GetView<TabHomeController> {
                     "Explore Quiz",
                     'assets/images/do_quiz.png',
                     ColorsManager.primary,
-                    controller.startQuiz,
+                    tabController.startQuiz,
                   ),
                 ),
                 SizedBox(width: UtilsReponsive.width(12, context)),
@@ -70,7 +74,7 @@ class TabHomeView extends GetView<TabHomeController> {
                     "Practice",
                     'assets/images/practice.png',
                     Colors.orange,
-                    controller.startPractice,
+                    tabController.startPractice,
                   ),
                 ),
               ],
@@ -86,7 +90,7 @@ class TabHomeView extends GetView<TabHomeController> {
                     "Vocabulary",
                     'assets/images/vocabulary.png',
                     Colors.green,
-                    controller.openVocabulary,
+                    tabController.openVocabulary,
                   ),
                 ),
                 SizedBox(width: UtilsReponsive.width(12, context)),
@@ -96,7 +100,7 @@ class TabHomeView extends GetView<TabHomeController> {
                     "Progress",
                     'assets/images/progress.png',
                     Colors.purple,
-                    controller.viewProgress,
+                    tabController.viewProgress,
                   ),
                 ),
               ],
@@ -184,7 +188,7 @@ class TabHomeView extends GetView<TabHomeController> {
                         child: _buildCompactStatCard(
                           context,
                           "Level",
-                          controller.currentLevel.value.toString(),
+                          tabController.currentLevel.value.toString(),
                           Icons.star,
                           Colors.amber,
                         ),
@@ -194,7 +198,7 @@ class TabHomeView extends GetView<TabHomeController> {
                         child: _buildCompactStatCard(
                           context,
                           "Streak",
-                          controller.formattedStreak,
+                          tabController.formattedStreak,
                           Icons.local_fire_department,
                           Colors.orange,
                         ),
@@ -204,7 +208,7 @@ class TabHomeView extends GetView<TabHomeController> {
                         child: _buildCompactStatCard(
                           context,
                           "Badges",
-                          controller.totalBadges.value.toString(),
+                          tabController.totalBadges.value.toString(),
                           Icons.emoji_events,
                           Colors.purple,
                         ),
@@ -244,7 +248,7 @@ class TabHomeView extends GetView<TabHomeController> {
             ),
             Obx(() => TextConstant.subTile3(
               context,
-              text: controller.formattedExp,
+              text: tabController.formattedExp,
               color: ColorsManager.primary,
               fontWeight: FontWeight.bold,
               size: 11,
@@ -260,7 +264,7 @@ class TabHomeView extends GetView<TabHomeController> {
           ),
           child: Obx(() => FractionallySizedBox(
             alignment: Alignment.centerLeft,
-            widthFactor: controller.progressPercentage,
+            widthFactor: tabController.progressPercentage,
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -367,7 +371,7 @@ class TabHomeView extends GetView<TabHomeController> {
                 SizedBox(height: UtilsReponsive.height(1, context)),
                 Obx(() => TextConstant.subTile3(
                   context,
-                  text: controller.recentBadge.value,
+                  text: tabController.recentBadge.value,
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
                   size: 10,

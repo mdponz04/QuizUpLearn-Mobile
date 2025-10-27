@@ -20,7 +20,7 @@ class HomeView extends GetView<HomeController> {
         children: [
           GetBuilder<TabHomeController>(
             init: TabHomeController(),
-            builder: (controller) => const TabHomeView(),
+            builder: (tabController) => TabHomeView(controller: tabController),
           ),
           _buildMyQuizTab(context),
           _buildForumTab(context),

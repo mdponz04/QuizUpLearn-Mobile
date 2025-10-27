@@ -7,7 +7,7 @@ import 'package:quizkahoot/app/modules/single-mode/models/start_quiz_request.dar
 import 'package:quizkahoot/app/modules/single-mode/models/start_quiz_response.dart';
 import 'package:quizkahoot/app/modules/single-mode/models/submit_answer_request.dart';
 import 'package:quizkahoot/app/modules/single-mode/models/submit_answer_response.dart';
-import 'package:quizkahoot/app/modules/single-mode/models/finish_quiz_response.dart';
+import 'package:quizkahoot/app/modules/single-mode/models/finish_quiz_response.dart' as finish;
 
 class SingleModeService {
   SingleModeService({required this.singleModeApi});
@@ -45,14 +45,14 @@ class SingleModeService {
     }
   }
 
-  Future<BaseResponse<FinishQuizResponse>> finishQuiz(String attemptId) async {
+  Future<BaseResponse<finish.Data>> finishQuiz(String attemptId) async {
     try {
       final response = await singleModeApi.finishQuiz(attemptId);
       log("Finish quiz response: ${response.toString()}");
       return BaseResponse(
         isSuccess: true,
         message: 'Quiz completed successfully',
-        data: response,
+        data: response.data,
       );
     } on DioException catch (e) {
       return BaseResponse.error(
