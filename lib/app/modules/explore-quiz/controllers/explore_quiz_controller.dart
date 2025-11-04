@@ -88,7 +88,7 @@ class ExploreQuizController extends GetxController {
     // Apply type filter
     if (selectedFilter.value != 'All') {
       filtered = filtered.where((quiz) => 
-        quiz.quizType.toUpperCase() == selectedFilter.value.toUpperCase()
+        quiz.quizType == int.parse(selectedFilter.value)
       ).toList();
     }
     

@@ -5,7 +5,7 @@ class QuizSetModel {
   final String id;
   final String title;
   final String description;
-  final String quizType;
+  final int quizType;
   final String toeicPart;
   final String skillType;
   final String difficultyLevel;
@@ -51,9 +51,9 @@ class QuizSetModel {
       id: json['id'],
       title: json['title'],
       description: json['description'],
-      quizType: json['quizType'],
+      quizType: json['quizType'] ?? 0,
       toeicPart: json['toeicPart'] ?? '',
-      skillType: json['skillType'],
+      skillType: json['skillType'] ?? '',
       difficultyLevel: json['difficultyLevel'],
       totalQuestions: json['totalQuestions'],
       timeLimit: json['timeLimit'] ?? 0,
@@ -78,7 +78,7 @@ class QuizSetModel {
       'id': id,
       'title': title,
       'description': description,
-      'quizType': quizType,
+      'quizType': quizType ?? 0,
       'toeicPart': toeicPart,
       'skillType': skillType,
       'difficultyLevel': difficultyLevel,
@@ -135,14 +135,14 @@ class QuizSetModel {
   }
 
   String get quizTypeIcon {
-    switch (quizType.toUpperCase()) {
-      case 'TOEIC':
+    switch (quizType) {
+      case 1:
         return '🎧';
-      case 'IELTS':
+      case 2:
         return '📚';
-      case 'TOEFL':
+      case 3:
         return '🌍';
-      case 'GRAMMAR':
+      case 4:
         return '📝';
       default:
         return '📖';

@@ -230,7 +230,7 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        controller.getQuizTypeIcon(quizSet.quizType),
+                        quizSet.quizTypeIcon,
                         style: TextStyle(
                           fontSize: UtilsReponsive.formatFontSize(20, context),
                         ),
@@ -254,7 +254,7 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
                           SizedBox(height: UtilsReponsive.height(2, context)),
                           TextConstant.subTile3(
                             context,
-                            text: quizSet.quizType,
+                            text: controller.filterOptions[quizSet.quizType],
                             color: ColorsManager.primary,
                             fontWeight: FontWeight.w600,
                             size: 12,

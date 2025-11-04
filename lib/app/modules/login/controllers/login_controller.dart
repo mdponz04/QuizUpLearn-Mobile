@@ -86,7 +86,7 @@ class LoginController extends GetxController {
         // Navigate to home on success
         Get.offAllNamed('/home');
       } else {
-        Get.offAllNamed('/home');
+        // Get.offAllNamed('/home');
 
         Get.snackbar(
           'Lỗi đăng nhập',
