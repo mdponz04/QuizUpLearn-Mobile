@@ -140,6 +140,16 @@ class HomeView extends GetView<HomeController> {
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () => _showAIGenerateDialog(context),
+            icon: Icon(
+              Icons.auto_awesome,
+              color: ColorsManager.primary,
+            ),
+            tooltip: 'AI Generate Quiz',
+          ),
+        ],
       ),
       body: Center(
         child: Column(
@@ -171,6 +181,304 @@ class HomeView extends GetView<HomeController> {
         },
         backgroundColor: ColorsManager.primary,
         child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+  }
+
+  void _showAIGenerateDialog(BuildContext context) {
+    final topicController = TextEditingController();
+    final questionCountController = TextEditingController();
+    
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(UtilsReponsive.width(20, context)),
+          constraints: BoxConstraints(
+            maxWidth: UtilsReponsive.width(400, context),
+            maxHeight: UtilsReponsive.height(600, context),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Icon(
+                      Icons.auto_awesome,
+                      color: ColorsManager.primary,
+                      size: UtilsReponsive.height(28, context),
+                    ),
+                    SizedBox(width: UtilsReponsive.width(8, context)),
+                    Expanded(
+                      child: TextConstant.titleH2(
+                        context,
+                        text: "Tạo Quiz với AI",
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Get.back(),
+                      icon: Icon(
+                        Icons.close,
+                        color: Colors.grey[600],
+                        size: UtilsReponsive.height(20, context),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: UtilsReponsive.height(20, context)),
+                
+                // Part Dropdown
+                TextConstant.subTile1(
+                  context,
+                  text: "Part",
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+                SizedBox(height: UtilsReponsive.height(8, context)),
+                Obx(() => Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: controller.selectedPart.value,
+                      isExpanded: true,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: UtilsReponsive.width(12, context),
+                      ),
+                      icon: Icon(
+                        Icons.arrow_drop_down,
+                        color: ColorsManager.primary,
+                      ),
+                      items: controller.partOptions.map((String part) {
+                        return DropdownMenuItem<String>(
+                          value: part,
+                          child: TextConstant.subTile2(
+                            context,
+                            text: part,
+                            color: Colors.black,
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          controller.selectedPart.value = newValue;
+                        }
+                      },
+                    ),
+                  ),
+                )),
+                SizedBox(height: UtilsReponsive.height(16, context)),
+                
+                // Difficulty Dropdown
+                TextConstant.subTile1(
+                  context,
+                  text: "Độ khó",
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+                SizedBox(height: UtilsReponsive.height(8, context)),
+                Obx(() => Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: controller.selectedDifficulty.value,
+                      isExpanded: true,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: UtilsReponsive.width(12, context),
+                      ),
+                      icon: Icon(
+                        Icons.arrow_drop_down,
+                        color: ColorsManager.primary,
+                      ),
+                      items: controller.difficultyOptions.map((String difficulty) {
+                        return DropdownMenuItem<String>(
+                          value: difficulty,
+                          child: TextConstant.subTile2(
+                            context,
+                            text: difficulty,
+                            color: Colors.black,
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          controller.selectedDifficulty.value = newValue;
+                        }
+                      },
+                    ),
+                  ),
+                )),
+                SizedBox(height: UtilsReponsive.height(16, context)),
+                
+                // Topic Content TextField
+                TextConstant.subTile1(
+                  context,
+                  text: "Nội dung đề tài",
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+                SizedBox(height: UtilsReponsive.height(8, context)),
+                TextField(
+                  controller: topicController,
+                  decoration: InputDecoration(
+                    hintText: "Nhập nội dung đề tài...",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: ColorsManager.primary,
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: UtilsReponsive.width(16, context),
+                      vertical: UtilsReponsive.height(12, context),
+                    ),
+                  ),
+                  maxLines: 3,
+                  onChanged: (value) {
+                    controller.topicContent.value = value;
+                  },
+                ),
+                SizedBox(height: UtilsReponsive.height(16, context)),
+                
+                // Question Count TextField
+                TextConstant.subTile1(
+                  context,
+                  text: "Số lượng câu hỏi",
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+                SizedBox(height: UtilsReponsive.height(8, context)),
+                TextField(
+                  controller: questionCountController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: "Nhập số lượng câu hỏi...",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: ColorsManager.primary,
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: UtilsReponsive.width(16, context),
+                      vertical: UtilsReponsive.height(12, context),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    controller.questionCount.value = value;
+                  },
+                ),
+                SizedBox(height: UtilsReponsive.height(24, context)),
+                
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          controller.resetAIDialogForm();
+                          topicController.clear();
+                          questionCountController.clear();
+                          Get.back();
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.grey[300]!),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            vertical: UtilsReponsive.height(12, context),
+                          ),
+                        ),
+                        child: TextConstant.subTile2(
+                          context,
+                          text: "Hủy",
+                          color: Colors.grey[600]!,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: UtilsReponsive.width(12, context)),
+                    Expanded(
+                      child: Obx(() => ElevatedButton(
+                        onPressed: controller.isLoading.value
+                            ? null
+                            : () async {
+                                // Update controller values from text fields
+                                controller.topicContent.value = topicController.text.trim();
+                                controller.questionCount.value = questionCountController.text.trim();
+                                
+                                // Call API
+                                await controller.generateQuizWithAI();
+                                
+                                // Close dialog if successful
+                                if (!controller.isLoading.value) {
+                                  Get.back();
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ColorsManager.primary,
+                          disabledBackgroundColor: Colors.grey[300],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            vertical: UtilsReponsive.height(12, context),
+                          ),
+                        ),
+                        child: controller.isLoading.value
+                            ? SizedBox(
+                                height: UtilsReponsive.height(20, context),
+                                width: UtilsReponsive.height(20, context),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : TextConstant.subTile2(
+                                context,
+                                text: "Tạo Quiz",
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                      )),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
