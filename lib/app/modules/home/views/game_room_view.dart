@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quizkahoot/app/resource/color_manager.dart';
@@ -6,9 +7,187 @@ import 'package:quizkahoot/app/resource/text_style.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/services.dart';
 import '../models/create_game_response.dart';
+import '../../../service/game_hub_service.dart';
 
-class GameRoomView extends StatelessWidget {
+class GameRoomView extends StatefulWidget {
   const GameRoomView({super.key});
+
+  @override
+  State<GameRoomView> createState() => _GameRoomViewState();
+}
+
+class _GameRoomViewState extends State<GameRoomView> {
+  final GameHubService _gameHub = GameHubService();
+  bool _isConnecting = false;
+  bool _isConnected = false;
+  bool _isStartingGame = false;
+  bool _isGameStarted = false;
+  String? _connectionStatus;
+  String? _gamePin;
+
+  @override
+  void initState() {
+    super.initState();
+    final gameData = Get.arguments as GameData?;
+    if (gameData != null) {
+      _gamePin = gameData.gamePin;
+    }
+    _setupSignalRListeners();
+  }
+
+  void _setupSignalRListeners() {
+    _gameHub.setupEventListeners(
+      onConnected: () {
+        setState(() {
+          _isConnected = true;
+          _connectionStatus = 'Đã kết nối';
+        });
+        Get.snackbar(
+          'Thành công',
+          'Đã kết nối SignalR',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      },
+      onConnectionError: (error) {
+        setState(() {
+          _isConnected = false;
+          _connectionStatus = 'Lỗi: $error';
+        });
+        Get.snackbar(
+          'Lỗi',
+          'Không thể kết nối SignalR: $error',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      },
+      onConnectionClosed: (error) {
+        setState(() {
+          _isConnected = false;
+          _connectionStatus = 'Đã ngắt kết nối';
+        });
+      },
+      onHostConnected: (data) {
+        Get.snackbar(
+          'Thành công',
+          'Host đã kết nối vào game',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      },
+      onLobbyUpdated: (data) {
+        log('Lobby updated: ${data['TotalPlayers']} players');
+        setState(() {
+          _connectionStatus = 'Lobby: ${data['TotalPlayers']} players';
+        });
+      },
+      onGameStarted: (data) {
+        setState(() {
+          _isGameStarted = true;
+          _isStartingGame = false;
+          _connectionStatus = 'Game đã bắt đầu';
+        });
+        Get.snackbar(
+          'Thành công',
+          'Game đã bắt đầu!',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      },
+      onShowQuestion: (data) {
+        log('Show question: ${data['QuestionId']}');
+        Get.snackbar(
+          'Thông báo',
+          'Câu hỏi đã được hiển thị',
+          backgroundColor: Colors.blue,
+          colorText: Colors.white,
+        );
+      },
+      onError: (error) {
+        setState(() {
+          _isStartingGame = false;
+        });
+        Get.snackbar(
+          'Lỗi',
+          error,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      },
+    );
+  }
+
+  Future<void> _testConnect() async {
+    if (_isConnecting) return;
+
+    setState(() {
+      _isConnecting = true;
+      _connectionStatus = 'Đang kết nối...';
+      _isConnected = false;
+    });
+
+    try {
+      const baseUrl = 'https://qul-api.onrender.com';
+      final connected = await _gameHub.connect(baseUrl);
+
+      if (connected) {
+        final gameData = Get.arguments as GameData?;
+        if (gameData != null) {
+          _gamePin = gameData.gamePin;
+          // Test HostConnect
+          await _gameHub.hostConnect(gameData.gamePin);
+        }
+      } else {
+        setState(() {
+          _connectionStatus = 'Không thể kết nối';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _connectionStatus = 'Lỗi: $e';
+      });
+      Get.snackbar(
+        'Lỗi',
+        'Lỗi khi test connect: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      setState(() {
+        _isConnecting = false;
+      });
+    }
+  }
+
+  Future<void> _startGame() async {
+    if (_isStartingGame || _gamePin == null) return;
+
+    setState(() {
+      _isStartingGame = true;
+      _connectionStatus = 'Đang bắt đầu game...';
+    });
+
+    try {
+      await _gameHub.startGame(_gamePin!);
+    } catch (e) {
+      setState(() {
+        _isStartingGame = false;
+        _connectionStatus = 'Lỗi khi start game: $e';
+      });
+      Get.snackbar(
+        'Lỗi',
+        'Không thể bắt đầu game: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _gameHub.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -183,6 +362,110 @@ class GameRoomView extends StatelessWidget {
             ),
             
             SizedBox(height: UtilsReponsive.height(32, context)),
+            
+            // Test Connect Button
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(UtilsReponsive.width(20, context)),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: (_isConnecting || _isStartingGame) 
+                          ? null 
+                          : (_isConnected ? _startGame : _testConnect),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _isGameStarted
+                            ? Colors.orange
+                            : (_isConnected 
+                                ? Colors.green 
+                                : ColorsManager.primary),
+                        disabledBackgroundColor: Colors.grey[300],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          vertical: UtilsReponsive.height(16, context),
+                        ),
+                      ),
+                      child: _isConnecting || _isStartingGame
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: UtilsReponsive.height(20, context),
+                                  height: UtilsReponsive.height(20, context),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                ),
+                                SizedBox(width: UtilsReponsive.width(12, context)),
+                                TextConstant.subTile1(
+                                  context,
+                                  text: _isConnecting 
+                                      ? "Đang kết nối..." 
+                                      : "Đang bắt đầu game...",
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ],
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  _isGameStarted
+                                      ? Icons.play_circle_filled
+                                      : (_isConnected 
+                                          ? Icons.play_arrow 
+                                          : Icons.wifi),
+                                  color: Colors.white,
+                                  size: UtilsReponsive.height(20, context),
+                                ),
+                                SizedBox(width: UtilsReponsive.width(8, context)),
+                                TextConstant.subTile1(
+                                  context,
+                                  text: _isGameStarted
+                                      ? "Game đã bắt đầu"
+                                      : (_isConnected 
+                                          ? "Start Game" 
+                                          : "Connect"),
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                  if (_connectionStatus != null) ...[
+                    SizedBox(height: UtilsReponsive.height(12, context)),
+                    TextConstant.subTile3(
+                      context,
+                      text: _connectionStatus!,
+                      color: _isConnected 
+                          ? Colors.green 
+                          : Colors.grey[600]!,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            
+            SizedBox(height: UtilsReponsive.height(24, context)),
             
             // Action Buttons
             Row(
