@@ -25,6 +25,7 @@ import '../modules/explore-quiz/views/explore_quiz_view.dart';
 import '../modules/single-mode/bindings/single_mode_binding.dart';
 import '../modules/single-mode/views/quiz_playing_view.dart';
 import '../modules/single-mode/views/quiz_result_view.dart';
+import '../modules/home/views/game_room_view.dart';
 
 part 'app_routes.dart';
 
@@ -97,6 +98,10 @@ class AppPages {
     GetPage(
       name: _Paths.QUIZ_RESULT,
       page: () => QuizResultView(result: Get.arguments),
+    ),
+    GetPage(
+      name: _Paths.GAME_ROOM,
+      page: () => const GameRoomView(),
     ),
   ];
 }

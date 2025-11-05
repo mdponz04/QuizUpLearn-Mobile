@@ -6,6 +6,13 @@ import 'package:quizkahoot/app/data/dio_interceptor.dart';
 import 'package:quizkahoot/app/modules/home/data/ai_quiz_api.dart';
 import 'package:quizkahoot/app/modules/home/data/ai_quiz_service.dart';
 import 'package:quizkahoot/app/modules/home/models/generate_quiz_request.dart';
+import 'package:quizkahoot/app/modules/home/data/game_api.dart';
+import 'package:quizkahoot/app/modules/home/data/game_service.dart';
+import 'package:quizkahoot/app/modules/home/models/create_game_request.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_api.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_service.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_set_model.dart';
+import 'package:quizkahoot/app/modules/single-mode/controllers/single_mode_controller.dart';
 import 'package:quizkahoot/app/service/basecommon.dart';
 
 const baseUrl = 'https://qul-api.onrender.com/api';
@@ -15,7 +22,12 @@ class HomeController extends GetxController {
   late PageController pageController;
   
   late AIQuizService aiQuizService;
+  late QuizSetService quizSetService;
+  late GameService gameService;
   var isLoading = false.obs;
+  var isLoadingMyQuiz = false.obs;
+  var isLoadingGame = false.obs;
+  var myQuizSets = <QuizSetModel>[].obs;
 
   // AI Quiz Dialog state
   var selectedPart = 'Part 1'.obs;
@@ -69,6 +81,8 @@ class HomeController extends GetxController {
   void onInit() {
     pageController = PageController();
     _initializeAIService();
+    _initializeQuizSetService();
+    _initializeGameService();
     super.onInit();
   }
 
@@ -86,6 +100,22 @@ class HomeController extends GetxController {
     );
   }
 
+  void _initializeQuizSetService() {
+    Dio dio = Dio();
+    dio.interceptors.add(DioIntercepTorCustom());
+    quizSetService = QuizSetService(
+      quizSetApi: QuizSetApi(dio, baseUrl: baseUrl),
+    );
+  }
+
+  void _initializeGameService() {
+    Dio dio = Dio();
+    dio.interceptors.add(DioIntercepTorCustom());
+    gameService = GameService(
+      gameApi: GameApi(dio, baseUrl: baseUrl),
+    );
+  }
+
   void changeTabIndex(int index) {
     currentIndex.value = index;
     pageController.animateToPage(
@@ -93,10 +123,105 @@ class HomeController extends GetxController {
       duration: const Duration(milliseconds: 300),
       curve: Curves.ease,
     );
+    // Load My Quiz when switching to My Quiz tab
+    if (index == 1) {
+      loadMyQuizSets();
+    }
   }
 
   void onPageChanged(int index) {
     currentIndex.value = index;
+    // Load My Quiz when switching to My Quiz tab
+    if (index == 1) {
+      loadMyQuizSets();
+    }
+  }
+
+  Future<void> loadMyQuizSets() async {
+    try {
+      final userId = BaseCommon.instance.userId;
+      if (userId.isEmpty) {
+        log('User ID is empty, cannot load my quiz sets');
+        return;
+      }
+
+      isLoadingMyQuiz.value = true;
+      final response = await quizSetService.getQuizSetsByCreator(userId);
+      isLoadingMyQuiz.value = false;
+
+      if (response.isSuccess && response.data != null) {
+        myQuizSets.value = response.data!;
+      } else {
+        Get.snackbar(
+          'Lỗi',
+          response.message,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      isLoadingMyQuiz.value = false;
+      log('Error loading my quiz sets: $e');
+      Get.snackbar(
+        'Lỗi',
+        'Đã xảy ra lỗi khi tải danh sách quiz',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  void startQuiz(QuizSetModel quizSet) {
+    // Navigate to Single Mode controller and start quiz
+    final singleModeController = Get.find<SingleModeController>();
+    singleModeController.startQuiz(quizSet.id);
+  }
+
+  Future<void> createGameRoom(QuizSetModel quizSet) async {
+    try {
+      final userId = BaseCommon.instance.userId;
+      if (userId.isEmpty) {
+        Get.snackbar(
+          'Lỗi',
+          'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      isLoadingGame.value = true;
+      
+      final request = CreateGameRequest(
+        hostUserId: userId,
+        hostUserName: 'string', // TODO: Get actual username from user info
+        quizSetId: quizSet.id,
+      );
+
+      final response = await gameService.createGame(request);
+      isLoadingGame.value = false;
+
+      if (response.isSuccess && response.data != null) {
+        // Navigate to game room page
+        Get.toNamed('/game-room', arguments: response.data);
+      } else {
+        Get.snackbar(
+          'Lỗi',
+          response.message,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      isLoadingGame.value = false;
+      log('Error creating game room: $e');
+      Get.snackbar(
+        'Lỗi',
+        'Đã xảy ra lỗi khi tạo phòng game',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 
   void resetAIDialogForm() {
@@ -207,6 +332,11 @@ class HomeController extends GetxController {
         
         // Reset form
         resetAIDialogForm();
+        
+        // Reload My Quiz list if we're on the My Quiz tab
+        if (currentIndex.value == 1) {
+          await loadMyQuizSets();
+        }
       } else {
         Get.snackbar(
           'Lỗi',

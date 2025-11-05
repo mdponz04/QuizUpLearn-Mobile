@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'quiz_set_api.dart';
+part of 'game_api.dart';
 
 // **************************************************************************
 // RetrofitGenerator
@@ -8,8 +8,8 @@ part of 'quiz_set_api.dart';
 
 // ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers,unused_element,unnecessary_string_interpolations,unused_element_parameter
 
-class _QuizSetApi implements QuizSetApi {
-  _QuizSetApi(this._dio, {this.baseUrl, this.errorLogger});
+class _GameApi implements GameApi {
+  _GameApi(this._dio, {this.baseUrl, this.errorLogger});
 
   final Dio _dio;
 
@@ -18,52 +18,26 @@ class _QuizSetApi implements QuizSetApi {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<QuizSetResponse> getQuizSets() async {
+  Future<CreateGameResponse> createGame(CreateGameRequest request) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<QuizSetResponse>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
+    final _data = <String, dynamic>{};
+    _data.addAll(request.toJson());
+    final _options = _setStreamType<CreateGameResponse>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/quizset',
+            '/game/create',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late QuizSetResponse _value;
+    late CreateGameResponse _value;
     try {
-      _value = QuizSetResponse.fromJson(_result.data!);
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
-      rethrow;
-    }
-    return _value;
-  }
-
-  @override
-  Future<QuizSetResponse> getQuizSetsByCreator(String userId) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<QuizSetResponse>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/quizset/creator/${userId}',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late QuizSetResponse _value;
-    try {
-      _value = QuizSetResponse.fromJson(_result.data!);
+      _value = CreateGameResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;

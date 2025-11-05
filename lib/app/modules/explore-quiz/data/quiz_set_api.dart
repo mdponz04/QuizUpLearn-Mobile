@@ -10,4 +10,7 @@ abstract class QuizSetApi {
   
   @GET('/quizset')
   Future<QuizSetResponse> getQuizSets();
+  
+  @GET('/quizset/creator/{userId}')
+  Future<QuizSetResponse> getQuizSetsByCreator(@Path('userId') String userId);
 }

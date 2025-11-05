@@ -7,6 +7,7 @@ import 'package:quizkahoot/app/resource/text_style.dart';
 import '../controllers/home_controller.dart';
 import '../../tab-home/views/tab_home_view.dart';
 import '../../tab-home/controllers/tab_home_controller.dart';
+import '../../explore-quiz/models/quiz_set_model.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -142,6 +143,14 @@ class HomeView extends GetView<HomeController> {
         elevation: 0,
         actions: [
           IconButton(
+            onPressed: () => controller.loadMyQuizSets(),
+            icon: Icon(
+              Icons.refresh,
+              color: ColorsManager.primary,
+            ),
+            tooltip: 'Refresh',
+          ),
+          IconButton(
             onPressed: () => _showAIGenerateDialog(context),
             icon: Icon(
               Icons.auto_awesome,
@@ -151,38 +160,402 @@ class HomeView extends GetView<HomeController> {
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.quiz_outlined,
-              size: UtilsReponsive.height(80, context),
-              color: Colors.grey[400],
-            ),
-            SizedBox(height: UtilsReponsive.height(16, context)),
-            TextConstant.titleH3(
-              context,
-              text: "No quizzes yet",
-              color: Colors.grey[600]!,
-            ),
-            SizedBox(height: UtilsReponsive.height(8, context)),
-            TextConstant.subTile2(
-              context,
-              text: "Create your first quiz to get started",
-              color: Colors.grey[500]!,
-            ),
-          ],
-        ),
-      ),
+      body: Obx(() {
+        if (controller.isLoadingMyQuiz.value) {
+          return _buildMyQuizLoadingState(context);
+        }
+        
+        if (controller.myQuizSets.isEmpty) {
+          return _buildMyQuizEmptyState(context);
+        }
+        
+        return _buildMyQuizList(context);
+      }),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Create quiz action
-        },
+        onPressed: () => _showAIGenerateDialog(context),
         backgroundColor: ColorsManager.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
+  }
+
+  Widget _buildMyQuizLoadingState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            color: ColorsManager.primary,
+          ),
+          SizedBox(height: UtilsReponsive.height(16, context)),
+          TextConstant.subTile1(
+            context,
+            text: "Loading your quizzes...",
+            color: Colors.grey[600]!,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMyQuizEmptyState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.quiz_outlined,
+            size: UtilsReponsive.height(80, context),
+            color: Colors.grey[400],
+          ),
+          SizedBox(height: UtilsReponsive.height(16, context)),
+          TextConstant.titleH3(
+            context,
+            text: "No quizzes yet",
+            color: Colors.grey[600]!,
+          ),
+          SizedBox(height: UtilsReponsive.height(8, context)),
+          TextConstant.subTile2(
+            context,
+            text: "Create your first quiz to get started",
+            color: Colors.grey[500]!,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMyQuizList(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: controller.loadMyQuizSets,
+      color: ColorsManager.primary,
+      child: ListView.builder(
+        padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+        itemCount: controller.myQuizSets.length,
+        itemBuilder: (context, index) {
+          final quizSet = controller.myQuizSets[index];
+          return _buildMyQuizSetCard(context, quizSet);
+        },
+      ),
+    );
+  }
+
+  Widget _buildMyQuizSetCard(BuildContext context, QuizSetModel quizSetModel) {
+    return Container(
+      margin: EdgeInsets.only(bottom: UtilsReponsive.height(16, context)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => controller.startQuiz(quizSetModel),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Row
+                Row(
+                  children: [
+                    // Quiz Type Icon
+                    Container(
+                      padding: EdgeInsets.all(UtilsReponsive.width(8, context)),
+                      decoration: BoxDecoration(
+                        color: ColorsManager.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        quizSetModel.quizTypeIcon,
+                        style: TextStyle(
+                          fontSize: UtilsReponsive.formatFontSize(20, context),
+                        ),
+                      ),
+                    ),
+                    
+                    SizedBox(width: UtilsReponsive.width(12, context)),
+                    
+                    // Title and Type
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextConstant.titleH3(
+                            context,
+                            text: quizSetModel.title,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            size: 16,
+                          ),
+                          SizedBox(height: UtilsReponsive.height(2, context)),
+                          TextConstant.subTile3(
+                            context,
+                            text: quizSetModel.skillType.isNotEmpty 
+                                ? quizSetModel.skillType 
+                                : 'General',
+                            color: ColorsManager.primary,
+                            fontWeight: FontWeight.w600,
+                            size: 12,
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Badges Row
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Published Badge
+                        if (quizSetModel.isPublished)
+                          Container(
+                            margin: EdgeInsets.only(right: UtilsReponsive.width(4, context)),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: UtilsReponsive.width(8, context),
+                              vertical: UtilsReponsive.height(4, context),
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: TextConstant.subTile4(
+                              context,
+                              text: "PUBLISHED",
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              size: 8,
+                            ),
+                          ),
+                        
+                        // Unpublished Badge
+                        if (!quizSetModel.isPublished)
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: UtilsReponsive.width(8, context),
+                              vertical: UtilsReponsive.height(4, context),
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.orange,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: TextConstant.subTile4(
+                              context,
+                              text: "DRAFT",
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              size: 8,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+                
+                SizedBox(height: UtilsReponsive.height(12, context)),
+                
+                // Description
+                TextConstant.subTile2(
+                  context,
+                  text: quizSetModel.description,
+                  color: Colors.grey[600]!,
+                  size: 13,
+                ),
+                
+                SizedBox(height: UtilsReponsive.height(12, context)),
+                
+                // Stats Row
+                Row(
+                  children: [
+                    _buildStatChip(
+                      context,
+                      Icons.quiz,
+                      "${quizSetModel.totalQuestions} questions",
+                      Colors.blue,
+                    ),
+                    SizedBox(width: UtilsReponsive.width(8, context)),
+                    if (quizSetModel.timeLimit > 0)
+                      _buildStatChip(
+                        context,
+                        Icons.timer,
+                        quizSetModel.formattedTimeLimit,
+                        Colors.orange,
+                      ),
+                    if (quizSetModel.timeLimit > 0)
+                      SizedBox(width: UtilsReponsive.width(8, context)),
+                    _buildStatChip(
+                      context,
+                      Icons.trending_up,
+                      quizSetModel.difficultyColor,
+                      quizSetModel.difficultyColorValue,
+                    ),
+                  ],
+                ),
+                
+                SizedBox(height: UtilsReponsive.height(12, context)),
+                
+                // Footer Row
+                Row(
+                  children: [
+                    // Created Date
+                    Expanded(
+                      child: TextConstant.subTile3(
+                        context,
+                        text: "Created: ${_formatDate(quizSetModel.createdAt)}",
+                        color: Colors.grey[500]!,
+                        size: 11,
+                      ),
+                    ),
+                    
+                    // Attempts
+                    if (quizSetModel.totalAttempts > 0)
+                      TextConstant.subTile3(
+                        context,
+                        text: "${quizSetModel.totalAttempts} attempts",
+                        color: Colors.grey[500]!,
+                        size: 11,
+                      ),
+                    
+                    if (quizSetModel.totalAttempts > 0)
+                      SizedBox(width: UtilsReponsive.width(8, context)),
+                    
+                    // Room Game Button
+                    Obx(() => Container(
+                      margin: EdgeInsets.only(right: UtilsReponsive.width(8, context)),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: UtilsReponsive.width(12, context),
+                        vertical: UtilsReponsive.height(6, context),
+                      ),
+                      decoration: BoxDecoration(
+                        color: controller.isLoadingGame.value 
+                            ? Colors.grey[300] 
+                            : Colors.purple,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: GestureDetector(
+                        onTap: controller.isLoadingGame.value 
+                            ? null 
+                            : () => controller.createGameRoom(quizSetModel),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (controller.isLoadingGame.value)
+                              SizedBox(
+                                width: UtilsReponsive.height(12, context),
+                                height: UtilsReponsive.height(12, context),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            else
+                              Icon(
+                                Icons.meeting_room,
+                                color: Colors.white,
+                                size: UtilsReponsive.height(12, context),
+                              ),
+                            if (!controller.isLoadingGame.value) ...[
+                              SizedBox(width: UtilsReponsive.width(4, context)),
+                              TextConstant.subTile3(
+                                context,
+                                text: "Room",
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                size: 12,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    )),
+                    
+                    // Start Button
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: UtilsReponsive.width(12, context),
+                        vertical: UtilsReponsive.height(6, context),
+                      ),
+                      decoration: BoxDecoration(
+                        color: ColorsManager.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextConstant.subTile3(
+                            context,
+                            text: "Start",
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            size: 12,
+                          ),
+                          SizedBox(width: UtilsReponsive.width(4, context)),
+                          Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                            size: UtilsReponsive.height(12, context),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatChip(
+    BuildContext context,
+    IconData icon,
+    String text,
+    Color color,
+  ) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: UtilsReponsive.width(8, context),
+        vertical: UtilsReponsive.height(4, context),
+      ),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: UtilsReponsive.height(12, context),
+          ),
+          SizedBox(width: UtilsReponsive.width(4, context)),
+          TextConstant.subTile4(
+            context,
+            text: text,
+            color: color,
+            fontWeight: FontWeight.w600,
+            size: 10,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return "${date.day}/${date.month}/${date.year}";
   }
 
   void _showAIGenerateDialog(BuildContext context) {
