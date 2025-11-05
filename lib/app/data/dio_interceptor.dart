@@ -15,6 +15,8 @@ class DioIntercepTorCustom extends Interceptor {
     
     final fullUrl = options.uri.toString();
     log('➡️ [API - ${DateTime.now()}][REQUEST] ${options.method} $fullUrl');
+    log('➡️ [API - ${DateTime.now()}][REQUEST][DATA] ${jsonEncode(options.data)}');
+
      
     super.onRequest(options, handler);
   }
