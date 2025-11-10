@@ -11,7 +11,7 @@ class StartQuizRequest {
     return {
       'quizSetId': quizSetId,
       'userId': userId,
-      'numQuestions': 1,
+      'numQuestions': 3,
     };
   }
 }

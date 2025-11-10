@@ -318,6 +318,7 @@ class HomeController extends GetxController {
 
       // Call API
       final response = await aiQuizService.generateQuiz(partNumber, request);
+      log('response: ${response.toString()}');
 
       isLoading.value = false;
 

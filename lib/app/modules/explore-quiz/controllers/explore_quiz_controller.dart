@@ -8,6 +8,8 @@ import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_api.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_service.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_set_model.dart';
 import 'package:quizkahoot/app/modules/single-mode/controllers/single_mode_controller.dart';
+import 'package:quizkahoot/app/resource/color_manager.dart';
+import 'package:quizkahoot/app/resource/text_style.dart';
 
 const baseUrl = 'https://qul-api.onrender.com/api';
 
@@ -108,6 +110,122 @@ class ExploreQuizController extends GetxController {
     // Navigate to Single Mode controller and start quiz
     final singleModeController = Get.find<SingleModeController>();
     singleModeController.startQuiz(quizSet.id);
+  }
+
+  void showPlayGameDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: TextConstant.titleH2(
+          context,
+          text: "Chơi Game",
+          color: ColorsManager.primary,
+          fontWeight: FontWeight.bold,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.keyboard, color: ColorsManager.primary),
+              title: TextConstant.subTile1(
+                context,
+                text: "Nhập mã PIN",
+                color: Colors.black,
+              ),
+              onTap: () {
+                Get.back();
+                _showEnterPinDialog(context);
+              },
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.qr_code_scanner, color: ColorsManager.primary),
+              title: TextConstant.subTile1(
+                context,
+                text: "Quét QR Code",
+                color: Colors.black,
+              ),
+              onTap: () {
+                Get.back();
+                _showQRScanner(context);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: TextConstant.subTile1(
+              context,
+              text: "Hủy",
+              color: Colors.grey[600]!,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEnterPinDialog(BuildContext context) {
+    final pinController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: TextConstant.titleH3(
+          context,
+          text: "Nhập mã PIN",
+          color: Colors.black,
+          fontWeight: FontWeight.bold,
+        ),
+        content: TextField(
+          controller: pinController,
+          decoration: InputDecoration(
+            hintText: "Nhập mã PIN",
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: TextConstant.subTile1(
+              context,
+              text: "Hủy",
+              color: Colors.grey[600]!,
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final pin = pinController.text.trim();
+              if (pin.isNotEmpty) {
+                Get.back();
+                _joinGameWithPin(pin);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ColorsManager.primary,
+            ),
+            child: TextConstant.subTile1(
+              context,
+              text: "Tham gia",
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showQRScanner(BuildContext context) {
+    Get.toNamed('/player-game-room', arguments: {'mode': 'scan'});
+  }
+
+  void _joinGameWithPin(String pin) {
+    Get.toNamed('/player-game-room', arguments: {'gamePin': pin, 'mode': 'pin'});
   }
 
   Future<void> refreshQuizSets() async {

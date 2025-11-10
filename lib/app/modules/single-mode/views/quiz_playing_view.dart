@@ -321,14 +321,15 @@ class QuizPlayingView extends GetView<SingleModeController> {
 
   Widget _buildAnswerOption(BuildContext context, AnswerOption option) {
     final optionLabelString = option.optionLabel?.toString().split('.').last ?? '';
-    final isSelected = controller.selectedAnswer.value == optionLabelString;
+    final optionId = option.id ?? '';
+    final isSelected = controller.selectedAnswer.value == optionId;
     
     return Container(
       margin: EdgeInsets.only(bottom: UtilsReponsive.height(12, context)),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => controller.selectAnswer(optionLabelString),
+          onTap: () => controller.selectAnswer(optionId),
           borderRadius: BorderRadius.circular(12),
           child: Container(
             padding: EdgeInsets.all(UtilsReponsive.width(16, context)),

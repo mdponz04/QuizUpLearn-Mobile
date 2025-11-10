@@ -42,7 +42,7 @@ class DioIntercepTorCustom extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    log("onError ${err.response?.data}");
+    log("onError ${err.response}");
     String errorMessage = "No connection";
 
     if (err.response != null) {

@@ -74,7 +74,7 @@ class SingleModeController extends GetxController {
       
       final request = StartQuizRequest(
         quizSetId: quizSetId,
-        userId: '161671d6-bc6c-4291-baee-f22bb964759e',
+        userId: userId!,
       );
       
       final response = await singleModeService.startQuiz(request);

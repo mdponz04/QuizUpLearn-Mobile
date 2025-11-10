@@ -25,6 +25,14 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
         elevation: 0,
         actions: [
           IconButton(
+            onPressed: () => controller.showPlayGameDialog(context),
+            icon: Icon(
+              Icons.play_circle_outline,
+              color: ColorsManager.primary,
+            ),
+            tooltip: 'Play Game',
+          ),
+          IconButton(
             onPressed: controller.refreshQuizSets,
             icon: Icon(
               Icons.refresh,
