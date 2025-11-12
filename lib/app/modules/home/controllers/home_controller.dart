@@ -31,7 +31,7 @@ class HomeController extends GetxController {
 
   // AI Quiz Dialog state
   var selectedPart = 'Part 1'.obs;
-  var selectedDifficulty = 'Dễ'.obs;
+  var selectedDifficulty = '70-100'.obs;
   var topicContent = ''.obs;
   var questionCount = ''.obs;
 
@@ -70,11 +70,13 @@ class HomeController extends GetxController {
     'Part 7',
   ];
 
-  // Difficulty options
+  // Difficulty options (ranges)
   final List<String> difficultyOptions = [
-    'Dễ',
-    'Trung bình',
-    'Khó',
+    '50-100',
+    '60-100',
+    '70-100',
+    '80-100',
+    '90-100',
   ];
 
   @override
@@ -226,23 +228,15 @@ class HomeController extends GetxController {
 
   void resetAIDialogForm() {
     selectedPart.value = 'Part 1';
-    selectedDifficulty.value = 'Dễ';
+    selectedDifficulty.value = '70-100';
     topicContent.value = '';
     questionCount.value = '';
   }
 
-  /// Map Vietnamese difficulty to English
-  String _mapDifficultyToEnglish(String vietnameseDifficulty) {
-    switch (vietnameseDifficulty) {
-      case 'Dễ':
-        return 'easy';
-      case 'Trung bình':
-        return 'medium';
-      case 'Khó':
-        return 'hard';
-      default:
-        return 'medium';
-    }
+  /// Map difficulty to range format (already in range format, just return as is)
+  String _mapDifficultyToRange(String difficulty) {
+    // Difficulty is already in range format (e.g., "50-100", "70-100")
+    return difficulty;
   }
 
   /// Extract part number from "Part X" string
@@ -308,7 +302,7 @@ class HomeController extends GetxController {
       // Prepare request
       final request = GenerateQuizRequest(
         questionQuantity: questionQuantity,
-        difficulty: _mapDifficultyToEnglish(selectedDifficulty.value),
+        difficulty: _mapDifficultyToRange(selectedDifficulty.value),
         topic: topicContent.value.trim(),
         creatorId: creatorId,
       );

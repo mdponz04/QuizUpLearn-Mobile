@@ -14,7 +14,7 @@ class GenerateQuizRequest {
   Map<String, dynamic> toJson() {
     return {
       'questionQuantity': questionQuantity,
-      'difficulty': '80-100',
+      'difficulty': difficulty,
       'topic': topic,
       'creatorId': creatorId,
     };

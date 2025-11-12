@@ -12,37 +12,11 @@ class AIQuizService {
   AIQuizApi aiQuizApi;
 
   Future<BaseResponse<GenerateQuizResponse>> generateQuiz(
-    int partNumber,
+    int quizPart,
     GenerateQuizRequest request,
   ) async {
     try {
-      GenerateQuizResponse response;
-      
-      switch (partNumber) {
-        case 1:
-          response = await aiQuizApi.generateQuizPart1(request);
-          break;
-        case 2:
-          response = await aiQuizApi.generateQuizPart2(request);
-          break;
-        case 3:
-          response = await aiQuizApi.generateQuizPart3(request);
-          break;
-        case 4:
-          response = await aiQuizApi.generateQuizPart4(request);
-          break;
-        case 5:
-          response = await aiQuizApi.generateQuizPart5(request);
-          break;
-        case 6:
-          response = await aiQuizApi.generateQuizPart6(request);
-          break;
-        case 7:
-          response = await aiQuizApi.generateQuizPart7(request);
-          break;
-        default:
-          return BaseResponse.error('Invalid part number');
-      }
+      final response = await aiQuizApi.generateQuiz(quizPart, request);
       
       log("AI Quiz generation response: ${response.toString()}");
       return BaseResponse(

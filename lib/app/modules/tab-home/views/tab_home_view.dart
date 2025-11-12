@@ -71,10 +71,10 @@ class TabHomeView extends StatelessWidget {
                 Expanded(
                   child: _buildActionCard(
                     context,
-                    "Practice",
+                    "Play Game",
                     'assets/images/practice.png',
                     Colors.orange,
-                    tabController.startPractice,
+                    tabController.playGame,
                   ),
                 ),
               ],
@@ -87,10 +87,10 @@ class TabHomeView extends StatelessWidget {
                 Expanded(
                   child: _buildActionCard(
                     context,
-                    "Vocabulary",
+                    "Placement tests",
                     'assets/images/vocabulary.png',
                     Colors.green,
-                    tabController.openVocabulary,
+                    tabController.openPlacementTests,
                   ),
                 ),
                 SizedBox(width: UtilsReponsive.width(12, context)),

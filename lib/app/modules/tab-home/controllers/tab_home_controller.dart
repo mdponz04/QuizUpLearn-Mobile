@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class TabHomeController extends GetxController {
@@ -15,17 +16,106 @@ class TabHomeController extends GetxController {
     Get.toNamed('/explore-quiz');
   }
 
-  void startPractice() {
-    Get.toNamed('/play-event');
+  void playGame() {
+    showDialog(
+      context: Get.context!,
+      builder: (context) => AlertDialog(
+        title: Text(
+          "Chơi Game",
+          style: TextStyle(
+            color: Colors.orange,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.keyboard, color: Colors.orange),
+              title: Text("Nhập mã PIN"),
+              onTap: () {
+                Get.back();
+                _showEnterPinDialog(context);
+              },
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.qr_code_scanner, color: Colors.orange),
+              title: Text("Quét QR Code"),
+              onTap: () {
+                Get.back();
+                _showQRScanner(context);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text("Hủy"),
+          ),
+        ],
+      ),
+    );
   }
 
-  void openVocabulary() {
-    // TODO: Navigate to vocabulary
-    Get.snackbar(
-      "Coming Soon",
-      "Vocabulary feature will be available soon!",
-      snackPosition: SnackPosition.BOTTOM,
+  void _showEnterPinDialog(BuildContext context) {
+    final pinController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          "Nhập mã PIN",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: TextField(
+          controller: pinController,
+          decoration: InputDecoration(
+            hintText: "Nhập mã PIN",
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text("Hủy"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final pin = pinController.text.trim();
+              if (pin.isNotEmpty) {
+                Get.back();
+                _joinGameWithPin(pin);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+            ),
+            child: Text(
+              "Tham gia",
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  void _showQRScanner(BuildContext context) {
+    Get.toNamed('/player-game-room', arguments: {'mode': 'scan'});
+  }
+
+  void _joinGameWithPin(String pin) {
+    Get.toNamed('/player-game-room', arguments: {'gamePin': pin, 'mode': 'pin'});
+  }
+
+  void openPlacementTests() {
+    // Navigate to placement tests page
+    Get.toNamed('/placement-tests');
   }
 
   void viewProgress() {

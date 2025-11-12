@@ -1,9 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:quizkahoot/app/modules/single-mode/models/start_quiz_request.dart';
 import 'package:quizkahoot/app/modules/single-mode/models/start_quiz_response.dart';
-import 'package:quizkahoot/app/modules/single-mode/models/submit_answer_request.dart';
-import 'package:quizkahoot/app/modules/single-mode/models/submit_answer_response.dart';
-import 'package:quizkahoot/app/modules/single-mode/models/finish_quiz_response.dart';
+import 'package:quizkahoot/app/modules/single-mode/models/submit_all_answers_request.dart';
+import 'package:quizkahoot/app/modules/single-mode/models/submit_all_answers_response.dart';
 import 'package:retrofit/retrofit.dart';
 
 part 'single_mode_api.g.dart';
@@ -15,9 +14,6 @@ abstract class SingleModeApi {
   @POST('/quizattempt/single/start')
   Future<StartQuizResponse> startQuiz(@Body() StartQuizRequest request);
 
-  @POST('/quizattemptdetail')
-  Future<SubmitAnswerResponse> submitAnswer(@Body() SubmitAnswerRequest request);
-
-  @POST('/quizattempt/{attemptId}/finish')
-  Future<FinishQuizResponse> finishQuiz(@Path('attemptId') String attemptId);
+  @POST('/quizattemptdetail/submit')
+  Future<SubmitAllAnswersResponse> submitAllAnswers(@Body() SubmitAllAnswersRequest request);
 }

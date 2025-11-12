@@ -652,47 +652,66 @@ class HomeView extends GetView<HomeController> {
                 SizedBox(height: UtilsReponsive.height(16, context)),
                 
                 // Difficulty Dropdown
-                TextConstant.subTile1(
-                  context,
-                  text: "Độ khó",
-                  color: Colors.black,
-                  fontWeight: FontWeight.w600,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextConstant.subTile1(
+                      context,
+                      text: "Difficulty Range",
+                      color: Colors.black,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    SizedBox(height: UtilsReponsive.height(4, context)),
+                    TextConstant.subTile4(
+                      context,
+                      text: "Select difficulty range (e.g., 70-100)",
+                      color: Colors.grey[600]!,
+                      size: 10,
+                    ),
+                  ],
                 ),
                 SizedBox(height: UtilsReponsive.height(8, context)),
-                Obx(() => Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[300]!),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: controller.selectedDifficulty.value,
-                      isExpanded: true,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: UtilsReponsive.width(12, context),
-                      ),
-                      icon: Icon(
-                        Icons.arrow_drop_down,
-                        color: ColorsManager.primary,
-                      ),
-                      items: controller.difficultyOptions.map((String difficulty) {
-                        return DropdownMenuItem<String>(
-                          value: difficulty,
-                          child: TextConstant.subTile2(
-                            context,
-                            text: difficulty,
-                            color: Colors.black,
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        if (newValue != null) {
-                          controller.selectedDifficulty.value = newValue;
-                        }
-                      },
+                Obx(() {
+                  // Ensure value is valid, fallback to first option if not
+                  final currentValue = controller.difficultyOptions.contains(controller.selectedDifficulty.value)
+                      ? controller.selectedDifficulty.value
+                      : controller.difficultyOptions.first;
+                  
+                  return Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ),
-                )),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: currentValue,
+                        isExpanded: true,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: UtilsReponsive.width(12, context),
+                        ),
+                        icon: Icon(
+                          Icons.arrow_drop_down,
+                          color: ColorsManager.primary,
+                        ),
+                        items: controller.difficultyOptions.map((String difficulty) {
+                          return DropdownMenuItem<String>(
+                            value: difficulty,
+                            child: TextConstant.subTile2(
+                              context,
+                              text: difficulty,
+                              color: Colors.black,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            controller.selectedDifficulty.value = newValue;
+                          }
+                        },
+                      ),
+                    ),
+                  );
+                }),
                 SizedBox(height: UtilsReponsive.height(16, context)),
                 
                 // Topic Content TextField

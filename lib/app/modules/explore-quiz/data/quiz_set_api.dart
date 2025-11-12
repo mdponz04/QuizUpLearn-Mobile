@@ -8,7 +8,7 @@ part 'quiz_set_api.g.dart';
 abstract class QuizSetApi {
   factory QuizSetApi(Dio dio, {required String? baseUrl}) = _QuizSetApi;
   
-  @GET('/quizset')
+  @GET('/quizset/published')
   Future<QuizSetResponse> getQuizSets();
   
   @GET('/quizset/creator/{userId}')

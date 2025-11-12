@@ -4,11 +4,11 @@ import 'package:quizkahoot/app/resource/color_manager.dart';
 import 'package:quizkahoot/app/resource/reponsive_utils.dart';
 import 'package:quizkahoot/app/resource/text_style.dart';
 
-import '../controllers/explore_quiz_controller.dart';
-import '../models/quiz_set_model.dart';
+import '../controllers/placement_tests_controller.dart';
+import '../../explore-quiz/models/quiz_set_model.dart';
 
-class ExploreQuizView extends GetView<ExploreQuizController> {
-  const ExploreQuizView({super.key});
+class PlacementTestsView extends GetView<PlacementTestsController> {
+  const PlacementTestsView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +16,7 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
       appBar: AppBar(
         title: TextConstant.titleH2(
           context,
-          text: "Explore Quiz",
+          text: "Placement Tests",
           color: ColorsManager.primary,
           fontWeight: FontWeight.bold,
         ),
@@ -72,7 +72,7 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
             child: TextField(
               onChanged: controller.searchQuizSets,
               decoration: InputDecoration(
-                hintText: "Search quizzes...",
+                hintText: "Search placement tests...",
                 prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
                 suffixIcon: Obx(() => controller.searchQuery.value.isNotEmpty
                     ? IconButton(
@@ -144,7 +144,7 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
           SizedBox(height: UtilsReponsive.height(16, context)),
           TextConstant.subTile1(
             context,
-            text: "Loading quiz sets...",
+            text: "Loading placement tests...",
             color: Colors.grey[600]!,
           ),
         ],
@@ -165,7 +165,7 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
           SizedBox(height: UtilsReponsive.height(16, context)),
           TextConstant.titleH3(
             context,
-            text: "No quiz sets found",
+            text: "No placement tests found",
             color: Colors.grey[600]!,
           ),
           SizedBox(height: UtilsReponsive.height(8, context)),
@@ -211,8 +211,7 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => controller.startQuiz(quizSet)
-              ,
+          onTap: () => controller.startQuiz(quizSet),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
@@ -295,12 +294,12 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
                             vertical: UtilsReponsive.height(4, context),
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.green ,
+                            color: Colors.green,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: TextConstant.subTile4(
                             context,
-                            text:  "ACTIVE",
+                            text: "ACTIVE",
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             size: 8,
@@ -504,3 +503,4 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
     );
   }
 }
+

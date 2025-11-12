@@ -5,9 +5,8 @@ import 'package:quizkahoot/app/data/base_response.dart';
 import 'package:quizkahoot/app/modules/single-mode/data/single_mode_api.dart';
 import 'package:quizkahoot/app/modules/single-mode/models/start_quiz_request.dart';
 import 'package:quizkahoot/app/modules/single-mode/models/start_quiz_response.dart';
-import 'package:quizkahoot/app/modules/single-mode/models/submit_answer_request.dart';
-import 'package:quizkahoot/app/modules/single-mode/models/submit_answer_response.dart';
-import 'package:quizkahoot/app/modules/single-mode/models/finish_quiz_response.dart' as finish;
+import 'package:quizkahoot/app/modules/single-mode/models/submit_all_answers_request.dart';
+import 'package:quizkahoot/app/modules/single-mode/models/submit_all_answers_response.dart';
 
 class SingleModeService {
   SingleModeService({required this.singleModeApi});
@@ -29,34 +28,18 @@ class SingleModeService {
     }
   }
 
-  Future<BaseResponse<SubmitAnswerResponse>> submitAnswer(SubmitAnswerRequest request) async {
+  Future<BaseResponse<SubmitAllAnswersResponse>> submitAllAnswers(SubmitAllAnswersRequest request) async {
     try {
-      final response = await singleModeApi.submitAnswer(request);
-      log("Submit answer response: ${response.toString()}");
+      final response = await singleModeApi.submitAllAnswers(request);
+      log("Submit all answers response: ${response.toString()}");
       return BaseResponse(
         isSuccess: true,
-        message: 'Answer submitted successfully',
+        message: 'Answers submitted successfully',
         data: response,
       );
     } on DioException catch (e) {
       return BaseResponse.error(
-        e.response?.data['message'] ?? 'An error occurred while submitting answer',
-      );
-    }
-  }
-
-  Future<BaseResponse<finish.Data>> finishQuiz(String attemptId) async {
-    try {
-      final response = await singleModeApi.finishQuiz(attemptId);
-      log("Finish quiz response: ${response.toString()}");
-      return BaseResponse(
-        isSuccess: true,
-        message: 'Quiz completed successfully',
-        data: response.data,
-      );
-    } on DioException catch (e) {
-      return BaseResponse.error(
-        e.response?.data['message'] ?? 'An error occurred while finishing quiz',
+        e.response?.data['message'] ?? 'An error occurred while submitting answers',
       );
     }
   }

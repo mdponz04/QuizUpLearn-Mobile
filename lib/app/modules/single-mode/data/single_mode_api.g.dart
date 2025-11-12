@@ -2,6 +2,8 @@
 
 part of 'single_mode_api.dart';
 
+// dart format off
+
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -46,53 +48,28 @@ class _SingleModeApi implements SingleModeApi {
   }
 
   @override
-  Future<SubmitAnswerResponse> submitAnswer(SubmitAnswerRequest request) async {
+  Future<SubmitAllAnswersResponse> submitAllAnswers(
+    SubmitAllAnswersRequest request,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(request.toJson());
-    final _options = _setStreamType<SubmitAnswerResponse>(
+    final _options = _setStreamType<SubmitAllAnswersResponse>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/quizattemptdetail',
+            '/quizattemptdetail/submit',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late SubmitAnswerResponse _value;
+    late SubmitAllAnswersResponse _value;
     try {
-      _value = SubmitAnswerResponse.fromJson(_result.data!);
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
-      rethrow;
-    }
-    return _value;
-  }
-
-  @override
-  Future<FinishQuizResponse> finishQuiz(String attemptId) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<FinishQuizResponse>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/quizattempt/${attemptId}/finish',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late FinishQuizResponse _value;
-    try {
-      _value = FinishQuizResponse.fromJson(_result.data!);
+      _value = SubmitAllAnswersResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -127,3 +104,5 @@ class _SingleModeApi implements SingleModeApi {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
+
+// dart format on

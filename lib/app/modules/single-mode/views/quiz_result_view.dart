@@ -4,7 +4,7 @@ import 'package:quizkahoot/app/resource/color_manager.dart';
 import 'package:quizkahoot/app/resource/reponsive_utils.dart';
 import 'package:quizkahoot/app/resource/text_style.dart';
 
-import '../models/finish_quiz_response.dart';
+import '../models/submit_all_answers_response.dart';
 
 class QuizResultView extends StatelessWidget {
   final Data result;
@@ -138,9 +138,9 @@ class QuizResultView extends StatelessWidget {
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
             ),
-            child:           TextConstant.subTile2(
+            child: TextConstant.subTile2(
             context,
-            text: result.rank ?? 'Unknown',
+            text: result.status ?? 'Completed',
             color: Colors.white,
             fontWeight: FontWeight.bold,
             size: 14,
@@ -297,15 +297,15 @@ class QuizResultView extends StatelessWidget {
             Colors.red,
           ),
           
-          SizedBox(height: UtilsReponsive.height(12, context)),
-          
-          _buildStatRow(
-            context,
-            "Time Spent",
-            result.formattedTimeSpent,
-            Icons.timer,
-            Colors.orange,
-          ),
+          // Time Spent - not available in new response
+          // SizedBox(height: UtilsReponsive.height(12, context)),
+          // _buildStatRow(
+          //   context,
+          //   "Time Spent",
+          //   result.formattedTimeSpent,
+          //   Icons.timer,
+          //   Colors.orange,
+          // ),
         ],
       ),
     );
@@ -353,6 +353,11 @@ class QuizResultView extends StatelessWidget {
   }
 
   Widget _buildImprovementSection(BuildContext context) {
+    // Show answer results if available
+    if (result.answerResults == null || result.answerResults!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
     return Container(
       padding: EdgeInsets.all(UtilsReponsive.width(20, context)),
       decoration: BoxDecoration(
@@ -369,17 +374,17 @@ class QuizResultView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-        Row(
-          children: [
-            Icon(
-              (result.improvement?.isImprovement ?? false) ? Icons.trending_up : Icons.trending_down,
-              color: (result.improvement?.isImprovement ?? false) ? Colors.green : Colors.red,
-              size: UtilsReponsive.height(20, context),
-            ),
+          Row(
+            children: [
+              Icon(
+                Icons.quiz,
+                color: ColorsManager.primary,
+                size: UtilsReponsive.height(20, context),
+              ),
               SizedBox(width: UtilsReponsive.width(8, context)),
               TextConstant.titleH3(
                 context,
-                text: "Performance",
+                text: "Answer Results",
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
                 size: 18,
@@ -389,47 +394,61 @@ class QuizResultView extends StatelessWidget {
           
           SizedBox(height: UtilsReponsive.height(16, context)),
           
+          // Show summary of correct/wrong
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextConstant.subTile3(
-                      context,
-                      text: "Previous Score",
-                      color: Colors.grey[600]!,
-                      size: 12,
-                    ),
-                    TextConstant.subTile1(
-                      context,
-                      text: "${result.improvement?.previousScore ?? 0}",
-                      color: Colors.grey[700]!,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ],
+                child: _buildAnswerResultSummary(
+                  context,
+                  "Correct",
+                  "${result.correctAnswers ?? 0}",
+                  Colors.green,
                 ),
               ),
+              SizedBox(width: UtilsReponsive.width(12, context)),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    TextConstant.subTile3(
-                      context,
-                      text: "Difference",
-                      color: Colors.grey[600]!,
-                      size: 12,
-                    ),
-                    TextConstant.subTile1(
-                      context,
-                      text: "${(result.improvement?.isImprovement ?? false) ? '+' : ''}${result.improvement?.scoreDifference ?? 0}",
-                      color: (result.improvement?.isImprovement ?? false) ? Colors.green : Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ],
+                child: _buildAnswerResultSummary(
+                  context,
+                  "Wrong",
+                  "${result.wrongAnswers ?? 0}",
+                  Colors.red,
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnswerResultSummary(
+    BuildContext context,
+    String label,
+    String value,
+    Color color,
+  ) {
+    return Container(
+      padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          TextConstant.titleH3(
+            context,
+            text: value,
+            color: color,
+            fontWeight: FontWeight.bold,
+            size: 24,
+          ),
+          SizedBox(height: UtilsReponsive.height(4, context)),
+          TextConstant.subTile3(
+            context,
+            text: label,
+            color: Colors.grey[700]!,
+            size: 12,
           ),
         ],
       ),
@@ -501,28 +520,26 @@ class QuizResultView extends StatelessWidget {
   }
 
   IconData _getRankIcon() {
-    switch ((result.rank ?? '').toLowerCase()) {
-      case 'gold':
-        return Icons.emoji_events;
-      case 'silver':
-        return Icons.workspace_premium;
-      case 'bronze':
-        return Icons.military_tech;
-      default:
-        return Icons.star;
+    // Use status or score to determine icon
+    final accuracy = result.accuracy ?? 0.0;
+    if (accuracy >= 80) {
+      return Icons.emoji_events;
+    } else if (accuracy >= 60) {
+      return Icons.workspace_premium;
+    } else {
+      return Icons.star;
     }
   }
 
   Color _getRankColor() {
-    switch ((result.rank ?? '').toLowerCase()) {
-      case 'gold':
-        return Colors.amber;
-      case 'silver':
-        return Colors.grey[400]!;
-      case 'bronze':
-        return Colors.orange[700]!;
-      default:
-        return ColorsManager.primary;
+    // Use status or score to determine color
+    final accuracy = result.accuracy ?? 0.0;
+    if (accuracy >= 80) {
+      return Colors.amber;
+    } else if (accuracy >= 60) {
+      return Colors.grey[400]!;
+    } else {
+      return ColorsManager.primary;
     }
   }
 }

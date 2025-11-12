@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:quizkahoot/app/resource/color_manager.dart';
 import 'package:quizkahoot/app/resource/reponsive_utils.dart';
 import 'package:quizkahoot/app/resource/text_style.dart';
@@ -256,7 +257,7 @@ class QuizPlayingView extends GetView<SingleModeController> {
   }
 
   Widget _buildAudioPlayer(BuildContext context) {
-    return Container(
+    return Obx(() => Container(
       padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
       decoration: BoxDecoration(
         color: ColorsManager.primary.withOpacity(0.1),
@@ -264,35 +265,100 @@ class QuizPlayingView extends GetView<SingleModeController> {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.play_circle_filled,
-            color: ColorsManager.primary,
-            size: UtilsReponsive.height(24, context),
+          GestureDetector(
+            onTap: controller.toggleAudio,
+            child: Container(
+              padding: EdgeInsets.all(UtilsReponsive.width(4, context)),
+              child: controller.isAudioLoading.value
+                  ? SizedBox(
+                      width: UtilsReponsive.height(24, context),
+                      height: UtilsReponsive.height(24, context),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: ColorsManager.primary,
+                      ),
+                    )
+                  : Icon(
+                      controller.isAudioPlaying.value
+                          ? Icons.pause_circle_filled
+                          : Icons.play_circle_filled,
+                      color: ColorsManager.primary,
+                      size: UtilsReponsive.height(32, context),
+                    ),
+            ),
           ),
-          SizedBox(width: UtilsReponsive.width(8, context)),
-          TextConstant.subTile3(
-            context,
-            text: "Audio available",
-            color: ColorsManager.primary,
-            fontWeight: FontWeight.w600,
-            size: 12,
+          SizedBox(width: UtilsReponsive.width(12, context)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextConstant.subTile3(
+                  context,
+                  text: controller.isAudioPlaying.value
+                      ? "Playing audio..."
+                      : "Tap to play audio",
+                  color: ColorsManager.primary,
+                  fontWeight: FontWeight.w600,
+                  size: 12,
+                ),
+              ],
+            ),
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildImage(BuildContext context) {
+    final imageUrl = controller.currentQuestion.value?.imageUrl;
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        height: UtilsReponsive.height(200, context),
+        constraints: BoxConstraints(
+          maxHeight: UtilsReponsive.height(300, context),
+        ),
         width: double.infinity,
-        color: Colors.grey[200],
-        child: Icon(
-          Icons.image,
-          color: Colors.grey[400],
-          size: UtilsReponsive.height(48, context),
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
+          fit: BoxFit.contain,
+          placeholder: (context, url) => Container(
+            height: UtilsReponsive.height(200, context),
+            color: Colors.grey[200],
+            child: Center(
+              child: CircularProgressIndicator(
+                color: ColorsManager.primary,
+              ),
+            ),
+          ),
+          errorWidget: (context, url, error) => Container(
+            height: UtilsReponsive.height(200, context),
+            color: Colors.grey[200],
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.broken_image,
+                  color: Colors.grey[400],
+                  size: UtilsReponsive.height(48, context),
+                ),
+                SizedBox(height: UtilsReponsive.height(8, context)),
+                TextConstant.subTile3(
+                  context,
+                  text: "Failed to load image",
+                  color: Colors.grey[600]!,
+                  size: 12,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -371,7 +437,9 @@ class QuizPlayingView extends GetView<SingleModeController> {
                 Expanded(
                   child: TextConstant.subTile1(
                     context,
-                    text: option.optionText ?? '',
+                    text: (option.optionText?.isNotEmpty == true) 
+                        ? option.optionText! 
+                        : 'Option ${optionLabelString}',
                     color: isSelected ? Colors.white : Colors.black,
                     size: 15,
                   ),
@@ -449,13 +517,11 @@ class QuizPlayingView extends GetView<SingleModeController> {
           
           SizedBox(width: UtilsReponsive.width(12, context)),
           
-          // Submit button
+          // Next/Finish button
           Expanded(
             flex: 2,
             child: ElevatedButton(
-              onPressed: controller.selectedAnswer.value.isNotEmpty 
-                  ? controller.submitAnswer 
-                  : null,
+              onPressed: controller.nextQuestion,
               style: ElevatedButton.styleFrom(
                 backgroundColor: ColorsManager.primary,
                 padding: EdgeInsets.symmetric(

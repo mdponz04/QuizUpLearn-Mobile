@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -8,7 +9,7 @@ import 'package:quizkahoot/app/modules/single-mode/data/single_mode_api.dart';
 import 'package:quizkahoot/app/modules/single-mode/data/single_mode_service.dart';
 import 'package:quizkahoot/app/modules/single-mode/models/start_quiz_request.dart';
 import 'package:quizkahoot/app/modules/single-mode/models/start_quiz_response.dart';
-import 'package:quizkahoot/app/modules/single-mode/models/submit_answer_request.dart';
+import 'package:quizkahoot/app/modules/single-mode/models/submit_all_answers_request.dart';
 import 'package:quizkahoot/app/service/basecommon.dart';
 
 const baseUrl = 'https://qul-api.onrender.com/api';
@@ -32,6 +33,11 @@ class SingleModeController extends GetxController {
   // Timer
   Timer? _timer;
   
+  // Audio player
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  var isAudioPlaying = false.obs;
+  var isAudioLoading = false.obs;
+  
   // User info
   String? userId;
 
@@ -40,11 +46,28 @@ class SingleModeController extends GetxController {
     super.onInit();
     _initializeDio();
     _getUserId();
+    _setupAudioPlayer();
+  }
+  
+  void _setupAudioPlayer() {
+    // Listen to player state changes
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      isAudioPlaying.value = state == PlayerState.playing;
+      if (state == PlayerState.playing || state == PlayerState.completed) {
+        isAudioLoading.value = false;
+      }
+    });
+    
+    // Listen to completion
+    _audioPlayer.onPlayerComplete.listen((_) {
+      isAudioPlaying.value = false;
+    });
   }
 
   @override
   void onClose() {
     _timer?.cancel();
+    _audioPlayer.dispose();
     super.onClose();
   }
 
@@ -128,6 +151,9 @@ class SingleModeController extends GetxController {
       return;
     }
     
+    // Stop current audio if playing
+    stopAudio();
+    
     final question = quizData.value!.data!.questions![currentQuestionIndex.value];
     currentQuestion.value = question;
     selectedAnswer.value = userAnswers[question.id ?? ''] ?? '';
@@ -135,6 +161,61 @@ class SingleModeController extends GetxController {
     // Record question start time
     if (question.id != null) {
       questionStartTimes[question.id!] = DateTime.now();
+    }
+  }
+  
+  Future<void> playAudio() async {
+    final audioUrl = currentQuestion.value?.audioUrl;
+    if (audioUrl == null || audioUrl.isEmpty) {
+      Get.snackbar(
+        'Info',
+        'No audio available for this question',
+        backgroundColor: Colors.blue,
+        colorText: Colors.white,
+      );
+      return;
+    }
+    
+    try {
+      isAudioLoading.value = true;
+      await _audioPlayer.play(UrlSource(audioUrl));
+    } catch (e) {
+      log('Error playing audio: $e');
+      isAudioLoading.value = false;
+      isAudioPlaying.value = false;
+      Get.snackbar(
+        'Error',
+        'Failed to play audio. Please try again.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+  
+  Future<void> pauseAudio() async {
+    try {
+      await _audioPlayer.pause();
+      isAudioPlaying.value = false;
+    } catch (e) {
+      log('Error pausing audio: $e');
+    }
+  }
+  
+  Future<void> stopAudio() async {
+    try {
+      await _audioPlayer.stop();
+      isAudioPlaying.value = false;
+      isAudioLoading.value = false;
+    } catch (e) {
+      log('Error stopping audio: $e');
+    }
+  }
+  
+  Future<void> toggleAudio() async {
+    if (isAudioPlaying.value) {
+      await pauseAudio();
+    } else {
+      await playAudio();
     }
   }
 
@@ -151,69 +232,34 @@ class SingleModeController extends GetxController {
 
   void selectAnswer(String answer) {
     selectedAnswer.value = answer;
+    // Save answer locally when selected
+    if (currentQuestion.value?.id != null) {
+      userAnswers[currentQuestion.value!.id!] = answer;
+    }
   }
 
-  Future<void> submitAnswer() async {
-    if (selectedAnswer.value.isEmpty || currentQuestion.value == null) {
-      Get.snackbar(
-        'Warning',
-        'Please select an answer',
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-      );
-      return;
-    }
-
-    try {
-      // Calculate time spent on this question
-      final questionId = currentQuestion.value!.id ?? '';
-      final questionStartTime = questionStartTimes[questionId];
-      final timeSpent = questionStartTime != null 
-          ? DateTime.now().difference(questionStartTime).inSeconds
-          : 0;
-
-      final request = SubmitAnswerRequest(
-        attemptId: quizData.value!.data?.attemptId ?? '',
-        questionId: questionId,
-        userAnswer: selectedAnswer.value,
-        timeSpent: timeSpent,
-      );
-
-      final response = await singleModeService.submitAnswer(request);
-      
-      if (response.isSuccess && response.data != null) {
-        // Store user answer
-        userAnswers[questionId] = selectedAnswer.value;
-        
-        // Move to next question
-        _nextQuestion();
-      } else {
-        Get.snackbar(
-          'Error',
-          response.message,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-      }
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to submit answer. Please try again.',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+  void saveCurrentAnswer() {
+    // Save current answer before moving to next question
+    if (currentQuestion.value?.id != null && selectedAnswer.value.isNotEmpty) {
+      userAnswers[currentQuestion.value!.id!] = selectedAnswer.value;
     }
   }
 
   void _nextQuestion() {
+    // Save current answer before moving
+    saveCurrentAnswer();
+    
     if (quizData.value?.data?.questions != null &&
         currentQuestionIndex.value < quizData.value!.data!.questions!.length - 1) {
       currentQuestionIndex.value++;
-      selectedAnswer.value = '';
       _loadCurrentQuestion();
     } else {
       _finishQuiz();
     }
+  }
+
+  void nextQuestion() {
+    _nextQuestion();
   }
 
   Future<void> _finishQuiz() async {
@@ -221,12 +267,46 @@ class SingleModeController extends GetxController {
     
     try {
       _timer?.cancel();
+      isLoading.value = true;
       
-      final response = await singleModeService.finishQuiz(quizData.value!.data?.attemptId ?? '');
+      // Save current answer if any
+      saveCurrentAnswer();
       
-      if (response.isSuccess && response.data != null) {
+      // Calculate time spent for all questions
+      final attemptId = quizData.value!.data?.attemptId ?? '';
+      final questions = quizData.value!.data?.questions ?? [];
+      
+      final answers = <AnswerDetail>[];
+      
+      for (var question in questions) {
+        final questionId = question.id ?? '';
+        final userAnswer = userAnswers[questionId] ?? '';
+        final startTime = questionStartTimes[questionId];
+        
+        // Calculate time spent (if startTime exists, use it; otherwise 0)
+        int timeSpent = 0;
+        if (startTime != null) {
+          timeSpent = DateTime.now().difference(startTime).inSeconds;
+        }
+        
+        answers.add(AnswerDetail(
+          questionId: questionId,
+          userAnswer: userAnswer,
+          timeSpent: timeSpent,
+        ));
+      }
+      
+      final request = SubmitAllAnswersRequest(
+        attemptId: attemptId,
+        answers: answers,
+      );
+      
+      final response = await singleModeService.submitAllAnswers(request);
+      
+      if (response.isSuccess && response.data != null && response.data!.data != null) {
         isQuizCompleted.value = true;
-        Get.toNamed('/quiz-result', arguments: response.data!);
+        // Pass the response data to result screen
+        Get.toNamed('/quiz-result', arguments: response.data!.data!);
       } else {
         Get.snackbar(
           'Error',
@@ -236,16 +316,20 @@ class SingleModeController extends GetxController {
         );
       }
     } catch (e) {
+      log(e.toString());
       Get.snackbar(
         'Error',
         'Failed to finish quiz. Please try again.',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
+    } finally {
+      isLoading.value = false;
     }
   }
 
   void skipQuestion() {
+    // Save empty answer for skipped question
     if (currentQuestion.value != null && currentQuestion.value!.id != null) {
       userAnswers[currentQuestion.value!.id!] = '';
       _nextQuestion();

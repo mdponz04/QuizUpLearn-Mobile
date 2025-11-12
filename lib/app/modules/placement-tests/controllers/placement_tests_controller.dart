@@ -15,7 +15,7 @@ import 'package:quizkahoot/app/service/basecommon.dart';
 
 const baseUrl = 'https://qul-api.onrender.com/api';
 
-class ExploreQuizController extends GetxController {
+class PlacementTestsController extends GetxController {
   final quizSetService = QuizSetService(quizSetApi: QuizSetApi(Dio(), baseUrl: baseUrl));
   late GameService gameService;
   
@@ -170,7 +170,6 @@ class ExploreQuizController extends GetxController {
     }
   }
 
-
   Future<void> refreshQuizSets() async {
     await loadQuizSets();
   }
@@ -210,3 +209,4 @@ class ExploreQuizController extends GetxController {
     }
   }
 }
+

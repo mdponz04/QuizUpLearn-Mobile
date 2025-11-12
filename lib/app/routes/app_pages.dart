@@ -22,6 +22,8 @@ import '../modules/tab-home/bindings/tab_home_binding.dart';
 import '../modules/tab-home/views/tab_home_view.dart';
 import '../modules/explore-quiz/bindings/explore_quiz_binding.dart';
 import '../modules/explore-quiz/views/explore_quiz_view.dart';
+import '../modules/placement-tests/bindings/placement_tests_binding.dart';
+import '../modules/placement-tests/views/placement_tests_view.dart';
 import '../modules/single-mode/bindings/single_mode_binding.dart';
 import '../modules/single-mode/views/quiz_playing_view.dart';
 import '../modules/single-mode/views/quiz_result_view.dart';
@@ -90,6 +92,11 @@ class AppPages {
       name: _Paths.EXPLORE_QUIZ,
       page: () => const ExploreQuizView(),
       binding: ExploreQuizBinding(),
+    ),
+    GetPage(
+      name: _Paths.PLACEMENT_TESTS,
+      page: () => const PlacementTestsView(),
+      binding: PlacementTestsBinding(),
     ),
     GetPage(
       name: _Paths.QUIZ_PLAYING,
