@@ -97,10 +97,10 @@ class TabHomeView extends StatelessWidget {
                 Expanded(
                   child: _buildActionCard(
                     context,
-                    "Progress",
+                    "History",
                     'assets/images/progress.png',
                     Colors.purple,
-                    tabController.viewProgress,
+                    tabController.viewHistory,
                   ),
                 ),
               ],

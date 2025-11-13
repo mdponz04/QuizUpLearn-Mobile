@@ -118,13 +118,9 @@ class TabHomeController extends GetxController {
     Get.toNamed('/placement-tests');
   }
 
-  void viewProgress() {
-    // TODO: Navigate to detailed progress
-    Get.snackbar(
-      "Coming Soon",
-      "Detailed progress will be available soon!",
-      snackPosition: SnackPosition.BOTTOM,
-    );
+  void viewHistory() {
+    // Navigate to quiz history page
+    Get.toNamed('/quiz-history');
   }
 
   void showNotifications() {

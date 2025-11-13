@@ -1,1 +1,11 @@
 build
+.dart_tool
+
+ios
+linux
+macos
+.flutter-plugins
+pubspec.lock
+GameHub.cs
+GAME_HUB_COMPARISON.md
+.flutter-plugins-dependencies

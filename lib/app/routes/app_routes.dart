@@ -19,6 +19,7 @@ abstract class Routes {
   static const QUIZ_RESULT = _Paths.QUIZ_RESULT;
   static const GAME_ROOM = _Paths.GAME_ROOM;
   static const PLAYER_GAME_ROOM = _Paths.PLAYER_GAME_ROOM;
+  static const QUIZ_HISTORY = _Paths.QUIZ_HISTORY;
 }
 
 abstract class _Paths {
@@ -39,4 +40,5 @@ abstract class _Paths {
   static const QUIZ_RESULT = '/quiz-result';
   static const GAME_ROOM = '/game-room';
   static const PLAYER_GAME_ROOM = '/player-game-room';
+  static const QUIZ_HISTORY = '/quiz-history';
 }
