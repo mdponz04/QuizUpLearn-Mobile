@@ -16,8 +16,8 @@ class CreateGameResponse {
   factory CreateGameResponse.fromJson(Map<String, dynamic> json) {
     return CreateGameResponse(
       success: json['success'] ?? false,
-      data: json['data'] != null && json['data']['data'] != null
-          ? GameData.fromJson(json['data']['data'])
+      data: json['data'] != null && json['data'] != null
+          ? GameData.fromJson(json['data'])
           : null,
       message: json['message'],
       error: json['error'],

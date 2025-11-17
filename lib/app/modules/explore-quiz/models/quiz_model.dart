@@ -37,23 +37,29 @@ class QuizModel {
 
   factory QuizModel.fromJson(Map<String, dynamic> json) {
     return QuizModel(
-      id: json['id'],
-      quizSetId: json['quizSetId'],
-      questionText: json['questionText'],
-      correctAnswer: json['correctAnswer'],
-      audioURL: json['audioURL'],
-      imageURL: json['imageURL'],
-      toeicPart: json['toeicPart'],
-      timesAnswered: json['timesAnswered'],
-      timesCorrect: json['timesCorrect'],
-      orderIndex: json['orderIndex'],
-      isActive: json['isActive'],
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
-      deletedAt: DateTime.parse(json['deletedAt']),
-      answerOptions: (json['answerOptions'] as List)
-          .map((item) => AnswerOptionModel.fromJson(item))
-          .toList(),
+      id: json['id']?.toString() ?? '',
+      quizSetId: json['quizSetId']?.toString() ?? '',
+      questionText: json['questionText']?.toString() ?? '',
+      correctAnswer: json['correctAnswer']?.toString() ?? '',
+      audioURL: json['audioURL']?.toString() ?? '',
+      imageURL: json['imageURL']?.toString() ?? '',
+      toeicPart: json['toeicPart']?.toString() ?? '',
+      timesAnswered: json['timesAnswered'] ?? 0,
+      timesCorrect: json['timesCorrect'] ?? 0,
+      orderIndex: json['orderIndex'] ?? 0,
+      isActive: json['isActive'] ?? false,
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'].toString())
+          : DateTime.now(),
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'].toString())
+          : DateTime.now(),
+      deletedAt: json['deletedAt'] != null
+          ? DateTime.parse(json['deletedAt'].toString())
+          : DateTime.now(),
+      answerOptions: (json['answerOptions'] as List?)
+          ?.map((item) => AnswerOptionModel.fromJson(item))
+          .toList() ?? [],
     );
   }
 

@@ -175,23 +175,34 @@ class QuizHistoryView extends GetView<QuizHistoryController> {
             ? Colors.orange
             : Colors.red;
 
-    return Container(
-      margin: EdgeInsets.only(bottom: UtilsReponsive.height(12, context)),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.grey[300]!,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
+    return InkWell(
+      onTap: () {
+        Get.toNamed(
+          '/quiz-history-detail',
+          parameters: {
+            'attemptId': history.id,
+            'quizSetId': history.quizSetId,
+          },
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: EdgeInsets.only(bottom: UtilsReponsive.height(12, context)),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.grey[300]!,
+            width: 1,
           ),
-        ],
-      ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
       child: Padding(
         padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
         child: Column(
@@ -302,6 +313,7 @@ class QuizHistoryView extends GetView<QuizHistoryController> {
             ],
           ],
         ),
+      ),
       ),
     );
   }

@@ -30,7 +30,7 @@ class QuizHistoryService {
         e.response?.data['message'] ?? 'An error occurred while loading history',
       );
     } catch (e) {
-      log("Unexpected error: ${e.toString()}");
+      log("Error getting user history: ${e.toString()}");
       return BaseResponse.error('An unexpected error occurred');
     }
   }

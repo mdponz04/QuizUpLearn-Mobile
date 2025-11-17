@@ -175,6 +175,9 @@ class HomeController extends GetxController {
 
   void startQuiz(QuizSetModel quizSet) {
     // Navigate to Single Mode controller and start quiz
+    Get.lazyPut<SingleModeController>(
+      () => SingleModeController(),
+    );
     final singleModeController = Get.find<SingleModeController>();
     singleModeController.startQuiz(quizSet.id);
   }

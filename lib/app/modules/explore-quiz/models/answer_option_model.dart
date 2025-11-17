@@ -23,15 +23,21 @@ class AnswerOptionModel {
 
   factory AnswerOptionModel.fromJson(Map<String, dynamic> json) {
     return AnswerOptionModel(
-      id: json['id'],
-      quizId: json['quizId'],
-      optionLabel: json['optionLabel'],
-      optionText: json['optionText'],
-      orderIndex: json['orderIndex'],
-      isCorrect: json['isCorrect'],
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
-      deletedAt: DateTime.parse(json['deletedAt']),
+      id: json['id']?.toString() ?? '',
+      quizId: json['quizId']?.toString() ?? '',
+      optionLabel: json['optionLabel']?.toString() ?? '',
+      optionText: json['optionText']?.toString() ?? '',
+      orderIndex: json['orderIndex'] ?? 0,
+      isCorrect: json['isCorrect'] ?? false,
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'].toString())
+          : DateTime.now(),
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'].toString())
+          : DateTime.now(),
+      deletedAt: json['deletedAt'] != null
+          ? DateTime.parse(json['deletedAt'].toString())
+          : DateTime.now(),
     );
   }
 

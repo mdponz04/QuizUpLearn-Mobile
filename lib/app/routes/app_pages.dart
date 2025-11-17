@@ -31,6 +31,8 @@ import '../modules/home/views/game_room_view.dart';
 import '../modules/player-game-room/views/player_game_room_view.dart';
 import '../modules/quiz-history/bindings/quiz_history_binding.dart';
 import '../modules/quiz-history/views/quiz_history_view.dart';
+import '../modules/quiz-history/bindings/quiz_history_detail_binding.dart';
+import '../modules/quiz-history/views/quiz_history_detail_view.dart';
 
 part 'app_routes.dart';
 
@@ -121,6 +123,11 @@ class AppPages {
       name: _Paths.QUIZ_HISTORY,
       page: () => const QuizHistoryView(),
       binding: QuizHistoryBinding(),
+    ),
+    GetPage(
+      name: _Paths.QUIZ_HISTORY_DETAIL,
+      page: () => const QuizHistoryDetailView(),
+      binding: QuizHistoryDetailBinding(),
     ),
   ];
 }
