@@ -9,6 +9,9 @@ import 'package:quizkahoot/app/modules/home/models/generate_quiz_request.dart';
 import 'package:quizkahoot/app/modules/home/data/game_api.dart';
 import 'package:quizkahoot/app/modules/home/data/game_service.dart';
 import 'package:quizkahoot/app/modules/home/models/create_game_request.dart';
+import 'package:quizkahoot/app/modules/home/data/one_vs_one_room_api.dart';
+import 'package:quizkahoot/app/modules/home/data/one_vs_one_room_service.dart';
+import 'package:quizkahoot/app/modules/home/models/create_one_vs_one_room_request.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_api.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_service.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_set_model.dart';
@@ -24,6 +27,7 @@ class HomeController extends GetxController {
   late AIQuizService aiQuizService;
   late QuizSetService quizSetService;
   late GameService gameService;
+  late OneVsOneRoomService oneVsOneRoomService;
   var isLoading = false.obs;
   var isLoadingMyQuiz = false.obs;
   var isLoadingGame = false.obs;
@@ -85,6 +89,7 @@ class HomeController extends GetxController {
     _initializeAIService();
     _initializeQuizSetService();
     _initializeGameService();
+    _initializeOneVsOneRoomService();
     super.onInit();
   }
 
@@ -115,6 +120,14 @@ class HomeController extends GetxController {
     dio.interceptors.add(DioIntercepTorCustom());
     gameService = GameService(
       gameApi: GameApi(dio, baseUrl: baseUrl),
+    );
+  }
+
+  void _initializeOneVsOneRoomService() {
+    Dio dio = Dio();
+    dio.interceptors.add(DioIntercepTorCustom());
+    oneVsOneRoomService = OneVsOneRoomService(
+      oneVsOneRoomApi: OneVsOneRoomApi(dio, baseUrl: baseUrl),
     );
   }
 
@@ -223,6 +236,56 @@ class HomeController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Đã xảy ra lỗi khi tạo phòng game',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> createOneVsOneRoom(QuizSetModel quizSet) async {
+    try {
+      final userId = BaseCommon.instance.userId;
+      if (userId.isEmpty) {
+        Get.snackbar(
+          'Lỗi',
+          'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      isLoadingGame.value = true;
+      
+      // TODO: Get actual username from user info
+      final player1Name = 'Player1'; // Temporary, should get from user profile
+      
+      final request = CreateOneVsOneRoomRequest(
+        player1Name: player1Name,
+        quizSetId: quizSet.id,
+        player1UserId: userId,
+      );
+
+      final response = await oneVsOneRoomService.createRoom(request);
+      isLoadingGame.value = false;
+
+      if (response.isSuccess && response.data != null) {
+        // Navigate to 1vs1 room page
+        Get.toNamed('/one-vs-one-room', arguments: response.data);
+      } else {
+        Get.snackbar(
+          'Lỗi',
+          response.message,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      isLoadingGame.value = false;
+      log('Error creating 1vs1 room: $e');
+      Get.snackbar(
+        'Lỗi',
+        'Đã xảy ra lỗi khi tạo phòng 1vs1',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

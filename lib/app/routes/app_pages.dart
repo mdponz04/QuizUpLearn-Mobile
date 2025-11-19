@@ -29,6 +29,7 @@ import '../modules/single-mode/views/quiz_playing_view.dart';
 import '../modules/single-mode/views/quiz_result_view.dart';
 import '../modules/home/views/game_room_view.dart';
 import '../modules/player-game-room/views/player_game_room_view.dart';
+import '../modules/one-vs-one-room/views/one_vs_one_room_view.dart';
 import '../modules/quiz-history/bindings/quiz_history_binding.dart';
 import '../modules/quiz-history/views/quiz_history_view.dart';
 import '../modules/quiz-history/bindings/quiz_history_detail_binding.dart';
@@ -118,6 +119,10 @@ class AppPages {
     GetPage(
       name: _Paths.PLAYER_GAME_ROOM,
       page: () => const PlayerGameRoomView(),
+    ),
+    GetPage(
+      name: _Paths.ONE_VS_ONE_ROOM,
+      page: () => const OneVsOneRoomView(),
     ),
     GetPage(
       name: _Paths.QUIZ_HISTORY,

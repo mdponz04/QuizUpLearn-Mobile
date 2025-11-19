@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:quizkahoot/app/resource/color_manager.dart';
+import 'package:quizkahoot/app/resource/reponsive_utils.dart';
+import 'package:quizkahoot/app/resource/text_style.dart';
 
 class TabHomeController extends GetxController {
   // User progress data
@@ -17,22 +20,202 @@ class TabHomeController extends GetxController {
   }
 
   void playGame() {
-    showDialog(
-      context: Get.context!,
-      builder: (context) => AlertDialog(
-        title: Text(
-          "Chơi Game",
-          style: TextStyle(
-            color: Colors.orange,
-            fontWeight: FontWeight.bold,
+    _showGameModeDialog(Get.context!);
+  }
+
+  void _showGameModeDialog(BuildContext context) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
+          constraints: BoxConstraints(
+            maxWidth: UtilsReponsive.width(400, context),
           ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Icon(
+                    Icons.videogame_asset,
+                    color: ColorsManager.primary,
+                    size: UtilsReponsive.height(28, context),
+                  ),
+                  SizedBox(width: UtilsReponsive.width(8, context)),
+                  Expanded(
+                    child: TextConstant.titleH2(
+                      context,
+                      text: "Chọn chế độ chơi",
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Get.back(),
+                    icon: Icon(
+                      Icons.close,
+                      color: Colors.grey[600],
+                      size: UtilsReponsive.height(20, context),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: UtilsReponsive.height(24, context)),
+              
+              // Multi Mode Option
+              _buildGameModeOption(
+                context,
+                icon: Icons.people,
+                title: "Multi Player",
+                description: "Nhiều người chơi cùng lúc\nNhập PIN hoặc quét QR để tham gia",
+                color: Colors.purple,
+                onTap: () {
+                  Get.back();
+                  _showMultiPlayerOptions(context);
+                },
+              ),
+              
+              SizedBox(height: UtilsReponsive.height(16, context)),
+              
+              // 1vs1 Mode Option
+              _buildGameModeOption(
+                context,
+                icon: Icons.person,
+                title: "1 vs 1",
+                description: "Đấu trực tiếp với 1 người chơi\nNhập PIN để tham gia",
+                color: Colors.orange,
+                onTap: () {
+                  Get.back();
+                  _showOneVsOneJoinDialog(context);
+                },
+              ),
+              
+              SizedBox(height: UtilsReponsive.height(16, context)),
+              
+              // Cancel Button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Get.back(),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey[300]!),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      vertical: UtilsReponsive.height(12, context),
+                    ),
+                  ),
+                  child: TextConstant.subTile2(
+                    context,
+                    text: "Hủy",
+                    color: Colors.grey[600]!,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGameModeOption(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String description,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: color.withOpacity(0.3),
+              width: 2,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: UtilsReponsive.height(24, context),
+                ),
+              ),
+              SizedBox(width: UtilsReponsive.width(16, context)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextConstant.titleH3(
+                      context,
+                      text: title,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    SizedBox(height: UtilsReponsive.height(4, context)),
+                    TextConstant.subTile3(
+                      context,
+                      text: description,
+                      color: Colors.grey[600]!,
+                      size: 11,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: color,
+                size: UtilsReponsive.height(16, context),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showMultiPlayerOptions(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: TextConstant.titleH2(
+          context,
+          text: "Tham gia Multi Player",
+          color: Colors.black,
+          fontWeight: FontWeight.bold,
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: Icon(Icons.keyboard, color: Colors.orange),
-              title: Text("Nhập mã PIN"),
+              leading: Icon(Icons.keyboard, color: Colors.purple),
+              title: TextConstant.subTile1(
+                context,
+                text: "Nhập mã PIN",
+                color: Colors.black,
+              ),
               onTap: () {
                 Get.back();
                 _showEnterPinDialog(context);
@@ -40,8 +223,12 @@ class TabHomeController extends GetxController {
             ),
             Divider(),
             ListTile(
-              leading: Icon(Icons.qr_code_scanner, color: Colors.orange),
-              title: Text("Quét QR Code"),
+              leading: Icon(Icons.qr_code_scanner, color: Colors.purple),
+              title: TextConstant.subTile1(
+                context,
+                text: "Quét QR Code",
+                color: Colors.black,
+              ),
               onTap: () {
                 Get.back();
                 _showQRScanner(context);
@@ -52,11 +239,182 @@ class TabHomeController extends GetxController {
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: Text("Hủy"),
+            child: TextConstant.subTile2(
+              context,
+              text: "Hủy",
+              color: Colors.grey[600]!,
+            ),
           ),
         ],
       ),
     );
+  }
+
+  void _showOneVsOneJoinDialog(BuildContext context) {
+    final pinController = TextEditingController();
+    final playerNameController = TextEditingController();
+    
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
+          constraints: BoxConstraints(
+            maxWidth: UtilsReponsive.width(400, context),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Icon(
+                      Icons.person,
+                      color: Colors.orange,
+                      size: UtilsReponsive.height(28, context),
+                    ),
+                    SizedBox(width: UtilsReponsive.width(8, context)),
+                    Expanded(
+                      child: TextConstant.titleH2(
+                        context,
+                        text: "Tham gia 1 vs 1",
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Get.back(),
+                      icon: Icon(
+                        Icons.close,
+                        color: Colors.grey[600],
+                        size: UtilsReponsive.height(20, context),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: UtilsReponsive.height(24, context)),
+                
+                // Room PIN
+                TextConstant.subTile1(
+                  context,
+                  text: "Room PIN",
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+                SizedBox(height: UtilsReponsive.height(8, context)),
+                TextField(
+                  controller: pinController,
+                  decoration: InputDecoration(
+                    hintText: "Nhập Room PIN",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(Icons.lock, color: Colors.orange),
+                  ),
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                ),
+                SizedBox(height: UtilsReponsive.height(16, context)),
+                
+                // Player Name
+                TextConstant.subTile1(
+                  context,
+                  text: "Tên người chơi",
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+                SizedBox(height: UtilsReponsive.height(8, context)),
+                TextField(
+                  controller: playerNameController,
+                  decoration: InputDecoration(
+                    hintText: "Nhập tên của bạn",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(Icons.person, color: Colors.orange),
+                  ),
+                ),
+                SizedBox(height: UtilsReponsive.height(24, context)),
+                
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.grey[300]!),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            vertical: UtilsReponsive.height(12, context),
+                          ),
+                        ),
+                        child: TextConstant.subTile2(
+                          context,
+                          text: "Hủy",
+                          color: Colors.grey[600]!,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: UtilsReponsive.width(12, context)),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final pin = pinController.text.trim();
+                          final playerName = playerNameController.text.trim();
+                          if (pin.isNotEmpty && playerName.isNotEmpty) {
+                            Get.back();
+                            _joinOneVsOneRoom(pin, playerName);
+                          } else {
+                            Get.snackbar(
+                              'Lỗi',
+                              'Vui lòng nhập đầy đủ thông tin',
+                              backgroundColor: Colors.red,
+                              colorText: Colors.white,
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            vertical: UtilsReponsive.height(12, context),
+                          ),
+                        ),
+                        child: TextConstant.subTile2(
+                          context,
+                          text: "Tham gia",
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _joinOneVsOneRoom(String roomPin, String playerName) {
+    // Navigate to 1vs1 room view với thông tin Player2
+    Get.toNamed('/one-vs-one-room', arguments: {
+      'roomPin': roomPin,
+      'playerName': playerName,
+      'isPlayer1': false,
+    });
   }
 
   void _showEnterPinDialog(BuildContext context) {

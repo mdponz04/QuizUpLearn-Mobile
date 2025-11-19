@@ -442,7 +442,7 @@ class HomeView extends GetView<HomeController> {
                       child: GestureDetector(
                         onTap: controller.isLoadingGame.value 
                             ? null 
-                            : () => controller.createGameRoom(quizSetModel),
+                            : () => _showGameModeDialog(context, quizSetModel),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -556,6 +556,179 @@ class HomeView extends GetView<HomeController> {
 
   String _formatDate(DateTime date) {
     return "${date.day}/${date.month}/${date.year}";
+  }
+
+  void _showGameModeDialog(BuildContext context, QuizSetModel quizSet) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
+          constraints: BoxConstraints(
+            maxWidth: UtilsReponsive.width(400, context),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Icon(
+                    Icons.videogame_asset,
+                    color: ColorsManager.primary,
+                    size: UtilsReponsive.height(28, context),
+                  ),
+                  SizedBox(width: UtilsReponsive.width(8, context)),
+                  Expanded(
+                    child: TextConstant.titleH2(
+                      context,
+                      text: "Chọn chế độ chơi",
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Get.back(),
+                    icon: Icon(
+                      Icons.close,
+                      color: Colors.grey[600],
+                      size: UtilsReponsive.height(20, context),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: UtilsReponsive.height(24, context)),
+              
+              // Multi Mode Option
+              _buildGameModeOption(
+                context,
+                icon: Icons.people,
+                title: "Multi Player",
+                description: "Nhiều người chơi cùng lúc\nHost tạo phòng, players join bằng PIN",
+                color: Colors.purple,
+                onTap: () {
+                  Get.back();
+                  controller.createGameRoom(quizSet);
+                },
+              ),
+              
+              SizedBox(height: UtilsReponsive.height(16, context)),
+              
+              // 1vs1 Mode Option
+              _buildGameModeOption(
+                context,
+                icon: Icons.person,
+                title: "1 vs 1",
+                description: "Đấu trực tiếp với 1 người chơi\nPlayer1 tạo phòng, Player2 join",
+                color: Colors.orange,
+                onTap: () {
+                  Get.back();
+                  controller.createOneVsOneRoom(quizSet);
+                },
+              ),
+              
+              SizedBox(height: UtilsReponsive.height(16, context)),
+              
+              // Cancel Button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Get.back(),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey[300]!),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      vertical: UtilsReponsive.height(12, context),
+                    ),
+                  ),
+                  child: TextConstant.subTile2(
+                    context,
+                    text: "Hủy",
+                    color: Colors.grey[600]!,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGameModeOption(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String description,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: color.withOpacity(0.3),
+              width: 2,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: UtilsReponsive.height(24, context),
+                ),
+              ),
+              SizedBox(width: UtilsReponsive.width(16, context)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextConstant.titleH3(
+                      context,
+                      text: title,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    SizedBox(height: UtilsReponsive.height(4, context)),
+                    TextConstant.subTile3(
+                      context,
+                      text: description,
+                      color: Colors.grey[600]!,
+                      size: 11,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: color,
+                size: UtilsReponsive.height(16, context),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _showAIGenerateDialog(BuildContext context) {
