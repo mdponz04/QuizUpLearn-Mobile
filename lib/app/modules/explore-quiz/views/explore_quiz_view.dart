@@ -567,12 +567,12 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
               _buildGameModeOption(
                 context,
                 icon: Icons.person,
-                title: "1 vs 1",
-                description: "Đấu trực tiếp với 1 người chơi\nPlayer1 tạo phòng, Player2 join",
+                title: "1 vs 1 / Multiplayer",
+                description: "Đấu trực tiếp hoặc nhiều người chơi\nPlayer1 tạo phòng, Players join",
                 color: Colors.orange,
                 onTap: () {
                   Get.back();
-                  controller.createOneVsOneRoom(quizSet);
+                  controller.showOneVsOneModeDialog(quizSet);
                 },
               ),
               

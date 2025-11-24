@@ -54,6 +54,9 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
   // Player info
   Map<String, dynamic>? _player1Info;
   Map<String, dynamic>? _player2Info;
+  List<Map<String, dynamic>> _playersList = []; // List of all players for multiplayer
+  int? _gameMode; // 0 = 1vs1, 1 = Multiplayer
+  int? _maxPlayers;
   
   // Audio player
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -103,7 +106,7 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
   }
   
   Future<void> _playAudio() async {
-    final audioUrl = _currentQuestion?['audioUrl'] ?? _currentQuestion?['AudioUrl'];
+    final audioUrl = _currentQuestion?['audioUrl'];
     if (audioUrl == null || audioUrl.toString().isEmpty) {
       Get.snackbar(
         'Thông báo',
@@ -191,8 +194,8 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
           // Player1 connect
           await _hubService.player1Connect(_roomPin!);
         } else if (!_isPlayer1 && _roomPin != null && _player2Name != null) {
-          // Player2 join
-          await _hubService.player2Join(_roomPin!, _player2Name!);
+          // Player join (Player2, Player3, ...)
+          await _hubService.playerJoin(_roomPin!, _player2Name!);
         }
       } else {
         setState(() {
@@ -239,6 +242,7 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
             backgroundColor: Colors.green, colorText: Colors.white);
       },
       onPlayer2Joined: (data) {
+        // @deprecated - use onPlayerJoined instead
         setState(() {
           _currentPhase = OneVsOneRoomPhase.waiting;
         });
@@ -246,28 +250,120 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
             backgroundColor: Colors.green, colorText: Colors.white);
       },
       onPlayerJoined: (data) {
-        // Cập nhật thông tin player
+        // Cập nhật thông tin player (new event from Hub)
         log('PlayerJoined: ${data.toString()}');
+        setState(() {
+          _currentPhase = OneVsOneRoomPhase.waiting;
+        });
+        Get.snackbar('Thành công', 'Đã tham gia phòng!',
+            backgroundColor: Colors.green, colorText: Colors.white);
+      },
+      onPlayerJoinedRoom: (data) {
+        // Event broadcast to all players when someone joins
+        final playerName = data['playerName'] ?? '';
+        log('PlayerJoinedRoom: $playerName joined');
+        Get.snackbar('Thông báo', '$playerName đã tham gia phòng',
+            backgroundColor: Colors.blue, colorText: Colors.white);
       },
       onRoomUpdated: (data) {
         setState(() {
-          _player1Info = data['Player1'];
-          _player2Info = data['Player2'];
+          _player1Info = data['player1'];
+          _player2Info = data['player2'];
+          // New fields for multiplayer support
+          // Parse Mode - có thể là số (0/1) hoặc string ("OneVsOne"/"Multiplayer")
+          final modeValue = data['mode'];
+          if (modeValue != null) {
+            if (modeValue is int) {
+              _gameMode = modeValue;
+            } else if (modeValue is String) {
+              final modeStr = modeValue.toString().toLowerCase();
+              if (modeStr == 'Multiplayer' || modeStr.contains('Multi')) {
+                _gameMode = 1;
+              } else {
+                _gameMode = 0; // OneVsOne
+              }
+            } else {
+              _gameMode = int.tryParse(modeValue.toString());
+            }
+          }
+          _maxPlayers = data['maxPlayers'];
+          
+          // Parse Players list if available (for multiplayer)
+          if (data['players'] != null && data['players'] is List) {
+            _playersList = List<Map<String, dynamic>>.from(
+              (data['players'] as List).map((p) => Map<String, dynamic>.from(p))
+            );
+          } else {
+            // Fallback to Player1/Player2 for 1vs1 mode
+            _playersList = [];
+            if (_player1Info != null) _playersList.add(_player1Info!);
+            if (_player2Info != null) _playersList.add(_player2Info!);
+          }
         });
         log('RoomUpdated: ${data.toString()}');
       },
       onRoomReady: (data) {
         setState(() {
-          _currentPhase = OneVsOneRoomPhase.ready;
-          _player1Info = data['Player1'];
-          _player2Info = data['Player2'];
+          _player1Info = data['player1'];
+          _player2Info = data['player2'];
+          
+          // Parse Mode - có thể là số (0/1) hoặc string ("OneVsOne"/"Multiplayer")
+          final modeValue = data['mode'];
+          if (modeValue != null) {
+            if (modeValue is int) {
+              _gameMode = modeValue;
+            } else if (modeValue is String) {
+              final modeStr = modeValue.toString().toLowerCase();
+              if (modeStr == 'multiplayer' || modeStr.contains('multi')) {
+                _gameMode = 1;
+              } else {
+                _gameMode = 0; // OneVsOne
+              }
+            } else {
+              _gameMode = int.tryParse(modeValue.toString());
+            }
+          }
+          
+          // Parse Players list if available (for multiplayer)
+          if (data['players'] != null && data['players'] is List) {
+            _playersList = List<Map<String, dynamic>>.from(
+              (data['players'] as List).map((p) => Map<String, dynamic>.from(p))
+            );
+          } else {
+            // Fallback to Player1/Player2 for 1vs1 mode
+            _playersList = [];
+            if (_player1Info != null) _playersList.add(_player1Info!);
+            if (_player2Info != null) _playersList.add(_player2Info!);
+          }
+          
+          // Trong multiplayer mode, giữ phase = waiting để players khác vẫn có thể join
+          // Chỉ chuyển sang ready trong 1vs1 mode (cần đúng 2 players)
+          final isMultiplayer = _gameMode == 1 || 
+                                (modeValue != null && modeValue.toString().toLowerCase().contains('multi'));
+          
+          if (isMultiplayer) {
+            // Multiplayer: giữ waiting, chỉ Player1 mới thấy button start
+            _currentPhase = OneVsOneRoomPhase.waiting;
+            log('RoomReady: Multiplayer mode - keeping phase = waiting');
+          } else {
+            // 1vs1: chuyển sang ready khi đủ 2 players
+            _currentPhase = OneVsOneRoomPhase.ready;
+            log('RoomReady: 1vs1 mode - changing phase = ready');
+          }
         });
-        Get.snackbar('Thông báo', 'Cả 2 người chơi đã sẵn sàng!',
+        
+        final playerCount = data['playerCount'] ?? _playersList.length;
+        final isMultiplayer = _gameMode == 1 || 
+                              (data['mode'] != null && data['mode'].toString().toLowerCase().contains('multi'));
+        final message = isMultiplayer
+            ? '$playerCount người chơi đã sẵn sàng! Bạn có thể bắt đầu game hoặc chờ thêm người chơi.'
+            : 'Cả 2 người chơi đã sẵn sàng!';
+        Get.snackbar('Thông báo', message,
             backgroundColor: Colors.blue, colorText: Colors.white);
       },
       onGameStarted: (data) {
         setState(() {
-          _totalQuestions = data['totalQuestions'] ?? data['TotalQuestions'] ?? 0;
+          _totalQuestions = data['totalQuestions'] ?? 0;
           _currentPhase = OneVsOneRoomPhase.gameStarted;
           _isStartingGame = false;
         });
@@ -281,12 +377,12 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
         setState(() {
           _currentQuestion = data;
           _currentQuestionIndex = data['questionNumber'] ?? 
-                                 (data['QuestionIndex'] ?? 0) + 1;
-          _totalQuestions = data['totalQuestions'] ?? data['TotalQuestions'] ?? _totalQuestions;
+                                 (data['questionIndex'] ?? 0) + 1;
+          _totalQuestions = data['totalQuestions'] ?? _totalQuestions;
           _currentPhase = OneVsOneRoomPhase.question;
           _hasSubmittedAnswer = false;
           _selectedAnswerId = null;
-          _timeRemaining = data['timeLimit'] ?? data['TimeLimit'] ?? 30;
+          _timeRemaining = data['timeLimit'] ?? 30;
         });
         _startTimer();
       },
@@ -294,8 +390,19 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
         setState(() {
           _hasSubmittedAnswer = true;
         });
-        Get.snackbar('Thành công', 'Đã gửi câu trả lời!',
-            backgroundColor: Colors.green, colorText: Colors.white);
+        
+        // Show progress if multiplayer mode
+        final answeredCount = data['answeredCount'];
+        final totalPlayers = data['totalPlayers'];
+        final message = data['message'] ?? '';
+        
+        if (answeredCount != null && totalPlayers != null && answeredCount < totalPlayers) {
+          Get.snackbar('Thông báo', message,
+              backgroundColor: Colors.blue, colorText: Colors.white);
+        } else {
+          Get.snackbar('Thành công', message.isNotEmpty ? message : 'Đã gửi câu trả lời!',
+              backgroundColor: Colors.green, colorText: Colors.white);
+        }
       },
       onShowRoundResult: (data) {
         log('ShowRoundResult: ${data.toString()}');
@@ -379,8 +486,7 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
     }
 
     try {
-      final questionId = _currentQuestion!['questionId']?.toString() ?? 
-                         _currentQuestion!['QuestionId']?.toString() ?? '';
+      final questionId = _currentQuestion!['questionId']?.toString() ?? '';
       
       await _hubService.submitAnswer(_roomPin!, questionId, _selectedAnswerId!);
     } catch (e) {
@@ -574,32 +680,129 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
                   fontWeight: FontWeight.bold,
                 ),
                 SizedBox(height: UtilsReponsive.height(16, context)),
-                if (_player1Info != null)
-                  _buildPlayerInfo(context, _player1Info!, "Player 1", Colors.blue),
-                if (_player1Info != null && _player2Info != null)
-                  SizedBox(height: UtilsReponsive.height(12, context)),
-                if (_player2Info != null)
-                  _buildPlayerInfo(context, _player2Info!, "Player 2", Colors.orange)
-                else
-                  Padding(
-                    padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
-                    child: TextConstant.subTile2(
-                      context,
-                      text: "Đang chờ Player 2...",
-                      color: Colors.grey[600]!,
+                // Display players list (supports both 1vs1 and multiplayer)
+                if (_playersList.isNotEmpty) ...[
+                  ..._playersList.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final player = entry.value;
+                    final isHost = player['isHost'] ?? false;
+                    final playerLabel = isHost 
+                        ? "Host" 
+                        : (_gameMode == 1 ? "Player ${index + 1}" : (index == 0 ? "Player 1" : "Player 2"));
+                    final color = isHost 
+                        ? Colors.purple 
+                        : (index == 0 ? Colors.blue : Colors.orange);
+                    
+                    return Column(
+                      children: [
+                        if (index > 0)
+                          SizedBox(height: UtilsReponsive.height(12, context)),
+                        _buildPlayerInfo(context, player, playerLabel, color),
+                      ],
+                    );
+                  }),
+                  // Show waiting message if not enough players
+                  if (_gameMode == 0 && _playersList.length < 2) ...[
+                    SizedBox(height: UtilsReponsive.height(12, context)),
+                    Padding(
+                      padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+                      child: TextConstant.subTile2(
+                        context,
+                        text: "Đang chờ Player 2...",
+                        color: Colors.grey[600]!,
+                      ),
                     ),
-                  ),
+                  ] else if (_gameMode == 1) ...[
+                    // Multiplayer mode: luôn hiển thị thông báo (có thể start với 2+ players)
+                    SizedBox(height: UtilsReponsive.height(12, context)),
+                    Padding(
+                      padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+                      child: Column(
+                        children: [
+                          TextConstant.subTile2(
+                            context,
+                            text: _maxPlayers != null && _playersList.length < _maxPlayers!
+                                ? "Đang chờ thêm người chơi... (${_playersList.length}/$_maxPlayers)"
+                                : "${_playersList.length} người chơi đã tham gia",
+                            color: Colors.grey[600]!,
+                          ),
+                          if (_isPlayer1 && _playersList.length >= 2) ...[
+                            SizedBox(height: UtilsReponsive.height(8, context)),
+                            TextConstant.subTile3(
+                              context,
+                              text: "Bạn có thể bắt đầu game ngay hoặc chờ thêm người chơi",
+                              color: Colors.blue,
+                              size: 12,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ] else ...[
+                  // Fallback: show Player1/Player2 if Players list not available
+                  if (_player1Info != null)
+                    _buildPlayerInfo(context, _player1Info!, "Player 1", Colors.blue),
+                  if (_player1Info != null && _player2Info != null)
+                    SizedBox(height: UtilsReponsive.height(12, context)),
+                  if (_player2Info != null)
+                    _buildPlayerInfo(context, _player2Info!, "Player 2", Colors.orange)
+                  else
+                    Padding(
+                      padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+                      child: TextConstant.subTile2(
+                        context,
+                        text: "Đang chờ Player 2...",
+                        color: Colors.grey[600]!,
+                      ),
+                    ),
+                ],
               ],
             ),
           ),
+          
+          // Start Game Button (hiển thị trong waiting phase nếu multiplayer và đã có >= 2 players)
+          if (_isPlayer1 && _gameMode == 1 && _playersList.length >= 2) ...[
+            SizedBox(height: UtilsReponsive.height(32, context)),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isStartingGame ? null : _startGame,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ColorsManager.primary,
+                  padding: EdgeInsets.symmetric(
+                    vertical: UtilsReponsive.height(16, context),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: _isStartingGame
+                    ? CircularProgressIndicator(color: Colors.white)
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.play_arrow, color: Colors.white),
+                          SizedBox(width: UtilsReponsive.width(8, context)),
+                          TextConstant.subTile1(
+                            context,
+                            text: "Bắt đầu game (${_playersList.length} người chơi)",
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
   Widget _buildPlayerInfo(BuildContext context, Map<String, dynamic> player, String label, Color color) {
-    final playerName = player['PlayerName'] ?? player['playerName'] ?? '';
-    final score = player['Score'] ?? player['score'] ?? 0;
+    final playerName = player['playerName'] ?? '';
+    final score = player['score'] ?? 0;
     
     return Container(
       padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
@@ -733,7 +936,7 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
     log('Building question UI: ${question.toString()}');
     
     final answers = List<Map<String, dynamic>>.from(
-      question['answerOptions'] ?? question['Answers'] ?? question['Options'] ?? []
+      question['answerOptions'] ?? question['options'] ?? []
     );
     
     log('Answers parsed: ${answers.length} answers found');
@@ -790,22 +993,22 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
                 SizedBox(height: UtilsReponsive.height(16, context)),
                 TextConstant.titleH2(
                   context,
-                  text: question['questionText'] ?? question['QuestionText'] ?? '',
+                  text: question['questionText'] ?? '',
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
                 
                 // Audio player (if available)
-                if ((question['audioUrl'] ?? question['AudioUrl']) != null &&
-                    (question['audioUrl'] ?? question['AudioUrl']).toString().isNotEmpty)
+                if ((question['audioUrl'] ?? question['audioUrl']) != null &&
+                    (question['audioUrl'] ?? question['audioUrl']).toString().isNotEmpty)
                   Container(
                     margin: EdgeInsets.only(top: UtilsReponsive.height(16, context)),
                     child: _buildAudioPlayer(context),
                   ),
                 
                 // Image (if available)
-                if ((question['imageUrl'] ?? question['ImageUrl']) != null &&
-                    (question['imageUrl'] ?? question['ImageUrl']).toString().isNotEmpty)
+                if ((question['imageUrl'] ?? question['imageUrl']) != null &&
+                    (question['imageUrl'] ?? question['imageUrl']).toString().isNotEmpty)
                   Container(
                     margin: EdgeInsets.only(top: UtilsReponsive.height(16, context)),
                     child: _buildImage(context, question),
@@ -819,17 +1022,14 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
           ...answers.asMap().entries.map((entry) {
             final index = entry.key;
             final answer = entry.value;
-            final answerId = answer['answerId']?.toString() ?? answer['AnswerId']?.toString();
+            final answerId = answer['answerId']?.toString() ?? '';
             final isSelected = _selectedAnswerId == answerId;
             final answerLabels = ['A', 'B', 'C', 'D'];
             
             // Parse optionText với nhiều field names khác nhau
             final optionText = answer['optionText'] ?? 
-                             answer['OptionText'] ?? 
                              answer['answerText'] ??
-                             answer['AnswerText'] ??
                              answer['text'] ??
-                             answer['Text'] ??
                              '';
             
             log('Answer $index: answerId=$answerId, optionText="$optionText"');
@@ -1001,7 +1201,7 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
   }
 
   Widget _buildImage(BuildContext context, Map<String, dynamic> question) {
-    final imageUrl = question['imageUrl'] ?? question['ImageUrl'];
+    final imageUrl = question['imageUrl'];
     if (imageUrl == null || imageUrl.toString().isEmpty) {
       return const SizedBox.shrink();
     }
@@ -1062,25 +1262,73 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
 
     log('Building round result UI: ${_roundResult.toString()}');
     
-    // Parse data từ backend
-    final player1Result = _roundResult!['player1Result'] ?? _roundResult!['Player1Result'] ?? {};
-    final player2Result = _roundResult!['player2Result'] ?? _roundResult!['Player2Result'] ?? {};
-    final correctAnswerText = _roundResult!['correctAnswerText'] ?? _roundResult!['CorrectAnswerText'] ?? '';
+    final correctAnswerText = _roundResult!['correctAnswerText'] ?? '';
     
-    // Xác định player hiện tại
-    final currentPlayerResult = _isPlayer1 ? player1Result : player2Result;
-    final opponentResult = _isPlayer1 ? player2Result : player1Result;
+    // Check if multiplayer mode (has playerResults list)
+    final playerResults = _roundResult!['playerResults'] ?? _roundResult!['playersResults'];
+    final isMultiplayer = playerResults != null && playerResults is List && playerResults.length > 2;
     
-    final currentPlayerName = currentPlayerResult['playerName'] ?? currentPlayerResult['PlayerName'] ?? (_isPlayer1 ? 'Player1' : 'Player2');
-    final currentPlayerScore = currentPlayerResult['score'] ?? currentPlayerResult['Score'] ?? 0;
-    final currentPlayerIsCorrect = currentPlayerResult['isCorrect'] ?? currentPlayerResult['IsCorrect'] ?? false;
+    // Find current player's result
+    Map<String, dynamic>? currentPlayerResult;
+    List<Map<String, dynamic>> allPlayersResults = [];
     
-    final opponentName = opponentResult['playerName'] ?? opponentResult['PlayerName'] ?? (_isPlayer1 ? 'Player2' : 'Player1');
-    final opponentScore = opponentResult['score'] ?? opponentResult['Score'] ?? 0;
-    final opponentIsCorrect = opponentResult['isCorrect'] ?? opponentResult['IsCorrect'] ?? false;
+    if (playerResults != null && playerResults is List && playerResults.isNotEmpty) {
+      // Parse từ playerResults list (ưu tiên - có pointsEarned)
+      allPlayersResults = List<Map<String, dynamic>>.from(
+        playerResults.map((p) => Map<String, dynamic>.from(p))
+      );
+      
+      // Find current player by name or index
+      if (_isPlayer1 && allPlayersResults.isNotEmpty) {
+        currentPlayerResult = allPlayersResults.firstWhere(
+          (p) => (p['playerName'] ?? '').toString().contains('Player1') || p == allPlayersResults[0],
+          orElse: () => allPlayersResults[0],
+        );
+      } else if (!_isPlayer1 && allPlayersResults.length > 1) {
+        // Find current player (not Player1)
+        currentPlayerResult = allPlayersResults.firstWhere(
+          (p) => (p['playerName'] ?? '').toString() != 'Player1' && p != allPlayersResults[0],
+          orElse: () => allPlayersResults.length > 1 ? allPlayersResults[1] : allPlayersResults[0],
+        );
+      } else {
+        currentPlayerResult = allPlayersResults.isNotEmpty ? allPlayersResults[0] : {};
+      }
+      
+      // Sort by pointsEarned (descending) - điểm của round này
+      allPlayersResults.sort((a, b) {
+        final pointsA = a['pointsEarned'] ?? a['score'] ?? 0;
+        final pointsB = b['pointsEarned'] ?? b['score'] ?? 0;
+        return pointsB.compareTo(pointsA);
+      });
+    } else {
+      // Fallback: use player1Result and player2Result
+      final player1Result = _roundResult!['player1Result'] ?? {};
+      final player2Result = _roundResult!['player2Result'] ?? {};
+      
+      currentPlayerResult = _isPlayer1 ? player1Result : player2Result;
+      allPlayersResults = [
+        if (player1Result.isNotEmpty) player1Result,
+        if (player2Result.isNotEmpty) player2Result,
+      ];
+      
+      // Sort by pointsEarned (descending)
+      allPlayersResults.sort((a, b) {
+        final pointsA = a['pointsEarned'] ?? a['score'] ?? 0;
+        final pointsB = b['pointsEarned'] ?? b['score'] ?? 0;
+        return pointsB.compareTo(pointsA);
+      });
+    }
     
-    final isCurrentPlayerWinner = currentPlayerScore > opponentScore || 
-                                  (currentPlayerScore == opponentScore && currentPlayerIsCorrect && !opponentIsCorrect);
+    final currentPlayerName = currentPlayerResult?['playerName'] ?? (_isPlayer1 ? 'Player1' : 'Player2');
+    // Parse pointsEarned (điểm của round này) thay vì score (tổng điểm)
+    final currentPlayerScore = currentPlayerResult?['pointsEarned'] ?? currentPlayerResult?['score'] ?? 0;
+    final currentPlayerIsCorrect = currentPlayerResult?['isCorrect'] ?? false;
+    
+    // Check if current player is winner (highest pointsEarned or tied with highest)
+    final highestScore = allPlayersResults.isNotEmpty 
+        ? (allPlayersResults[0]['pointsEarned'] ?? allPlayersResults[0]['score'] ?? 0)
+        : 0;
+    final isCurrentPlayerWinner = currentPlayerScore >= highestScore;
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(UtilsReponsive.width(20, context)),
@@ -1184,36 +1432,44 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
               children: [
                 TextConstant.titleH3(
                   context,
-                  text: "Kết quả round",
+                  text: isMultiplayer ? "Bảng xếp hạng round" : "Kết quả round",
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
                 SizedBox(height: UtilsReponsive.height(20, context)),
                 
-                // Current Player
-                _buildPlayerResultCard(
-                  context,
-                  currentPlayerName,
-                  currentPlayerScore,
-                  currentPlayerIsCorrect,
-                  true, // isCurrentPlayer
-                ),
-                
-                SizedBox(height: UtilsReponsive.height(16, context)),
-                
-                // Opponent
-                _buildPlayerResultCard(
-                  context,
-                  opponentName,
-                  opponentScore,
-                  opponentIsCorrect,
-                  false, // isCurrentPlayer
-                ),
+                // Display all players (sorted by pointsEarned)
+                ...allPlayersResults.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final playerResult = entry.value;
+                  final playerName = playerResult['playerName'] ?? 'Player ${index + 1}';
+                  // Parse pointsEarned (điểm của round này) thay vì score
+                  final playerScore = playerResult['pointsEarned'] ?? playerResult['score'] ?? 0;
+                  final playerIsCorrect = playerResult['isCorrect'] ?? false;
+                  final isCurrentPlayer = playerName == currentPlayerName;
+                  final isTopPlayer = index == 0 && playerScore == highestScore;
+                  
+                  return Column(
+                    children: [
+                      if (index > 0)
+                        SizedBox(height: UtilsReponsive.height(12, context)),
+                      _buildPlayerResultCard(
+                        context,
+                        playerName,
+                        playerScore,
+                        playerIsCorrect,
+                        isCurrentPlayer,
+                        isTopPlayer: isTopPlayer,
+                        rank: index + 1,
+                      ),
+                    ],
+                  );
+                }),
                 
                 SizedBox(height: UtilsReponsive.height(20, context)),
                 
                 // Winner indicator
-                if (isCurrentPlayerWinner)
+                if (isCurrentPlayerWinner && currentPlayerScore == highestScore)
                   Container(
                     padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
                     decoration: BoxDecoration(
@@ -1228,14 +1484,14 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
                         SizedBox(width: UtilsReponsive.width(8, context)),
                         TextConstant.subTile1(
                           context,
-                          text: "Bạn dẫn đầu!",
+                          text: isMultiplayer ? "Bạn đứng đầu!" : "Bạn dẫn đầu!",
                           color: Colors.green,
                           fontWeight: FontWeight.bold,
                         ),
                       ],
                     ),
                   )
-                else if (currentPlayerScore < opponentScore)
+                else if (currentPlayerScore < highestScore)
                   Container(
                     padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
                     decoration: BoxDecoration(
@@ -1250,14 +1506,14 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
                         SizedBox(width: UtilsReponsive.width(8, context)),
                         TextConstant.subTile1(
                           context,
-                          text: "Đối thủ dẫn đầu",
+                          text: isMultiplayer ? "Có người chơi khác dẫn đầu" : "Đối thủ dẫn đầu",
                           color: Colors.orange,
                           fontWeight: FontWeight.bold,
                         ),
                       ],
                     ),
                   )
-                else
+                else if (currentPlayerScore == highestScore && allPlayersResults.where((p) => (p['pointsEarned'] ?? p['score'] ?? 0) == highestScore).length > 1)
                   Container(
                     padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
                     decoration: BoxDecoration(
@@ -1325,8 +1581,10 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
     String playerName,
     int score,
     bool isCorrect,
-    bool isCurrentPlayer,
-  ) {
+    bool isCurrentPlayer, {
+    bool isTopPlayer = false,
+    int? rank,
+  }) {
     return Container(
       padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
       decoration: BoxDecoration(
@@ -1343,6 +1601,36 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
       ),
       child: Row(
         children: [
+          // Rank badge (for multiplayer)
+          if (rank != null && isTopPlayer)
+            Container(
+              margin: EdgeInsets.only(right: UtilsReponsive.width(12, context)),
+              padding: EdgeInsets.all(UtilsReponsive.width(8, context)),
+              decoration: BoxDecoration(
+                color: Colors.amber,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.emoji_events, color: Colors.white, size: UtilsReponsive.height(20, context)),
+            )
+          else if (rank != null)
+            Container(
+              margin: EdgeInsets.only(right: UtilsReponsive.width(12, context)),
+              width: UtilsReponsive.width(32, context),
+              height: UtilsReponsive.width(32, context),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: TextConstant.subTile1(
+                  context,
+                  text: "$rank",
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          
           // Status Icon
           Container(
             padding: EdgeInsets.all(UtilsReponsive.width(8, context)),
@@ -1387,7 +1675,7 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
               vertical: UtilsReponsive.height(6, context),
             ),
             decoration: BoxDecoration(
-              color: isCurrentPlayer ? ColorsManager.primary : Colors.grey[300],
+              color: isCurrentPlayer ? ColorsManager.primary : (isTopPlayer ? Colors.amber : Colors.grey[300]),
               borderRadius: BorderRadius.circular(20),
             ),
             child: TextConstant.subTile1(
@@ -1409,29 +1697,82 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
 
     log('Building game end UI: ${_finalResult.toString()}');
     
-    // Parse data từ backend
-    final player1Result = _finalResult!['player1Result'] ?? _finalResult!['Player1Result'] ?? {};
-    final player2Result = _finalResult!['player2Result'] ?? _finalResult!['Player2Result'] ?? {};
-    final winner = _finalResult!['winner'] ?? _finalResult!['Winner'];
+    // Parse data từ backend - ưu tiên rankings list (cho multiplayer)
+    final rankings = _finalResult!['rankings'];
+    final winner = _finalResult!['winner'];
+    final mode = _finalResult!['mode'] ?? 0;
+    final isMultiplayer = mode == 1;
     
-    // Xác định player hiện tại
-    final currentPlayerResult = _isPlayer1 ? player1Result : player2Result;
-    final opponentResult = _isPlayer1 ? player2Result : player1Result;
+    List<Map<String, dynamic>> allPlayersResults = [];
+    Map<String, dynamic>? currentPlayerResult;
     
-    final currentPlayerName = currentPlayerResult['playerName'] ?? currentPlayerResult['PlayerName'] ?? (_isPlayer1 ? 'Player1' : 'Player2');
-    final currentPlayerScore = currentPlayerResult['totalScore'] ?? currentPlayerResult['TotalScore'] ?? currentPlayerResult['score'] ?? currentPlayerResult['Score'] ?? 0;
-    final currentPlayerCorrectAnswers = currentPlayerResult['correctAnswers'] ?? currentPlayerResult['CorrectAnswers'] ?? 0;
+    if (rankings != null && rankings is List && rankings.isNotEmpty) {
+      // Parse từ rankings list (đúng cho cả 1vs1 và multiplayer)
+      allPlayersResults = List<Map<String, dynamic>>.from(
+        rankings.map((p) => Map<String, dynamic>.from(p))
+      );
+      
+      // Sort by score descending
+      allPlayersResults.sort((a, b) {
+        final scoreA = a['score'] ?? 0;
+        final scoreB = b['score'] ?? 0;
+        return scoreB.compareTo(scoreA);
+      });
+      
+      // Find current player - try to match by userId or connectionId
+      // For now, use _isPlayer1 to determine (first player is Player1)
+      if (_isPlayer1 && allPlayersResults.isNotEmpty) {
+        currentPlayerResult = allPlayersResults.firstWhere(
+          (p) => p['playerName'] == 'Player1' || p == allPlayersResults[0],
+          orElse: () => allPlayersResults[0],
+        );
+      } else {
+        // Find current player (not the first one, or match by name)
+        currentPlayerResult = allPlayersResults.firstWhere(
+          (p) => p != allPlayersResults[0],
+          orElse: () => allPlayersResults.isNotEmpty ? allPlayersResults[0] : {},
+        );
+      }
+    } else {
+      // Fallback: parse từ player1/player2 (backward compatibility)
+      final player1Result = _finalResult!['player1'] ?? _finalResult!['player1Result'] ?? {};
+      final player2Result = _finalResult!['player2'] ?? _finalResult!['player2Result'] ?? {};
+      
+      currentPlayerResult = _isPlayer1 ? player1Result : player2Result;
+      allPlayersResults = [
+        if (player1Result.isNotEmpty) player1Result,
+        if (player2Result.isNotEmpty) player2Result,
+      ];
+      
+      // Sort by score
+      allPlayersResults.sort((a, b) {
+        final scoreA = a['score'] ?? 0;
+        final scoreB = b['score'] ?? 0;
+        return scoreB.compareTo(scoreA);
+      });
+    }
     
-    final opponentName = opponentResult['playerName'] ?? opponentResult['PlayerName'] ?? (_isPlayer1 ? 'Player2' : 'Player1');
-    final opponentScore = opponentResult['totalScore'] ?? opponentResult['TotalScore'] ?? opponentResult['score'] ?? opponentResult['Score'] ?? 0;
-    final opponentCorrectAnswers = opponentResult['correctAnswers'] ?? opponentResult['CorrectAnswers'] ?? 0;
+    // Get current player info (for winner determination)
+    final currentPlayerName = currentPlayerResult?['playerName'] ?? (_isPlayer1 ? 'Player1' : 'Player2');
+    final currentPlayerUserId = currentPlayerResult?['userId'] ?? '';
     
-    final isCurrentPlayerWinner = currentPlayerScore > opponentScore;
-    final isDraw = currentPlayerScore == opponentScore;
+    // Get highest score
+    final highestScore = allPlayersResults.isNotEmpty 
+        ? (allPlayersResults[0]['score'] ?? 0)
+        : 0;
     
+    // Determine winner using winner object or score comparison
     final winnerName = winner != null 
-        ? (winner['playerName'] ?? winner['PlayerName'] ?? '')
-        : (isCurrentPlayerWinner ? currentPlayerName : opponentName);
+        ? (winner['playerName'] ?? '')
+        : (allPlayersResults.isNotEmpty ? (allPlayersResults[0]['playerName'] ?? '') : '');
+    
+    final winnerUserId = winner != null
+        ? (winner['userId'] ?? '')
+        : (allPlayersResults.isNotEmpty ? (allPlayersResults[0]['userId'] ?? '') : '');
+    
+    // Check if current player is winner
+    final isCurrentPlayerWinner = winnerUserId.isNotEmpty && currentPlayerUserId == winnerUserId;
+    final isDraw = winner == null && allPlayersResults.where((p) => (p['score'] ?? 0) == highestScore).length > 1;
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(UtilsReponsive.width(20, context)),
@@ -1500,35 +1841,41 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
               children: [
                 TextConstant.titleH2(
                   context,
-                  text: "Kết quả cuối cùng",
+                  text: isMultiplayer ? "Bảng xếp hạng cuối cùng" : "Kết quả cuối cùng",
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
                 SizedBox(height: UtilsReponsive.height(24, context)),
                 
-                // Current Player
-                _buildFinalPlayerCard(
-                  context,
-                  currentPlayerName,
-                  currentPlayerScore,
-                  currentPlayerCorrectAnswers,
-                  _totalQuestions,
-                  true, // isCurrentPlayer
-                  isCurrentPlayerWinner && !isDraw,
-                ),
-                
-                SizedBox(height: UtilsReponsive.height(16, context)),
-                
-                // Opponent
-                _buildFinalPlayerCard(
-                  context,
-                  opponentName,
-                  opponentScore,
-                  opponentCorrectAnswers,
-                  _totalQuestions,
-                  false, // isCurrentPlayer
-                  !isCurrentPlayerWinner && !isDraw,
-                ),
+                // Display all players (sorted by score)
+                ...allPlayersResults.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final playerResult = entry.value;
+                  final playerName = playerResult['playerName'] ?? 'Player ${index + 1}';
+                  final playerScore = playerResult['score'] ?? 0;
+                  final playerCorrectAnswers = playerResult['correctAnswers'] ?? 0;
+                  final playerUserId = playerResult['userId'] ?? '';
+                  
+                  final isCurrentPlayer = playerUserId == currentPlayerUserId || playerName == currentPlayerName;
+                  final isWinner = playerUserId == winnerUserId || (index == 0 && playerScore == highestScore);
+                  
+                  return Column(
+                    children: [
+                      if (index > 0)
+                        SizedBox(height: UtilsReponsive.height(16, context)),
+                      _buildFinalPlayerCard(
+                        context,
+                        playerName,
+                        playerScore,
+                        playerCorrectAnswers,
+                        _totalQuestions,
+                        isCurrentPlayer,
+                        isWinner && !isDraw,
+                        rank: index + 1,
+                      ),
+                    ],
+                  );
+                }),
               ],
             ),
           ),
@@ -1571,8 +1918,9 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
     int correctAnswers,
     int totalQuestions,
     bool isCurrentPlayer,
-    bool isWinner,
-  ) {
+    bool isWinner, {
+    int? rank,
+  }) {
     final accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions * 100).round() : 0;
     
     return Container(
@@ -1593,8 +1941,36 @@ class _OneVsOneRoomViewState extends State<OneVsOneRoomView> {
         children: [
           Row(
             children: [
-              // Winner Badge
-              if (isWinner)
+              // Rank badge or Winner Badge
+              if (rank != null && isWinner)
+                Container(
+                  margin: EdgeInsets.only(right: UtilsReponsive.width(12, context)),
+                  padding: EdgeInsets.all(UtilsReponsive.width(8, context)),
+                  decoration: BoxDecoration(
+                    color: Colors.amber,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.emoji_events, color: Colors.white, size: UtilsReponsive.height(20, context)),
+                )
+              else if (rank != null)
+                Container(
+                  margin: EdgeInsets.only(right: UtilsReponsive.width(12, context)),
+                  width: UtilsReponsive.width(32, context),
+                  height: UtilsReponsive.width(32, context),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: TextConstant.subTile1(
+                      context,
+                      text: "$rank",
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
+              else if (isWinner)
                 Container(
                   margin: EdgeInsets.only(right: UtilsReponsive.width(12, context)),
                   padding: EdgeInsets.all(UtilsReponsive.width(8, context)),

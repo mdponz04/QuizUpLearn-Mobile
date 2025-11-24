@@ -118,21 +118,28 @@ class OneVsOneHubService {
     }
   }
 
-  // ==================== PLAYER2 METHODS ====================
+  // ==================== PLAYER JOIN METHODS ====================
 
-  /// Player2 join vào room bằng PIN
-  Future<void> player2Join(String roomPin, String playerName) async {
+  /// Player join vào room bằng PIN (Player2, Player3, Player4, ...)
+  /// Dùng chung cho cả 1vs1 và Multiplayer
+  Future<void> playerJoin(String roomPin, String playerName) async {
     try {
       if (!isConnected) {
         throw Exception('Not connected to SignalR');
       }
       _currentRoomPin = roomPin;
-      await _connection!.invoke('Player2Join', args: [roomPin, playerName]);
-      log('Player2Join called: $playerName joined room $roomPin');
+      await _connection!.invoke('PlayerJoin', args: [roomPin, playerName]);
+      log('PlayerJoin called: $playerName joined room $roomPin');
     } catch (e) {
-      log('Error in player2Join: $e');
+      log('Error in playerJoin: $e');
       throw e;
     }
+  }
+
+  /// @deprecated Use playerJoin instead
+  /// Player2 join vào room bằng PIN (kept for backward compatibility)
+  Future<void> player2Join(String roomPin, String playerName) async {
+    return playerJoin(roomPin, playerName);
   }
 
   // ==================== COMMON METHODS ====================
@@ -161,11 +168,12 @@ class OneVsOneHubService {
   // Callbacks cho Player1 events
   Function(Map<String, dynamic>)? _onPlayer1Connected;
   
-  // Callbacks cho Player2 events
-  Function(Map<String, dynamic>)? _onPlayer2Joined;
+  // Callbacks cho Player join events
+  Function(Map<String, dynamic>)? _onPlayer2Joined; // @deprecated - use onPlayerJoined
+  Function(Map<String, dynamic>)? _onPlayerJoined;
+  Function(Map<String, dynamic>)? _onPlayerJoinedRoom; // New event from Hub
   
   // Callbacks cho common events
-  Function(Map<String, dynamic>)? _onPlayerJoined;
   Function(Map<String, dynamic>)? _onRoomUpdated;
   Function(Map<String, dynamic>)? _onRoomReady;
   Function(Map<String, dynamic>)? _onGameStarted;
@@ -189,11 +197,12 @@ class OneVsOneHubService {
     // Player1 events
     Function(Map<String, dynamic>)? onPlayer1Connected,
 
-    // Player2 events
-    Function(Map<String, dynamic>)? onPlayer2Joined,
+    // Player join events
+    Function(Map<String, dynamic>)? onPlayer2Joined, // @deprecated - use onPlayerJoined
+    Function(Map<String, dynamic>)? onPlayerJoined,
+    Function(Map<String, dynamic>)? onPlayerJoinedRoom, // New event from Hub
 
     // Common events
-    Function(Map<String, dynamic>)? onPlayerJoined,
     Function(Map<String, dynamic>)? onRoomUpdated,
     Function(Map<String, dynamic>)? onRoomReady,
     Function(Map<String, dynamic>)? onGameStarted,
@@ -214,6 +223,7 @@ class OneVsOneHubService {
     _onPlayer1Connected = onPlayer1Connected;
     _onPlayer2Joined = onPlayer2Joined;
     _onPlayerJoined = onPlayerJoined;
+    _onPlayerJoinedRoom = onPlayerJoinedRoom;
     _onRoomUpdated = onRoomUpdated;
     _onRoomReady = onRoomReady;
     _onGameStarted = onGameStarted;
@@ -239,17 +249,26 @@ class OneVsOneHubService {
       _onPlayer1Connected?.call(_parseArguments(arguments));
     });
 
-    // ==================== PLAYER2 EVENTS ====================
+    // ==================== PLAYER JOIN EVENTS ====================
+    // @deprecated - Hub now sends PlayerJoined instead
     _connection!.on('Player2Joined', (arguments) {
-      log('Event: Player2Joined');
+      log('Event: Player2Joined (deprecated)');
       _onPlayer2Joined?.call(_parseArguments(arguments));
     });
 
-    // ==================== COMMON EVENTS ====================
+    // New event from Hub - PlayerJoined (replaces Player2Joined)
     _connection!.on('PlayerJoined', (arguments) {
       log('Event: PlayerJoined');
       _onPlayerJoined?.call(_parseArguments(arguments));
     });
+
+    // New event - PlayerJoinedRoom (broadcast to all players)
+    _connection!.on('PlayerJoinedRoom', (arguments) {
+      log('Event: PlayerJoinedRoom');
+      _onPlayerJoinedRoom?.call(_parseArguments(arguments));
+    });
+
+    // ==================== COMMON EVENTS ====================
 
     _connection!.on('RoomUpdated', (arguments) {
       log('Event: RoomUpdated');
@@ -344,6 +363,7 @@ class OneVsOneHubService {
     _onPlayer1Connected = null;
     _onPlayer2Joined = null;
     _onPlayerJoined = null;
+    _onPlayerJoinedRoom = null;
     _onRoomUpdated = null;
     _onRoomReady = null;
     _onGameStarted = null;

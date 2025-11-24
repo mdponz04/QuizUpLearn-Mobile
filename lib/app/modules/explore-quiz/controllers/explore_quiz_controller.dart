@@ -15,6 +15,8 @@ import 'package:quizkahoot/app/modules/home/data/one_vs_one_room_api.dart';
 import 'package:quizkahoot/app/modules/home/data/one_vs_one_room_service.dart';
 import 'package:quizkahoot/app/modules/home/models/create_one_vs_one_room_request.dart';
 import 'package:quizkahoot/app/service/basecommon.dart';
+import 'package:quizkahoot/app/resource/reponsive_utils.dart';
+import 'package:quizkahoot/app/resource/text_style.dart';
 
 const baseUrl = 'https://qul-api.onrender.com/api';
 
@@ -183,7 +185,148 @@ class ExploreQuizController extends GetxController {
     }
   }
 
-  Future<void> createOneVsOneRoom(QuizSetModel quizSet) async {
+  /// Hiển thị dialog để chọn mode (1vs1 hoặc Multiplayer)
+  void showOneVsOneModeDialog(QuizSetModel quizSet) {
+    final context = Get.context;
+    if (context == null) return;
+    
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextConstant.titleH2(
+                context,
+                text: "Chọn chế độ chơi",
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+              SizedBox(height: UtilsReponsive.height(24, context)),
+              
+              // 1vs1 Option
+              _buildModeOption(
+                context,
+                icon: Icons.person,
+                title: "1 vs 1",
+                description: "Đấu trực tiếp với 1 người chơi",
+                color: Colors.orange,
+                onTap: () {
+                  Get.back();
+                  createOneVsOneRoom(quizSet, mode: 0);
+                },
+              ),
+              
+              SizedBox(height: UtilsReponsive.height(16, context)),
+              
+              // Multiplayer Option
+              _buildModeOption(
+                context,
+                icon: Icons.people,
+                title: "Multiplayer",
+                description: "Nhiều người chơi cùng lúc (không giới hạn)",
+                color: Colors.purple,
+                onTap: () {
+                  Get.back();
+                  createOneVsOneRoom(quizSet, mode: 1);
+                },
+              ),
+              
+              SizedBox(height: UtilsReponsive.height(16, context)),
+              
+              // Cancel Button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Get.back(),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey[300]!),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      vertical: UtilsReponsive.height(12, context),
+                    ),
+                  ),
+                  child: TextConstant.subTile2(
+                    context,
+                    text: "Hủy",
+                    color: Colors.grey[600]!,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModeOption(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String description,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color, width: 2),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: Colors.white, size: UtilsReponsive.height(24, context)),
+              ),
+              SizedBox(width: UtilsReponsive.width(16, context)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextConstant.subTile1(
+                      context,
+                      text: title,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    SizedBox(height: UtilsReponsive.height(4, context)),
+                    TextConstant.subTile3(
+                      context,
+                      text: description,
+                      color: Colors.grey[600]!,
+                      size: 12,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.arrow_forward_ios, color: color, size: UtilsReponsive.height(16, context)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> createOneVsOneRoom(QuizSetModel quizSet, {int mode = 0}) async {
     try {
       final userId = BaseCommon.instance.userId;
       if (userId.isEmpty) {
@@ -204,6 +347,7 @@ class ExploreQuizController extends GetxController {
         player1Name: player1Name,
         quizSetId: quizSet.id,
         player1UserId: userId,
+        mode: mode, // 0 = 1vs1, 1 = Multiplayer
       );
 
       final response = await oneVsOneRoomService.createRoom(request);
