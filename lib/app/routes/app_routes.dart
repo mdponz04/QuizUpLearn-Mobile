@@ -22,6 +22,7 @@ abstract class Routes {
   static const ONE_VS_ONE_ROOM = _Paths.ONE_VS_ONE_ROOM;
   static const QUIZ_HISTORY = _Paths.QUIZ_HISTORY;
   static const QUIZ_HISTORY_DETAIL = _Paths.QUIZ_HISTORY_DETAIL;
+  static const PAYMENT_RESULT = _Paths.PAYMENT_RESULT;
 }
 
 abstract class _Paths {
@@ -45,4 +46,5 @@ abstract class _Paths {
   static const ONE_VS_ONE_ROOM = '/one-vs-one-room';
   static const QUIZ_HISTORY = '/quiz-history';
   static const QUIZ_HISTORY_DETAIL = '/quiz-history-detail';
+  static const PAYMENT_RESULT = '/payment-result';
 }

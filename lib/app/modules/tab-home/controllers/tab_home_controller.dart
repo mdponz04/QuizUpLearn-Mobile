@@ -4,10 +4,15 @@ import 'package:get/get.dart';
 import 'package:quizkahoot/app/data/dio_interceptor.dart';
 import 'package:quizkahoot/app/modules/home/data/subscription_plan_api.dart';
 import 'package:quizkahoot/app/modules/home/data/subscription_plan_service.dart';
+import 'package:quizkahoot/app/modules/home/data/subscription_purchase_api.dart';
+import 'package:quizkahoot/app/modules/home/data/subscription_purchase_service.dart';
 import 'package:quizkahoot/app/modules/home/models/subscription_plan_model.dart';
 import 'package:quizkahoot/app/resource/color_manager.dart';
 import 'package:quizkahoot/app/resource/reponsive_utils.dart';
 import 'package:quizkahoot/app/resource/text_style.dart';
+import 'package:quizkahoot/app/service/basecommon.dart';
+import 'package:quizkahoot/app/service/url_handler_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 const baseUrl = 'https://qul-api.onrender.com/api';
 
@@ -22,8 +27,10 @@ class TabHomeController extends GetxController {
 
   // Subscription plans
   late SubscriptionPlanService subscriptionPlanService;
+  late SubscriptionPurchaseService subscriptionPurchaseService;
   var subscriptionPlans = <SubscriptionPlanModel>[].obs;
   var isLoadingPlans = false.obs;
+  var isPurchasing = false.obs;
 
   // Quick action methods
   void startQuiz() {
@@ -524,6 +531,77 @@ class TabHomeController extends GetxController {
     subscriptionPlanService = SubscriptionPlanService(
       subscriptionPlanApi: SubscriptionPlanApi(dio, baseUrl: baseUrl),
     );
+    subscriptionPurchaseService = SubscriptionPurchaseService(
+      subscriptionPurchaseApi: SubscriptionPurchaseApi(dio, baseUrl: baseUrl),
+    );
+  }
+
+  Future<void> purchaseSubscription(SubscriptionPlanModel plan) async {
+    final userId = BaseCommon.instance.userId;
+    if (userId.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Please login to purchase subscription',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    isPurchasing.value = true;
+    try {
+      final successUrl = UrlHandlerService.createPaymentSuccessUrl(
+        planId: plan.id,
+      );
+      final cancelUrl = UrlHandlerService.createPaymentCancelUrl(
+        planId: plan.id,
+      );
+
+      final response = await subscriptionPurchaseService.purchaseSubscription(
+        userId: userId,
+        planId: plan.id,
+        successUrl: successUrl,
+        cancelUrl: cancelUrl,
+      );
+
+      if (response.isSuccess && response.data != null) {
+        // Open payment URL
+        final paymentUrl = Uri.parse(response.data!.qrCodeUrl);
+        if (await canLaunchUrl(paymentUrl)) {
+          await launchUrl(
+            paymentUrl,
+            mode: LaunchMode.externalApplication,
+          );
+        } else {
+          Get.snackbar(
+            'Error',
+            'Cannot open payment link',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+        }
+      } else {
+        Get.snackbar(
+          'Error',
+          response.message,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to create payment link: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isPurchasing.value = false;
+    }
   }
 
   Future<void> loadSubscriptionPlans() async {

@@ -452,13 +452,13 @@ class TabHomeView extends StatelessWidget {
         gradient: LinearGradient(
           colors: isPro
               ? [
-                  ColorsManager.primary,
-                  ColorsManager.primary.withOpacity(0.8),
+            ColorsManager.primary,
+            ColorsManager.primary.withOpacity(0.8),
                 ]
               : [
                   Colors.grey[600]!,
                   Colors.grey[700]!,
-                ],
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -523,21 +523,21 @@ class TabHomeView extends StatelessWidget {
               ],
             ),
 
-            SizedBox(height: UtilsReponsive.height(12, context)),
+                  SizedBox(height: UtilsReponsive.height(12, context)),
 
             // Features
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: [
+                    children: [
                 _buildFeatureItem(
-                  context,
+                          context,
                   "Duration: ${plan.formattedDuration}",
                   Icons.calendar_today,
                 ),
                 SizedBox(height: UtilsReponsive.height(6, context)),
                 _buildFeatureItem(
-                  context,
+                          context,
                   plan.canAccessPremiumContent
                       ? "Premium Content"
                       : "Basic Content",
@@ -547,27 +547,22 @@ class TabHomeView extends StatelessWidget {
                 ),
                 SizedBox(height: UtilsReponsive.height(6, context)),
                 _buildFeatureItem(
-                  context,
+                          context,
                   "AI Features: ${plan.aiGenerateQuizSetMaxTimes} times",
                   Icons.auto_awesome,
                 ),
               ],
             ),
 
-            SizedBox(height: UtilsReponsive.height(12, context)),
+                  SizedBox(height: UtilsReponsive.height(12, context)),
 
             // Subscribe Button
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Handle subscription
-                  Get.snackbar(
-                    'Subscription',
-                    'Selected ${plan.name} plan',
-                    snackPosition: SnackPosition.BOTTOM,
-                  );
-                },
+              child: Obx(() => ElevatedButton(
+                onPressed: tabController.isPurchasing.value
+                    ? null
+                    : () => tabController.purchaseSubscription(plan),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: cardColor,
@@ -578,13 +573,22 @@ class TabHomeView extends StatelessWidget {
                     vertical: UtilsReponsive.height(12, context),
                   ),
                 ),
-                child: TextConstant.subTile2(
-                  context,
-                  text: plan.price == 0 ? "Get Started" : "Subscribe",
-                  color: cardColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+                child: tabController.isPurchasing.value
+                    ? SizedBox(
+                        width: UtilsReponsive.width(20, context),
+                        height: UtilsReponsive.width(20, context),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(cardColor),
+                        ),
+                      )
+                    : TextConstant.subTile2(
+                        context,
+                        text: plan.price == 0 ? "Get Started" : "Subscribe",
+                        color: cardColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+              )),
             ),
           ],
         ),
@@ -598,12 +602,12 @@ class TabHomeView extends StatelessWidget {
     IconData icon,
   ) {
     return Row(
-      children: [
-        Icon(
-          icon,
+        children: [
+          Icon(
+            icon,
           color: Colors.white,
-          size: UtilsReponsive.height(16, context),
-        ),
+            size: UtilsReponsive.height(16, context),
+          ),
         SizedBox(width: UtilsReponsive.width(8, context)),
         Expanded(
           child: TextConstant.subTile3(
