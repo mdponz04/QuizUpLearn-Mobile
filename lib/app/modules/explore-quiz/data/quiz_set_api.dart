@@ -9,11 +9,11 @@ part 'quiz_set_api.g.dart';
 abstract class QuizSetApi {
   factory QuizSetApi(Dio dio, {required String? baseUrl}) = _QuizSetApi;
   
-  @GET('/quizset/published')
-  Future<QuizSetResponse> getQuizSets();
+  @POST('/quizset/published/search')
+  Future<QuizSetResponse> getQuizSets(@Body() Map<String, dynamic> body);
   
-  @GET('/quizset/creator/{userId}')
-  Future<QuizSetResponse> getQuizSetsByCreator(@Path('userId') String userId);
+  @POST('/quizset/creator/{userId}/search')
+  Future<QuizSetResponse> getQuizSetsByCreator(@Path('userId') String userId, @Body() Map<String, dynamic> body);
   
   @GET('/quizset/{quizSetId}')
   Future<QuizSetDetailResponse> getQuizSetById(@Path('quizSetId') String quizSetId);

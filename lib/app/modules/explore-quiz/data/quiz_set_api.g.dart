@@ -18,16 +18,17 @@ class _QuizSetApi implements QuizSetApi {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<QuizSetResponse> getQuizSets() async {
+  Future<QuizSetResponse> getQuizSets(Map<String, dynamic> body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
+    final _data = <String, dynamic>{};
+    _data.addAll(body);
     final _options = _setStreamType<QuizSetResponse>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
+      Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/quizset/published',
+            '/quizset/published/search',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -45,16 +46,20 @@ class _QuizSetApi implements QuizSetApi {
   }
 
   @override
-  Future<QuizSetResponse> getQuizSetsByCreator(String userId) async {
+  Future<QuizSetResponse> getQuizSetsByCreator(
+    String userId,
+    Map<String, dynamic> body,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
+    final _data = <String, dynamic>{};
+    _data.addAll(body);
     final _options = _setStreamType<QuizSetResponse>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
+      Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/quizset/creator/${userId}',
+            '/quizset/creator/${userId}/search',
             queryParameters: queryParameters,
             data: _data,
           )

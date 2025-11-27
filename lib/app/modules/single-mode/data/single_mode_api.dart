@@ -16,4 +16,5 @@ abstract class SingleModeApi {
 
   @POST('/quizattemptdetail/submit')
   Future<SubmitAllAnswersResponse> submitAllAnswers(@Body() SubmitAllAnswersRequest request);
+
 }

@@ -11,7 +11,7 @@ class QuizSetService {
 
   Future<BaseResponse<List<QuizSetModel>>> getQuizSets() async {
     try {
-      final response = await quizSetApi.getQuizSets();
+      final response = await quizSetApi.getQuizSets({});
       log("Quiz sets response: ${response.toString()}");
       
       if (response.success) {
@@ -34,7 +34,7 @@ class QuizSetService {
 
   Future<BaseResponse<List<QuizSetModel>>> getQuizSetsByCreator(String userId) async {
     try {
-      final response = await quizSetApi.getQuizSetsByCreator(userId);
+      final response = await quizSetApi.getQuizSetsByCreator(userId, {});
       log("Quiz sets by creator response: ${response.toString()}");
       
       if (response.success) {

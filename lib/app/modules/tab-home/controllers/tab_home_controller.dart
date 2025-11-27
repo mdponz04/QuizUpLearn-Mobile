@@ -1,8 +1,15 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:quizkahoot/app/data/dio_interceptor.dart';
+import 'package:quizkahoot/app/modules/home/data/subscription_plan_api.dart';
+import 'package:quizkahoot/app/modules/home/data/subscription_plan_service.dart';
+import 'package:quizkahoot/app/modules/home/models/subscription_plan_model.dart';
 import 'package:quizkahoot/app/resource/color_manager.dart';
 import 'package:quizkahoot/app/resource/reponsive_utils.dart';
 import 'package:quizkahoot/app/resource/text_style.dart';
+
+const baseUrl = 'https://qul-api.onrender.com/api';
 
 class TabHomeController extends GetxController {
   // User progress data
@@ -12,6 +19,11 @@ class TabHomeController extends GetxController {
   final currentStreak = 7.obs;
   final totalBadges = 5.obs;
   final recentBadge = "Quiz Master".obs;
+
+  // Subscription plans
+  late SubscriptionPlanService subscriptionPlanService;
+  var subscriptionPlans = <SubscriptionPlanModel>[].obs;
+  var isLoadingPlans = false.obs;
 
   // Quick action methods
   void startQuiz() {
@@ -502,7 +514,40 @@ class TabHomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Initialize any data loading here
+    _initializeSubscriptionPlanService();
+    loadSubscriptionPlans();
+  }
+
+  void _initializeSubscriptionPlanService() {
+    Dio dio = Dio();
+    dio.interceptors.add(DioIntercepTorCustom());
+    subscriptionPlanService = SubscriptionPlanService(
+      subscriptionPlanApi: SubscriptionPlanApi(dio, baseUrl: baseUrl),
+    );
+  }
+
+  Future<void> loadSubscriptionPlans() async {
+    isLoadingPlans.value = true;
+    try {
+      final response = await subscriptionPlanService.getSubscriptionPlans();
+      if (response.isSuccess && response.data != null) {
+        subscriptionPlans.value = response.data!;
+      } else {
+        Get.snackbar(
+          'Error',
+          response.message,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to load subscription plans',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoadingPlans.value = false;
+    }
   }
 
   @override
