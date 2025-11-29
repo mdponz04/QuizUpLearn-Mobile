@@ -98,10 +98,10 @@ class TabHomeView extends StatelessWidget {
                 Expanded(
                   child: _buildActionCard(
                     context,
-                    "History",
-                    'assets/images/progress.png',
+                    "Tournament",
+                    'assets/images/trophy.png',
                     Colors.purple,
-                    tabController.viewHistory,
+                    tabController.viewTournament,
                   ),
                 ),
               ],

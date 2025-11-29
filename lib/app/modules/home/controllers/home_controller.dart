@@ -561,6 +561,11 @@ class HomeController extends GetxController {
       );
     }
   }
+
+  void viewTournament() {
+    // Navigate to tournament page
+    Get.toNamed('/tournament');
+  }
 }
 
 class NavigationItem {

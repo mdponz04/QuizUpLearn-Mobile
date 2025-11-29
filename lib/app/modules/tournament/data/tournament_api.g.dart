@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'quiz_set_api.dart';
+part of 'tournament_api.dart';
 
 // **************************************************************************
 // RetrofitGenerator
@@ -8,8 +8,8 @@ part of 'quiz_set_api.dart';
 
 // ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers,unused_element,unnecessary_string_interpolations,unused_element_parameter
 
-class _QuizSetApi implements QuizSetApi {
-  _QuizSetApi(this._dio, {this.baseUrl, this.errorLogger});
+class _TournamentApi implements TournamentApi {
+  _TournamentApi(this._dio, {this.baseUrl, this.errorLogger});
 
   final Dio _dio;
 
@@ -18,26 +18,27 @@ class _QuizSetApi implements QuizSetApi {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<QuizSetResponse> getQuizSets(Map<String, dynamic> body) async {
+  Future<TournamentResponse> getTournaments(bool includeDeleted) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'includeDeleted': includeDeleted,
+    };
     final _headers = <String, dynamic>{};
-    final _data = <String, dynamic>{};
-    _data.addAll(body);
-    final _options = _setStreamType<QuizSetResponse>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<TournamentResponse>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/quizset/published/search',
+            '/tournament',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late QuizSetResponse _value;
+    late TournamentResponse _value;
     try {
-      _value = QuizSetResponse.fromJson(_result.data!);
+      _value = TournamentResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -46,26 +47,25 @@ class _QuizSetApi implements QuizSetApi {
   }
 
   @override
-  Future<QuizSetResponse> searchQuizSets(Map<String, dynamic> body) async {
+  Future<TournamentJoinedResponse> checkJoined(String tournamentId) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    final _data = <String, dynamic>{};
-    _data.addAll(body);
-    final _options = _setStreamType<QuizSetResponse>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<TournamentJoinedResponse>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/quizset/search',
+            '/tournament/${tournamentId}/joined',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late QuizSetResponse _value;
+    late TournamentJoinedResponse _value;
     try {
-      _value = QuizSetResponse.fromJson(_result.data!);
+      _value = TournamentJoinedResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -74,8 +74,8 @@ class _QuizSetApi implements QuizSetApi {
   }
 
   @override
-  Future<QuizSetResponse> getQuizSetsByCreator(
-    String userId,
+  Future<TournamentJoinResponse> joinTournament(
+    String tournamentId,
     Map<String, dynamic> body,
   ) async {
     final _extra = <String, dynamic>{};
@@ -83,20 +83,20 @@ class _QuizSetApi implements QuizSetApi {
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(body);
-    final _options = _setStreamType<QuizSetResponse>(
+    final _options = _setStreamType<TournamentJoinResponse>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/quizset/creator/${userId}/search',
+            '/tournament/${tournamentId}/join',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late QuizSetResponse _value;
+    late TournamentJoinResponse _value;
     try {
-      _value = QuizSetResponse.fromJson(_result.data!);
+      _value = TournamentJoinResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -105,25 +105,27 @@ class _QuizSetApi implements QuizSetApi {
   }
 
   @override
-  Future<QuizSetDetailResponse> getQuizSetById(String quizSetId) async {
+  Future<TournamentTodayResponse> getTournamentToday(
+    String tournamentId,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<QuizSetDetailResponse>(
+    final _options = _setStreamType<TournamentTodayResponse>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/quizset/${quizSetId}',
+            '/tournament/${tournamentId}/today',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late QuizSetDetailResponse _value;
+    late TournamentTodayResponse _value;
     try {
-      _value = QuizSetDetailResponse.fromJson(_result.data!);
+      _value = TournamentTodayResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;

@@ -12,6 +12,9 @@ abstract class QuizSetApi {
   @POST('/quizset/published/search')
   Future<QuizSetResponse> getQuizSets(@Body() Map<String, dynamic> body);
   
+  @POST('/quizset/search')
+  Future<QuizSetResponse> searchQuizSets(@Body() Map<String, dynamic> body);
+  
   @POST('/quizset/creator/{userId}/search')
   Future<QuizSetResponse> getQuizSetsByCreator(@Path('userId') String userId, @Body() Map<String, dynamic> body);
   

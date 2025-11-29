@@ -35,6 +35,8 @@ import '../modules/quiz-history/views/quiz_history_view.dart';
 import '../modules/quiz-history/bindings/quiz_history_detail_binding.dart';
 import '../modules/quiz-history/views/quiz_history_detail_view.dart';
 import '../modules/payment/views/payment_result_view.dart';
+import '../modules/tournament/bindings/tournament_binding.dart';
+import '../modules/tournament/views/tournament_view.dart';
 
 part 'app_routes.dart';
 
@@ -134,6 +136,11 @@ class AppPages {
       name: _Paths.QUIZ_HISTORY_DETAIL,
       page: () => const QuizHistoryDetailView(),
       binding: QuizHistoryDetailBinding(),
+    ),
+    GetPage(
+      name: _Paths.TOURNAMENT,
+      page: () => const TournamentView(),
+      binding: TournamentBinding(),
     ),
   ];
 }

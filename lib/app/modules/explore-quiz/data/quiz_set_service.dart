@@ -54,4 +54,27 @@ class QuizSetService {
       );
     }
   }
+
+  Future<BaseResponse<List<QuizSetModel>>> searchQuizSets(Map<String, dynamic> body) async {
+    try {
+      final response = await quizSetApi.searchQuizSets(body);
+      log("Search quiz sets response: ${response.toString()}");
+      
+      if (response.success) {
+        return BaseResponse(
+          isSuccess: true,
+          message: 'Success',
+          data: response.data,
+        );
+      } else {
+        return BaseResponse.error(
+          response.message ?? 'Failed to search quiz sets',
+        );
+      }
+    } on DioException catch (e) {
+      return BaseResponse.error(
+        e.response?.data['message'] ?? 'An error occurred while searching quiz sets',
+      );
+    }
+  }
 }

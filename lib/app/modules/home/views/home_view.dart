@@ -142,13 +142,21 @@ class HomeView extends GetView<HomeController> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
+          // IconButton(
+          //   onPressed: () => controller.loadMyQuizSets(),
+          //   icon: Icon(
+          //     Icons.refresh,
+          //     color: ColorsManager.primary,
+          //   ),
+          //   tooltip: 'Refresh',
+          // ),
           IconButton(
-            onPressed: () => controller.loadMyQuizSets(),
+            onPressed: () => controller.viewTournament(),
             icon: Icon(
-              Icons.refresh,
+              Icons.emoji_events,
               color: ColorsManager.primary,
             ),
-            tooltip: 'Refresh',
+            tooltip: 'Tournament',
           ),
           IconButton(
             onPressed: () => _showAIGenerateDialog(context),

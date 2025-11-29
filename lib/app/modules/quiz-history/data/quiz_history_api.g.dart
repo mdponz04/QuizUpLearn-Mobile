@@ -18,9 +18,19 @@ class _QuizHistoryApi implements QuizHistoryApi {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<QuizAttemptHistoryResponse> getUserHistory(String userId) async {
+  Future<QuizAttemptHistoryResponse> getUserHistory(
+    String userId, {
+    String? quizSetId,
+    String? status,
+    String? attemptType,
+  }) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'quizSetId': quizSetId,
+      r'status': status,
+      r'attemptType': attemptType,
+    };
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<QuizAttemptHistoryResponse>(

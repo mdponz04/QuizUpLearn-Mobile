@@ -23,6 +23,7 @@ abstract class Routes {
   static const QUIZ_HISTORY = _Paths.QUIZ_HISTORY;
   static const QUIZ_HISTORY_DETAIL = _Paths.QUIZ_HISTORY_DETAIL;
   static const PAYMENT_RESULT = _Paths.PAYMENT_RESULT;
+  static const TOURNAMENT = _Paths.TOURNAMENT;
 }
 
 abstract class _Paths {
@@ -47,4 +48,5 @@ abstract class _Paths {
   static const QUIZ_HISTORY = '/quiz-history';
   static const QUIZ_HISTORY_DETAIL = '/quiz-history-detail';
   static const PAYMENT_RESULT = '/payment-result';
+  static const TOURNAMENT = '/tournament';
 }

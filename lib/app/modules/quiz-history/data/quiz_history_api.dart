@@ -9,6 +9,11 @@ abstract class QuizHistoryApi {
   factory QuizHistoryApi(Dio dio, {required String? baseUrl}) = _QuizHistoryApi;
   
   @GET('/quizattempt/user/{userId}/history')
-  Future<QuizAttemptHistoryResponse> getUserHistory(@Path('userId') String userId);
+  Future<QuizAttemptHistoryResponse> getUserHistory(
+    @Path('userId') String userId, {
+    @Query('quizSetId') String? quizSetId,
+    @Query('status') String? status,
+    @Query('attemptType') String? attemptType,
+  });
 }
 

@@ -59,7 +59,15 @@ class PlacementTestsController extends GetxController {
   Future<void> loadQuizSets() async {
     try {
       isLoading.value = true;
-      final response = await quizSetService.getQuizSets();
+      
+      // Call API with filter for placement tests
+      final requestBody = {
+        "filters": {
+          "quizSetType": "placement"
+        }
+      };
+      
+      final response = await quizSetService.searchQuizSets(requestBody);
       
       if (response.isSuccess && response.data != null) {
         quizSets.value = response.data!;

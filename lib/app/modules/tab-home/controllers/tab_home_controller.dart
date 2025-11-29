@@ -495,9 +495,9 @@ class TabHomeController extends GetxController {
     Get.toNamed('/placement-tests');
   }
 
-  void viewHistory() {
-    // Navigate to quiz history page
-    Get.toNamed('/quiz-history');
+  void viewTournament() {
+    // Navigate to tournament page
+    Get.toNamed('/tournament');
   }
 
   void showNotifications() {
