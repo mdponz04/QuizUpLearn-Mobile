@@ -142,22 +142,22 @@ class HomeView extends GetView<HomeController> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          // IconButton(
-          //   onPressed: () => controller.loadMyQuizSets(),
-          //   icon: Icon(
-          //     Icons.refresh,
-          //     color: ColorsManager.primary,
-          //   ),
-          //   tooltip: 'Refresh',
-          // ),
           IconButton(
-            onPressed: () => controller.viewTournament(),
+            onPressed: () => Get.toNamed('/quiz-history'),
             icon: Icon(
-              Icons.emoji_events,
+              Icons.history,
               color: ColorsManager.primary,
             ),
-            tooltip: 'Tournament',
+            tooltip: 'History',
           ),
+          // IconButton(
+          //   onPressed: () => controller.viewTournament(),
+          //   icon: Icon(
+          //     Icons.emoji_events,
+          //     color: ColorsManager.primary,
+          //   ),
+          //   tooltip: 'Tournament',
+          // ),
           IconButton(
             onPressed: () => _showAIGenerateDialog(context),
             icon: Icon(
