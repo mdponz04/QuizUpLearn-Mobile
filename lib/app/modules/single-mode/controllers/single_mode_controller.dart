@@ -40,6 +40,9 @@ class SingleModeController extends GetxController {
   
   // User info
   String? userId;
+  
+  // Flag to identify if this is a placement test
+  var isPlacementTest = false.obs;
 
   @override
   void onInit() {
@@ -81,7 +84,7 @@ class SingleModeController extends GetxController {
     userId = BaseCommon.instance.userId;
   }
 
-  Future<void> startQuiz(String quizSetId) async {
+  Future<void> startQuiz(String quizSetId, {bool isPlacement = false}) async {
     if (userId == null) {
       Get.snackbar(
         'Error',
@@ -94,6 +97,7 @@ class SingleModeController extends GetxController {
 
     try {
       isLoading.value = true;
+      isPlacementTest.value = isPlacement;
       
       final request = StartQuizRequest(
         quizSetId: quizSetId,
@@ -141,6 +145,11 @@ class SingleModeController extends GetxController {
     
     _loadCurrentQuestion();
     _startTimer();
+  }
+  
+  // Reset placement test flag when needed
+  void resetPlacementTestFlag() {
+    isPlacementTest.value = false;
   }
 
   void _loadCurrentQuestion() {
@@ -301,7 +310,10 @@ class SingleModeController extends GetxController {
         answers: answers,
       );
       
-      final response = await singleModeService.submitAllAnswers(request);
+      // Use different endpoint for placement test
+      final response = isPlacementTest.value
+          ? await singleModeService.submitPlacementTest(request)
+          : await singleModeService.submitAllAnswers(request);
       
       if (response.isSuccess && response.data != null && response.data!.data != null) {
         isQuizCompleted.value = true;

@@ -19,6 +19,14 @@ import 'package:quizkahoot/app/modules/single-mode/controllers/single_mode_contr
 import 'package:quizkahoot/app/service/basecommon.dart';
 import 'package:quizkahoot/app/resource/reponsive_utils.dart';
 import 'package:quizkahoot/app/resource/text_style.dart';
+import 'package:quizkahoot/app/modules/home/data/subscription_plan_api.dart';
+import 'package:quizkahoot/app/modules/home/data/subscription_plan_service.dart';
+import 'package:quizkahoot/app/modules/home/data/subscription_purchase_api.dart';
+import 'package:quizkahoot/app/modules/home/data/subscription_purchase_service.dart';
+import 'package:quizkahoot/app/modules/home/models/subscription_plan_model.dart';
+import 'package:quizkahoot/app/modules/home/models/user_subscription_model.dart';
+import 'package:quizkahoot/app/service/url_handler_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 const baseUrl = 'https://qul-api.onrender.com/api';
 
@@ -30,10 +38,20 @@ class HomeController extends GetxController {
   late QuizSetService quizSetService;
   late GameService gameService;
   late OneVsOneRoomService oneVsOneRoomService;
+  late SubscriptionPlanService subscriptionPlanService;
+  late SubscriptionPurchaseService subscriptionPurchaseService;
   var isLoading = false.obs;
   var isLoadingMyQuiz = false.obs;
   var isLoadingGame = false.obs;
   var myQuizSets = <QuizSetModel>[].obs;
+  
+  // Subscription plans
+  var subscriptionPlans = <SubscriptionPlanModel>[].obs;
+  var isLoadingPlans = false.obs;
+  var isPurchasing = false.obs;
+  var userSubscription = Rxn<UserSubscriptionModel>();
+  var isLoadingSubscription = false.obs;
+  var activeSubscriptionPlan = Rxn<SubscriptionPlanModel>();
 
   // AI Quiz Dialog state
   var selectedPart = 'Part 1'.obs;
@@ -92,6 +110,8 @@ class HomeController extends GetxController {
     _initializeQuizSetService();
     _initializeGameService();
     _initializeOneVsOneRoomService();
+    _initializeSubscriptionPlanService();
+    // loadSubscriptionPlans();
     super.onInit();
   }
 
@@ -133,6 +153,17 @@ class HomeController extends GetxController {
     );
   }
 
+  void _initializeSubscriptionPlanService() {
+    Dio dio = Dio();
+    dio.interceptors.add(DioIntercepTorCustom());
+    subscriptionPlanService = SubscriptionPlanService(
+      subscriptionPlanApi: SubscriptionPlanApi(dio, baseUrl: baseUrl),
+    );
+    subscriptionPurchaseService = SubscriptionPurchaseService(
+      subscriptionPurchaseApi: SubscriptionPurchaseApi(dio, baseUrl: baseUrl),
+    );
+  }
+
   void changeTabIndex(int index) {
     currentIndex.value = index;
     pageController.animateToPage(
@@ -140,17 +171,19 @@ class HomeController extends GetxController {
       duration: const Duration(milliseconds: 300),
       curve: Curves.ease,
     );
-    // Load My Quiz when switching to My Quiz tab
+    // Load My Quiz and check subscription when switching to My Quiz tab
     if (index == 1) {
       loadMyQuizSets();
+      checkUserSubscription();
     }
   }
 
   void onPageChanged(int index) {
     currentIndex.value = index;
-    // Load My Quiz when switching to My Quiz tab
+    // Load My Quiz and check subscription when switching to My Quiz tab
     if (index == 1) {
       loadMyQuizSets();
+      checkUserSubscription();
     }
   }
 
@@ -565,6 +598,162 @@ class HomeController extends GetxController {
   void viewTournament() {
     // Navigate to tournament page
     Get.toNamed('/tournament');
+  }
+
+  Future<void> purchaseSubscription(SubscriptionPlanModel plan) async {
+    final userId = BaseCommon.instance.userId;
+    if (userId.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Please login to purchase subscription',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    isPurchasing.value = true;
+    try {
+      final successUrl = UrlHandlerService.createPaymentSuccessUrl(
+        planId: plan.id,
+      );
+      final cancelUrl = UrlHandlerService.createPaymentCancelUrl(
+        planId: plan.id,
+      );
+
+      final response = await subscriptionPurchaseService.purchaseSubscription(
+        userId: userId,
+        planId: plan.id,
+        successUrl: successUrl,
+        cancelUrl: cancelUrl,
+      );
+
+      if (response.isSuccess && response.data != null) {
+        // Open payment URL
+        final paymentUrl = Uri.parse(response.data!.qrCodeUrl);
+        if (await canLaunchUrl(paymentUrl)) {
+          await launchUrl(
+            paymentUrl,
+            mode: LaunchMode.externalApplication,
+          );
+        } else {
+          Get.snackbar(
+            'Error',
+            'Cannot open payment link',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+        }
+      } else {
+        Get.snackbar(
+          'Error',
+          response.message,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to create payment link: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isPurchasing.value = false;
+    }
+  }
+
+  Future<void> checkUserSubscription() async {
+    final userId = BaseCommon.instance.userId;
+    if (userId.isEmpty) {
+      // If no userId, load plans anyway
+      await loadSubscriptionPlans();
+      return;
+    }
+
+    isLoadingSubscription.value = true;
+    try {
+      final response = await subscriptionPlanService.getUserSubscription();
+      if (response.isSuccess && response.data != null) {
+        userSubscription.value = response.data!;
+        
+        // If subscription is active, load plan details
+        if (response.data!.isActive) {
+          log('User has active subscription, loading plan details');
+          await _loadActiveSubscriptionPlan(response.data!.subscriptionPlanId);
+          return;
+        }
+      }
+      
+      // If no subscription or expired, load plans
+      await loadSubscriptionPlans();
+    } catch (e) {
+      log('Error checking user subscription: $e');
+      // If error, load plans anyway
+      await loadSubscriptionPlans();
+    } finally {
+      isLoadingSubscription.value = false;
+    }
+  }
+
+  Future<void> _loadActiveSubscriptionPlan(String planId) async {
+    try {
+      // Load plans if not already loaded
+      if (subscriptionPlans.isEmpty) {
+        final response = await subscriptionPlanService.getSubscriptionPlans();
+        if (response.isSuccess && response.data != null) {
+          subscriptionPlans.value = response.data!;
+        }
+      }
+      
+      // Find the plan
+      final plan = subscriptionPlans.firstWhere(
+        (plan) => plan.id == planId,
+        orElse: () => SubscriptionPlanModel(
+          id: planId,
+          name: 'Unknown Plan',
+          price: 0,
+          durationDays: 0,
+          canAccessPremiumContent: false,
+          canAccessAiFeatures: false,
+          aiGenerateQuizSetMaxTimes: 0,
+          isActive: true,
+          createdAt: '',
+        ),
+      );
+      activeSubscriptionPlan.value = plan;
+    } catch (e) {
+      log('Error loading active subscription plan: $e');
+    }
+  }
+
+  Future<void> loadSubscriptionPlans() async {
+    isLoadingPlans.value = true;
+    try {
+      final response = await subscriptionPlanService.getSubscriptionPlans();
+      if (response.isSuccess && response.data != null) {
+        subscriptionPlans.value = response.data!;
+      } else {
+        Get.snackbar(
+          'Error',
+          response.message,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to load subscription plans',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoadingPlans.value = false;
+    }
   }
 }
 

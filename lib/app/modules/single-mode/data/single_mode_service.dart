@@ -43,4 +43,20 @@ class SingleModeService {
       );
     }
   }
+
+  Future<BaseResponse<SubmitAllAnswersResponse>> submitPlacementTest(SubmitAllAnswersRequest request) async {
+    try {
+      final response = await singleModeApi.submitPlacementTest(request);
+      log("Submit placement test response: ${response.toString()}");
+      return BaseResponse(
+        isSuccess: true,
+        message: 'Placement test submitted successfully',
+        data: response,
+      );
+    } on DioException catch (e) {
+      return BaseResponse.error(
+        e.response?.data['message'] ?? 'An error occurred while submitting placement test',
+      );
+    }
+  }
 }

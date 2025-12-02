@@ -127,8 +127,9 @@ class PlacementTestsController extends GetxController {
 
   void startQuiz(QuizSetModel quizSet) {
     // Navigate to Single Mode controller and start quiz
+    // Set isPlacement = true to use placement test submit endpoint
     final singleModeController = Get.find<SingleModeController>();
-    singleModeController.startQuiz(quizSet.id);
+    singleModeController.startQuiz(quizSet.id, isPlacement: true);
   }
 
   Future<void> createGameRoom(QuizSetModel quizSet) async {

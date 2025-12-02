@@ -8,6 +8,7 @@ import '../controllers/home_controller.dart';
 import '../../tab-home/views/tab_home_view.dart';
 import '../../tab-home/controllers/tab_home_controller.dart';
 import '../../explore-quiz/models/quiz_set_model.dart';
+import '../../home/models/subscription_plan_model.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -168,17 +169,44 @@ class HomeView extends GetView<HomeController> {
           ),
         ],
       ),
-      body: Obx(() {
-        if (controller.isLoadingMyQuiz.value) {
-          return _buildMyQuizLoadingState(context);
-        }
-        
-        if (controller.myQuizSets.isEmpty) {
-          return _buildMyQuizEmptyState(context);
-        }
-        
-        return _buildMyQuizList(context);
-      }),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Subscription Info or Plans Carousel
+            Obx(() {
+              if (controller.isLoadingSubscription.value) {
+                return _buildSubscriptionLoadingState(context);
+              }
+              
+              if (controller.userSubscription.value != null && 
+                  controller.userSubscription.value!.isActive) {
+                return _buildActiveSubscriptionInfo(context);
+              }
+              
+              return _buildSubscriptionPlansCarousel(context);
+            }),
+            
+            SizedBox(height: UtilsReponsive.height(24, context)),
+            
+            // My Quiz List
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: UtilsReponsive.width(16, context)),
+              child: Obx(() {
+                if (controller.isLoadingMyQuiz.value) {
+                  return _buildMyQuizLoadingState(context);
+                }
+                
+                if (controller.myQuizSets.isEmpty) {
+                  return _buildMyQuizEmptyState(context);
+                }
+                
+                return _buildMyQuizList(context);
+              }),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAIGenerateDialog(context),
         backgroundColor: ColorsManager.primary,
@@ -238,7 +266,8 @@ class HomeView extends GetView<HomeController> {
       onRefresh: controller.loadMyQuizSets,
       color: ColorsManager.primary,
       child: ListView.builder(
-        padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
         itemCount: controller.myQuizSets.length,
         itemBuilder: (context, index) {
           final quizSet = controller.myQuizSets[index];
@@ -610,11 +639,11 @@ class HomeView extends GetView<HomeController> {
               ),
               SizedBox(height: UtilsReponsive.height(24, context)),
               
-              // Multi Mode Option
+              // Multi Player (Quản trò) Option
               _buildGameModeOption(
                 context,
                 icon: Icons.people,
-                title: "Multi Player",
+                title: "Quản trò",
                 description: "Nhiều người chơi cùng lúc\nHost tạo phòng, players join bằng PIN",
                 color: Colors.purple,
                 onTap: () {
@@ -625,16 +654,31 @@ class HomeView extends GetView<HomeController> {
               
               SizedBox(height: UtilsReponsive.height(16, context)),
               
-              // 1vs1 Mode Option
+              // 1 vs 1 Option
               _buildGameModeOption(
                 context,
                 icon: Icons.person,
-                title: "1 vs 1 / Multiplayer",
-                description: "Đấu trực tiếp hoặc nhiều người chơi\nPlayer1 tạo phòng, Players join",
+                title: "1 vs 1",
+                description: "Đấu trực tiếp với 1 người chơi",
                 color: Colors.orange,
                 onTap: () {
                   Get.back();
-                  controller.showOneVsOneModeDialog(quizSet);
+                  controller.createOneVsOneRoom(quizSet, mode: 0);
+                },
+              ),
+              
+              SizedBox(height: UtilsReponsive.height(16, context)),
+              
+              // Multiplayer Option
+              _buildGameModeOption(
+                context,
+                icon: Icons.people_outline,
+                title: "Multiplayer",
+                description: "Nhiều người chơi cùng lúc (không giới hạn)",
+                color: Colors.purple,
+                onTap: () {
+                  Get.back();
+                  controller.createOneVsOneRoom(quizSet, mode: 1);
                 },
               ),
               
@@ -1250,6 +1294,424 @@ class HomeView extends GetView<HomeController> {
         ),
         tileColor: Colors.white,
       ),
+    );
+  }
+
+  Widget _buildSubscriptionLoadingState(BuildContext context) {
+    return Container(
+      height: UtilsReponsive.height(100, context),
+      padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+      child: Center(
+        child: CircularProgressIndicator(
+          color: ColorsManager.primary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActiveSubscriptionInfo(BuildContext context) {
+    return Obx(() {
+      final subscription = controller.userSubscription.value;
+      final plan = controller.activeSubscriptionPlan.value;
+      
+      if (subscription == null) {
+        return SizedBox.shrink();
+      }
+
+      return Padding(
+        padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                ColorsManager.primary,
+                ColorsManager.primary.withOpacity(0.8),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: ColorsManager.primary.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Icon(
+                      Icons.verified,
+                      color: Colors.white,
+                      size: UtilsReponsive.height(24, context),
+                    ),
+                    SizedBox(width: UtilsReponsive.width(8, context)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextConstant.titleH3(
+                            context,
+                            text: plan?.name ?? "Active Subscription",
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            size: 18,
+                          ),
+                          SizedBox(height: UtilsReponsive.height(4, context)),
+                          TextConstant.subTile3(
+                            context,
+                            text: "Subscription Active",
+                            color: Colors.white.withOpacity(0.9),
+                            size: 12,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: UtilsReponsive.width(8, context),
+                        vertical: UtilsReponsive.height(4, context),
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: TextConstant.subTile4(
+                        context,
+                        text: "ACTIVE",
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        size: 10,
+                      ),
+                    ),
+                  ],
+                ),
+                
+                SizedBox(height: UtilsReponsive.height(16, context)),
+                
+                // Info Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildSubscriptionInfoItem(
+                        context,
+                        Icons.calendar_today,
+                        "Expires",
+                        _formatSubscriptionDate(subscription.endDate),
+                      ),
+                    ),
+                    SizedBox(width: UtilsReponsive.width(12, context)),
+                    Expanded(
+                      child: _buildSubscriptionInfoItem(
+                        context,
+                        Icons.auto_awesome,
+                        "AI Remaining",
+                        "${subscription.aiGenerateQuizSetRemaining} times",
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildSubscriptionInfoItem(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              icon,
+              color: Colors.white.withOpacity(0.8),
+              size: UtilsReponsive.height(14, context),
+            ),
+            SizedBox(width: UtilsReponsive.width(4, context)),
+            TextConstant.subTile4(
+              context,
+              text: label,
+              color: Colors.white.withOpacity(0.8),
+              size: 10,
+            ),
+          ],
+        ),
+        SizedBox(height: UtilsReponsive.height(4, context)),
+        TextConstant.subTile2(
+          context,
+          text: value,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          size: 13,
+        ),
+      ],
+    );
+  }
+
+  String _formatSubscriptionDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = date.difference(now);
+    
+    if (difference.inDays > 365) {
+      final years = (difference.inDays / 365).floor();
+      return "$years year${years > 1 ? 's' : ''}";
+    } else if (difference.inDays > 30) {
+      final months = (difference.inDays / 30).floor();
+      return "$months month${months > 1 ? 's' : ''}";
+    } else if (difference.inDays > 0) {
+      return "${difference.inDays} day${difference.inDays > 1 ? 's' : ''}";
+    } else {
+      return "Expired";
+    }
+  }
+
+  Widget _buildSubscriptionPlansCarousel(BuildContext context) {
+    return Obx(() {
+      if (controller.isLoadingPlans.value) {
+        return Container(
+          height: UtilsReponsive.height(200, context),
+          padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+          child: Center(
+            child: CircularProgressIndicator(
+              color: ColorsManager.primary,
+            ),
+          ),
+        );
+      }
+
+      if (controller.subscriptionPlans.isEmpty) {
+        return SizedBox.shrink();
+      }
+
+      return Padding(
+        padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextConstant.titleH3(
+              context,
+              text: "Subscription Plans",
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+            SizedBox(height: UtilsReponsive.height(12, context)),
+            SizedBox(
+              height: UtilsReponsive.height(250, context),
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: controller.subscriptionPlans.length,
+                itemBuilder: (context, index) {
+                  final plan = controller.subscriptionPlans[index];
+                  return _buildSubscriptionPlanCard(context, plan, index);
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildSubscriptionPlanCard(
+    BuildContext context,
+    SubscriptionPlanModel plan,
+    int index,
+  ) {
+    final isPro = plan.name.toLowerCase() == 'pro';
+    final cardColor = isPro ? ColorsManager.primary : Colors.grey[600]!;
+    
+    return Container(
+      width: UtilsReponsive.width(280, context),
+      margin: EdgeInsets.only(
+        right: index < controller.subscriptionPlans.length - 1
+            ? UtilsReponsive.width(16, context)
+            : 0,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isPro
+              ? [
+            ColorsManager.primary,
+            ColorsManager.primary.withOpacity(0.8),
+                ]
+              : [
+                  Colors.grey[600]!,
+                  Colors.grey[700]!,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: cardColor.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextConstant.titleH2(
+                        context,
+                        text: plan.name,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        size: 24,
+                      ),
+                      SizedBox(height: UtilsReponsive.height(4, context)),
+                      TextConstant.subTile1(
+                        context,
+                        text: plan.formattedPrice,
+                        color: Colors.white.withOpacity(0.9),
+                        size: 16,
+                      ),
+                    ],
+                  ),
+                ),
+                if (isPro)
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: UtilsReponsive.width(8, context),
+                      vertical: UtilsReponsive.height(4, context),
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.amber,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TextConstant.subTile4(
+                      context,
+                      text: "POPULAR",
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      size: 10,
+                    ),
+                  ),
+              ],
+            ),
+
+            SizedBox(height: UtilsReponsive.height(12, context)),
+
+            // Features
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildSubscriptionFeatureItem(
+                  context,
+                  "Duration: ${plan.formattedDuration}",
+                  Icons.calendar_today,
+                ),
+                SizedBox(height: UtilsReponsive.height(6, context)),
+                _buildSubscriptionFeatureItem(
+                  context,
+                  plan.canAccessPremiumContent
+                      ? "Premium Content"
+                      : "Basic Content",
+                  plan.canAccessPremiumContent
+                      ? Icons.star
+                      : Icons.star_border,
+                ),
+                SizedBox(height: UtilsReponsive.height(6, context)),
+                _buildSubscriptionFeatureItem(
+                  context,
+                  "AI Features: ${plan.aiGenerateQuizSetMaxTimes} times",
+                  Icons.auto_awesome,
+                ),
+              ],
+            ),
+
+            SizedBox(height: UtilsReponsive.height(12, context)),
+
+            // Subscribe Button
+            SizedBox(
+              width: double.infinity,
+              child: Obx(() => ElevatedButton(
+                onPressed: controller.isPurchasing.value
+                    ? null
+                    : () => controller.purchaseSubscription(plan),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: cardColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    vertical: UtilsReponsive.height(12, context),
+                  ),
+                ),
+                child: controller.isPurchasing.value
+                    ? SizedBox(
+                        width: UtilsReponsive.width(20, context),
+                        height: UtilsReponsive.width(20, context),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(cardColor),
+                        ),
+                      )
+                    : TextConstant.subTile2(
+                        context,
+                        text: plan.price == 0 ? "Get Started" : "Subscribe",
+                        color: cardColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+              )),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubscriptionFeatureItem(
+    BuildContext context,
+    String text,
+    IconData icon,
+  ) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          color: Colors.white,
+          size: UtilsReponsive.height(16, context),
+        ),
+        SizedBox(width: UtilsReponsive.width(8, context)),
+        Expanded(
+          child: TextConstant.subTile3(
+            context,
+            text: text,
+            color: Colors.white.withOpacity(0.9),
+            size: 12,
+          ),
+        ),
+      ],
     );
   }
 }

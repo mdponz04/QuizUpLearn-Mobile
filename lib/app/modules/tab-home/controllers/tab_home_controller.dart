@@ -90,7 +90,7 @@ class TabHomeController extends GetxController {
               _buildGameModeOption(
                 context,
                 icon: Icons.people,
-                title: "Multi Player",
+                title: "Multi Player(Quản trò)",
                 description: "Nhiều người chơi cùng lúc\nNhập PIN hoặc quét QR để tham gia",
                 color: Colors.purple,
                 onTap: () {
@@ -105,8 +105,8 @@ class TabHomeController extends GetxController {
               _buildGameModeOption(
                 context,
                 icon: Icons.person,
-                title: "1 vs 1",
-                description: "Đấu trực tiếp với 1 người chơi\nNhập PIN để tham gia",
+                title: "1 vs 1/Multi Player thường",
+                description: "Đấu trực tiếp với 1 người chơi\nNhập PIN hoặc quét QR để tham gia",
                 color: Colors.orange,
                 onTap: () {
                   Get.back();

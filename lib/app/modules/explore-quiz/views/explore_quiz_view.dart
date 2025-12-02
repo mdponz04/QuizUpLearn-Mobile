@@ -548,11 +548,11 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
               ),
               SizedBox(height: UtilsReponsive.height(24, context)),
               
-              // Multi Mode Option
+              // Multi Player (Quản trò) Option
               _buildGameModeOption(
                 context,
                 icon: Icons.people,
-                title: "Multi Player",
+                title: "Quản trò",
                 description: "Nhiều người chơi cùng lúc\nHost tạo phòng, players join bằng PIN",
                 color: Colors.purple,
                 onTap: () {
@@ -563,16 +563,31 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
               
               SizedBox(height: UtilsReponsive.height(16, context)),
               
-              // 1vs1 Mode Option
+              // 1 vs 1 Option
               _buildGameModeOption(
                 context,
                 icon: Icons.person,
-                title: "1 vs 1 / Multiplayer",
-                description: "Đấu trực tiếp hoặc nhiều người chơi\nPlayer1 tạo phòng, Players join",
+                title: "1 vs 1",
+                description: "Đấu trực tiếp với 1 người chơi",
                 color: Colors.orange,
                 onTap: () {
                   Get.back();
-                  controller.showOneVsOneModeDialog(quizSet);
+                  controller.createOneVsOneRoom(quizSet, mode: 0);
+                },
+              ),
+              
+              SizedBox(height: UtilsReponsive.height(16, context)),
+              
+              // Multiplayer Option
+              _buildGameModeOption(
+                context,
+                icon: Icons.people_outline,
+                title: "Multiplayer",
+                description: "Nhiều người chơi cùng lúc (không giới hạn)",
+                color: Colors.purple,
+                onTap: () {
+                  Get.back();
+                  controller.createOneVsOneRoom(quizSet, mode: 1);
                 },
               ),
               
