@@ -26,7 +26,7 @@ class OnBoardingView extends GetView<OnBoardingController> {
                     onPressed: controller.skipToEnd,
                     child: TextConstant.subTile1(
                       context,
-                      text: "Skip",
+                      text: "Bỏ qua",
                       color: ColorsManager.primary,
                     ),
                   ),
@@ -152,7 +152,7 @@ class OnBoardingView extends GetView<OnBoardingController> {
                                 ),
                                 label: TextConstant.subTile1(
                                   context,
-                                  text: "Previous",
+                                  text: "Trước",
                                   color: ColorsManager.primary,
                                 ),
                               )
@@ -180,8 +180,8 @@ class OnBoardingView extends GetView<OnBoardingController> {
                                     context,
                                     text: controller.currentIndex.value ==
                                             controller.onBoardingPages.length - 1
-                                        ? "Get Started"
-                                        : "Next",
+                                        ? "Bắt đầu"
+                                        : "Tiếp theo",
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),

@@ -10,8 +10,8 @@ import 'package:quizkahoot/app/service/auth_service.dart';
 import 'package:quizkahoot/app/service/basecommon.dart';
 
 class LoginController extends GetxController {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+  final emailController = TextEditingController(text: 'tuan4@gmail.com');
+  final passwordController = TextEditingController(text: '123456');
   final formKey = GlobalKey<FormState>();
 
   var isPasswordVisible = false.obs;

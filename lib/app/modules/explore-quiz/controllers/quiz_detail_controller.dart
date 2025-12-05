@@ -7,6 +7,7 @@ import 'package:quizkahoot/app/data/dio_interceptor.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_api.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_service.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_set_model.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_model.dart';
 import 'package:quizkahoot/app/modules/single-mode/controllers/single_mode_controller.dart';
 import 'package:quizkahoot/app/modules/home/data/game_api.dart';
 import 'package:quizkahoot/app/modules/home/data/game_service.dart';
@@ -17,30 +18,20 @@ import 'package:quizkahoot/app/modules/home/models/create_one_vs_one_room_reques
 import 'package:quizkahoot/app/service/basecommon.dart';
 import 'package:quizkahoot/app/resource/reponsive_utils.dart';
 import 'package:quizkahoot/app/resource/text_style.dart';
+import 'package:quizkahoot/app/resource/color_manager.dart';
 
 const baseUrl = 'https://qul-api.onrender.com/api';
 
-class ExploreQuizController extends GetxController {
-  final quizSetService = QuizSetService(quizSetApi: QuizSetApi(Dio(), baseUrl: baseUrl));
+class QuizDetailController extends GetxController {
+  late QuizSetService quizSetService;
   late GameService gameService;
   late OneVsOneRoomService oneVsOneRoomService;
   
   // Observable variables
   var isLoading = false.obs;
   var isLoadingGame = false.obs;
-  var quizSets = <QuizSetModel>[].obs;
-  var filteredQuizSets = <QuizSetModel>[].obs;
-  var selectedFilter = 'All'.obs;
-  var searchQuery = ''.obs;
-  
-  // Filter options
-  final List<String> filterOptions = [
-    'All',
-    'TOEIC',
-    'IELTS',
-    'TOEFL',
-    'Grammar',
-  ];
+  var quizSet = Rxn<QuizSetModel>();
+  var errorMessage = ''.obs;
 
   @override
   void onInit() {
@@ -48,13 +39,18 @@ class ExploreQuizController extends GetxController {
     _initializeDio();
     _initializeGameService();
     _initializeOneVsOneRoomService();
-    loadQuizSets();
+    
+    // Get quiz set ID from arguments
+    final quizSetId = Get.arguments as String?;
+    if (quizSetId != null) {
+      loadQuizSetDetail(quizSetId);
+    }
   }
 
   void _initializeDio() {
     Dio dio = Dio();
     dio.interceptors.add(DioIntercepTorCustom());
-    quizSetService.quizSetApi = QuizSetApi(dio, baseUrl: baseUrl);
+    quizSetService = QuizSetService(quizSetApi: QuizSetApi(dio, baseUrl: baseUrl));
   }
 
   void _initializeGameService() {
@@ -71,15 +67,17 @@ class ExploreQuizController extends GetxController {
     );
   }
 
-  Future<void> loadQuizSets() async {
+  Future<void> loadQuizSetDetail(String quizSetId) async {
     try {
       isLoading.value = true;
-      final response = await quizSetService.getQuizSets();
+      errorMessage.value = '';
+      
+      final response = await quizSetService.getQuizSetDetail(quizSetId);
       
       if (response.isSuccess && response.data != null) {
-        quizSets.value = response.data!;
-        filteredQuizSets.value = response.data!;
+        quizSet.value = response.data;
       } else {
+        errorMessage.value = response.message;
         Get.snackbar(
           'Error',
           response.message,
@@ -88,10 +86,11 @@ class ExploreQuizController extends GetxController {
         );
       }
     } catch (e) {
-      log("error load quiz sets: $e");
+      log("Error loading quiz set detail: $e");
+      errorMessage.value = 'Failed to load quiz set detail. Please try again.';
       Get.snackbar(
         'Error',
-        'Failed to load quiz sets. Please try again.',
+        'Failed to load quiz set detail. Please try again.',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -100,45 +99,26 @@ class ExploreQuizController extends GetxController {
     }
   }
 
-  void filterQuizSets(String filter) {
-    selectedFilter.value = filter;
-    _applyFilters();
+  // Get quizzes without correct answers
+  List<QuizModel> get quizzesWithoutAnswers {
+    if (quizSet.value == null) return [];
+    
+    return quizSet.value!.quizzes.map((quiz) {
+      // Create a copy of quiz with answer options that don't show isCorrect
+      return quiz;
+    }).toList();
   }
 
-  void searchQuizSets(String query) {
-    searchQuery.value = query;
-    _applyFilters();
-  }
-
-  void _applyFilters() {
-    List<QuizSetModel> filtered = List.from(quizSets);
-    
-    // Apply type filter
-    if (selectedFilter.value != 'All') {
-      filtered = filtered.where((quiz) => 
-        quiz.quizType == int.parse(selectedFilter.value)
-      ).toList();
-    }
-    
-    // Apply search filter
-    if (searchQuery.value.isNotEmpty) {
-      filtered = filtered.where((quiz) =>
-        quiz.title.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
-        quiz.description.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
-        quiz.skillType.toLowerCase().contains(searchQuery.value.toLowerCase())
-      ).toList();
-    }
-    
-    filteredQuizSets.value = filtered;
-  }
-
-  void startQuiz(QuizSetModel quizSet) {
+  void startQuiz() {
+    if (quizSet.value == null) return;
     // Navigate to Single Mode controller and start quiz
     final singleModeController = Get.find<SingleModeController>();
-    singleModeController.startQuiz(quizSet.id);
+    singleModeController.startQuiz(quizSet.value!.id);
   }
 
-  Future<void> createGameRoom(QuizSetModel quizSet) async {
+  Future<void> createGameRoom() async {
+    if (quizSet.value == null) return;
+    
     try {
       final userId = BaseCommon.instance.userId;
       if (userId.isEmpty) {
@@ -156,7 +136,7 @@ class ExploreQuizController extends GetxController {
       final request = CreateGameRequest(
         hostUserId: userId,
         hostUserName: 'string', // TODO: Get actual username from user info
-        quizSetId: quizSet.id,
+        quizSetId: quizSet.value!.id,
       );
 
       final response = await gameService.createGame(request);
@@ -185,31 +165,121 @@ class ExploreQuizController extends GetxController {
     }
   }
 
-  /// Hiển thị dialog để chọn mode (1vs1 hoặc Multiplayer)
-  void showOneVsOneModeDialog(QuizSetModel quizSet) {
-    final context = Get.context;
-    if (context == null) return;
+  Future<void> createOneVsOneRoom({int mode = 0}) async {
+    if (quizSet.value == null) return;
+    
+    try {
+      final userId = BaseCommon.instance.userId;
+      if (userId.isEmpty) {
+        Get.snackbar(
+          'Lỗi',
+          'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      isLoadingGame.value = true;
+
+      final player1Name = 'Player1'; // Temporary, should get from user profile
+
+      final request = CreateOneVsOneRoomRequest(
+        player1Name: player1Name,
+        quizSetId: quizSet.value!.id,
+        player1UserId: userId,
+        mode: mode, // 0 = 1vs1, 1 = Multiplayer
+      );
+
+      final response = await oneVsOneRoomService.createRoom(request);
+      isLoadingGame.value = false;
+
+      if (response.isSuccess && response.data != null) {
+        // Navigate to 1vs1 room page
+        Get.toNamed('/one-vs-one-room', arguments: response.data);
+      } else {
+        Get.snackbar(
+          'Lỗi',
+          response.message,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      isLoadingGame.value = false;
+      log('Error creating 1vs1 room: $e');
+      Get.snackbar(
+        'Lỗi',
+        'Đã xảy ra lỗi khi tạo phòng 1vs1',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  void showGameModeDialog(BuildContext context) {
+    if (quizSet.value == null) return;
     
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Padding(
+        child: Container(
           padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
+          constraints: BoxConstraints(
+            maxWidth: UtilsReponsive.width(400, context),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextConstant.titleH2(
-                context,
-                text: "Chế độ chơi",
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
+              // Header
+              Row(
+                children: [
+                  Icon(
+                    Icons.videogame_asset,
+                    color: ColorsManager.primary,
+                    size: UtilsReponsive.height(28, context),
+                  ),
+                  SizedBox(width: UtilsReponsive.width(8, context)),
+                  Expanded(
+                    child: TextConstant.titleH2(
+                      context,
+                      text: "Chế độ chơi",
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Get.back(),
+                    icon: Icon(
+                      Icons.close,
+                      color: Colors.grey[600],
+                      size: UtilsReponsive.height(20, context),
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: UtilsReponsive.height(24, context)),
               
-              // 1vs1 Option
-              _buildModeOption(
+              // Multi Player (Quản trò) Option
+              _buildGameModeOption(
+                context,
+                icon: Icons.people,
+                title: "Quản trò",
+                description: "Nhiều người chơi cùng lúc\nHost tạo phòng, players join bằng PIN",
+                color: Colors.purple,
+                onTap: () {
+                  Get.back();
+                  createGameRoom();
+                },
+              ),
+              
+              SizedBox(height: UtilsReponsive.height(16, context)),
+              
+              // 1 vs 1 Option
+              _buildGameModeOption(
                 context,
                 icon: Icons.person,
                 title: "1 vs 1",
@@ -217,22 +287,22 @@ class ExploreQuizController extends GetxController {
                 color: Colors.orange,
                 onTap: () {
                   Get.back();
-                  createOneVsOneRoom(quizSet, mode: 0);
+                  createOneVsOneRoom(mode: 0);
                 },
               ),
               
               SizedBox(height: UtilsReponsive.height(16, context)),
               
               // Multiplayer Option
-              _buildModeOption(
+              _buildGameModeOption(
                 context,
-                icon: Icons.people,
+                icon: Icons.people_outline,
                 title: "Multiplayer",
                 description: "Nhiều người chơi cùng lúc (không giới hạn)",
                 color: Colors.purple,
                 onTap: () {
                   Get.back();
-                  createOneVsOneRoom(quizSet, mode: 1);
+                  createOneVsOneRoom(mode: 1);
                 },
               ),
               
@@ -267,7 +337,7 @@ class ExploreQuizController extends GetxController {
     );
   }
 
-  Widget _buildModeOption(
+  Widget _buildGameModeOption(
     BuildContext context, {
     required IconData icon,
     required String title,
@@ -285,7 +355,10 @@ class ExploreQuizController extends GetxController {
           decoration: BoxDecoration(
             color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color, width: 2),
+            border: Border.all(
+              color: color.withOpacity(0.3),
+              width: 2,
+            ),
           ),
           child: Row(
             children: [
@@ -293,16 +366,20 @@ class ExploreQuizController extends GetxController {
                 padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
                 decoration: BoxDecoration(
                   color: color,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: Colors.white, size: UtilsReponsive.height(24, context)),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: UtilsReponsive.height(24, context),
+                ),
               ),
               SizedBox(width: UtilsReponsive.width(16, context)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextConstant.subTile1(
+                    TextConstant.titleH3(
                       context,
                       text: title,
                       color: Colors.black,
@@ -313,106 +390,21 @@ class ExploreQuizController extends GetxController {
                       context,
                       text: description,
                       color: Colors.grey[600]!,
-                      size: 12,
+                      size: 11,
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, color: color, size: UtilsReponsive.height(16, context)),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: color,
+                size: UtilsReponsive.height(16, context),
+              ),
             ],
           ),
         ),
       ),
     );
   }
-
-  Future<void> createOneVsOneRoom(QuizSetModel quizSet, {int mode = 0}) async {
-    try {
-      final userId = BaseCommon.instance.userId;
-      if (userId.isEmpty) {
-        Get.snackbar(
-          'Lỗi',
-          'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-        return;
-      }
-
-      isLoadingGame.value = true;
-
-      final player1Name = 'Player1'; // Temporary, should get from user profile
-
-      final request = CreateOneVsOneRoomRequest(
-        player1Name: player1Name,
-        quizSetId: quizSet.id,
-        player1UserId: userId,
-        mode: mode, // 0 = 1vs1, 1 = Multiplayer
-      );
-
-      final response = await oneVsOneRoomService.createRoom(request);
-      isLoadingGame.value = false;
-
-      if (response.isSuccess && response.data != null) {
-        // Navigate to 1vs1 room page
-        Get.toNamed('/one-vs-one-room', arguments: response.data);
-      } else {
-        Get.snackbar(
-          'Lỗi',
-          response.message,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-      }
-    } catch (e) {
-      isLoadingGame.value = false;
-      log('Error creating 1vs1 room: $e');
-      Get.snackbar(
-        'Lỗi',
-        'Đã xảy ra lỗi khi tạo phòng 1vs1',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    }
-  }
-
-
-  Future<void> refreshQuizSets() async {
-    await loadQuizSets();
-  }
-
-  void clearSearch() {
-    searchQuery.value = '';
-    _applyFilters();
-  }
-
-  // Get difficulty color
-  Color getDifficultyColor(String difficulty) {
-    switch (difficulty.toLowerCase()) {
-      case 'easy':
-        return Colors.green;
-      case 'medium':
-        return Colors.orange;
-      case 'hard':
-        return Colors.red;
-      default:
-        return Colors.orange;
-    }
-  }
-
-  // Get quiz type icon
-  String getQuizTypeIcon(String quizType) {
-    switch (quizType.toUpperCase()) {
-      case 'TOEIC':
-        return '🎧';
-      case 'IELTS':
-        return '📚';
-      case 'TOEFL':
-        return '🌍';
-      case 'GRAMMAR':
-        return '📝';
-      default:
-        return '📖';
-    }
-  }
 }
+

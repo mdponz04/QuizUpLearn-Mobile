@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'tournament_api.dart';
+part of 'event_api.dart';
 
 // **************************************************************************
 // RetrofitGenerator
@@ -8,8 +8,8 @@ part of 'tournament_api.dart';
 
 // ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers,unused_element,unnecessary_string_interpolations,unused_element_parameter
 
-class _TournamentApi implements TournamentApi {
-  _TournamentApi(this._dio, {this.baseUrl, this.errorLogger});
+class _EventApi implements EventApi {
+  _EventApi(this._dio, {this.baseUrl, this.errorLogger});
 
   final Dio _dio;
 
@@ -18,27 +18,25 @@ class _TournamentApi implements TournamentApi {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<TournamentResponse> getTournaments(bool includeDeleted) async {
+  Future<EventResponse> getAllEvents() async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{
-      r'includeDeleted': includeDeleted,
-    };
+    final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<TournamentResponse>(
+    final _options = _setStreamType<EventResponse>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/tournament',
+            '/event/all',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late TournamentResponse _value;
+    late EventResponse _value;
     try {
-      _value = TournamentResponse.fromJson(_result.data!);
+      _value = EventResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -47,25 +45,25 @@ class _TournamentApi implements TournamentApi {
   }
 
   @override
-  Future<TournamentJoinedResponse> checkJoined(String tournamentId) async {
+  Future<EventLeaderboardResponse> getEventLeaderboard(String eventId) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<TournamentJoinedResponse>(
+    final _options = _setStreamType<EventLeaderboardResponse>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/tournament/${tournamentId}/joined',
+            '/event/${eventId}/leaderboard',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late TournamentJoinedResponse _value;
+    late EventLeaderboardResponse _value;
     try {
-      _value = TournamentJoinedResponse.fromJson(_result.data!);
+      _value = EventLeaderboardResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -74,87 +72,25 @@ class _TournamentApi implements TournamentApi {
   }
 
   @override
-  Future<TournamentJoinResponse> joinTournament(
-    String tournamentId,
-    Map<String, dynamic> body,
-  ) async {
+  Future<EventJoinResponse> joinEvent(String eventId) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    final _data = <String, dynamic>{};
-    _data.addAll(body);
-    final _options = _setStreamType<TournamentJoinResponse>(
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<EventJoinResponse>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/tournament/${tournamentId}/join',
+            '/event/${eventId}/join',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late TournamentJoinResponse _value;
+    late EventJoinResponse _value;
     try {
-      _value = TournamentJoinResponse.fromJson(_result.data!);
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
-      rethrow;
-    }
-    return _value;
-  }
-
-  @override
-  Future<TournamentTodayResponse> getTournamentToday(
-    String tournamentId,
-  ) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<TournamentTodayResponse>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/tournament/${tournamentId}/today',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late TournamentTodayResponse _value;
-    try {
-      _value = TournamentTodayResponse.fromJson(_result.data!);
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
-      rethrow;
-    }
-    return _value;
-  }
-
-  @override
-  Future<TournamentLeaderboardResponse> getTournamentLeaderboard(
-    String tournamentId,
-  ) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<TournamentLeaderboardResponse>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/tournament/${tournamentId}/leaderboard',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late TournamentLeaderboardResponse _value;
-    try {
-      _value = TournamentLeaderboardResponse.fromJson(_result.data!);
+      _value = EventJoinResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;

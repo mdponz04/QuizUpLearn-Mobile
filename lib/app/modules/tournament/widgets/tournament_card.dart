@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:quizkahoot/app/resource/color_manager.dart';
 import 'package:quizkahoot/app/resource/reponsive_utils.dart';
 import 'package:quizkahoot/app/resource/text_style.dart';
 import '../controllers/tournament_controller.dart';
@@ -354,6 +355,41 @@ class TournamentCard extends StatelessWidget {
                           }
                         }),
                       ],
+                      
+                      // Detail Button
+                      SizedBox(height: UtilsReponsive.height(12, context)),
+                      GestureDetector(
+                        onTap: () {
+                          Get.toNamed('/tournament-detail', arguments: tournament.id);
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.symmetric(
+                            vertical: UtilsReponsive.height(10, context),
+                          ),
+                          decoration: BoxDecoration(
+                            color: ColorsManager.primary,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              TextConstant.subTile2(
+                                context,
+                                text: "Chi tiết",
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              SizedBox(width: UtilsReponsive.width(6, context)),
+                              Icon(
+                                Icons.arrow_forward,
+                                color: Colors.white,
+                                size: UtilsReponsive.height(16, context),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

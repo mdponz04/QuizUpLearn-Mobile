@@ -88,46 +88,6 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
               ),
             ),
           ),
-          
-          SizedBox(height: UtilsReponsive.height(12, context)),
-          
-          // Filter Chips
-          SizedBox(
-            height: UtilsReponsive.height(40, context),
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: controller.filterOptions.length,
-              itemBuilder: (context, index) {
-                final filter = controller.filterOptions[index];
-                return Obx(() => Container(
-                  margin: EdgeInsets.only(right: UtilsReponsive.width(8, context)),
-                  child: FilterChip(
-                    label: Text(
-                      filter,
-                      style: TextStyle(
-                        fontSize: UtilsReponsive.formatFontSize(12, context),
-                        fontWeight: controller.selectedFilter.value == filter
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                    selected: controller.selectedFilter.value == filter,
-                    onSelected: (selected) {
-                      controller.filterQuizSets(filter);
-                    },
-                    selectedColor: ColorsManager.primary.withOpacity(0.2),
-                    checkmarkColor: ColorsManager.primary,
-                    backgroundColor: Colors.grey[100],
-                    side: BorderSide(
-                      color: controller.selectedFilter.value == filter
-                          ? ColorsManager.primary
-                          : Colors.grey[300]!,
-                    ),
-                  ),
-                ));
-              },
-            ),
-          ),
         ],
       ),
     );
@@ -211,8 +171,7 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => controller.startQuiz(quizSet)
-              ,
+          onTap: () => Get.toNamed('/quiz-detail', arguments: quizSet.id),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
@@ -376,83 +335,36 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
                     if (quizSet.totalAttempts > 0)
                       SizedBox(width: UtilsReponsive.width(8, context)),
                     
-                    // Room Game Button
-                    Obx(() => Container(
-                      margin: EdgeInsets.only(right: UtilsReponsive.width(8, context)),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: UtilsReponsive.width(12, context),
-                        vertical: UtilsReponsive.height(6, context),
-                      ),
-                      decoration: BoxDecoration(
-                        color: controller.isLoadingGame.value 
-                            ? Colors.grey[300] 
-                            : Colors.purple,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: GestureDetector(
-                        onTap: controller.isLoadingGame.value 
-                            ? null 
-                            : () => _showGameModeDialog(context, quizSet),
+                    // Chi tiết Button
+                    GestureDetector(
+                      onTap: () => Get.toNamed('/quiz-detail', arguments: quizSet.id),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: UtilsReponsive.width(12, context),
+                          vertical: UtilsReponsive.height(6, context),
+                        ),
+                        decoration: BoxDecoration(
+                          color: ColorsManager.primary,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (controller.isLoadingGame.value)
-                              SizedBox(
-                                width: UtilsReponsive.height(12, context),
-                                height: UtilsReponsive.height(12, context),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            else
-                              Icon(
-                                Icons.meeting_room,
-                                color: Colors.white,
-                                size: UtilsReponsive.height(12, context),
-                              ),
-                            if (!controller.isLoadingGame.value) ...[
-                              SizedBox(width: UtilsReponsive.width(4, context)),
-                              TextConstant.subTile3(
-                                context,
-                                text: "Room",
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                size: 12,
-                              ),
-                            ],
+                            TextConstant.subTile3(
+                              context,
+                              text: "Chi tiết",
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              size: 12,
+                            ),
+                            SizedBox(width: UtilsReponsive.width(4, context)),
+                            Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                              size: UtilsReponsive.height(12, context),
+                            ),
                           ],
                         ),
-                      ),
-                    )),
-                    
-                    // Start Button
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: UtilsReponsive.width(12, context),
-                        vertical: UtilsReponsive.height(6, context),
-                      ),
-                      decoration: BoxDecoration(
-                        color: ColorsManager.primary,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextConstant.subTile3(
-                            context,
-                            text: "Start",
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            size: 12,
-                          ),
-                          SizedBox(width: UtilsReponsive.width(4, context)),
-                          Icon(
-                            Icons.arrow_forward,
-                            color: Colors.white,
-                            size: UtilsReponsive.height(12, context),
-                          ),
-                        ],
                       ),
                     ),
                   ],
@@ -504,191 +416,4 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
     );
   }
 
-  void _showGameModeDialog(BuildContext context, QuizSetModel quizSet) {
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
-          constraints: BoxConstraints(
-            maxWidth: UtilsReponsive.width(400, context),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Icon(
-                    Icons.videogame_asset,
-                    color: ColorsManager.primary,
-                    size: UtilsReponsive.height(28, context),
-                  ),
-                  SizedBox(width: UtilsReponsive.width(8, context)),
-                  Expanded(
-                    child: TextConstant.titleH2(
-                      context,
-                      text: "Chọn chế độ chơi",
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Get.back(),
-                    icon: Icon(
-                      Icons.close,
-                      color: Colors.grey[600],
-                      size: UtilsReponsive.height(20, context),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: UtilsReponsive.height(24, context)),
-              
-              // Multi Player (Quản trò) Option
-              _buildGameModeOption(
-                context,
-                icon: Icons.people,
-                title: "Quản trò",
-                description: "Nhiều người chơi cùng lúc\nHost tạo phòng, players join bằng PIN",
-                color: Colors.purple,
-                onTap: () {
-                  Get.back();
-                  controller.createGameRoom(quizSet);
-                },
-              ),
-              
-              SizedBox(height: UtilsReponsive.height(16, context)),
-              
-              // 1 vs 1 Option
-              _buildGameModeOption(
-                context,
-                icon: Icons.person,
-                title: "1 vs 1",
-                description: "Đấu trực tiếp với 1 người chơi",
-                color: Colors.orange,
-                onTap: () {
-                  Get.back();
-                  controller.createOneVsOneRoom(quizSet, mode: 0);
-                },
-              ),
-              
-              SizedBox(height: UtilsReponsive.height(16, context)),
-              
-              // Multiplayer Option
-              _buildGameModeOption(
-                context,
-                icon: Icons.people_outline,
-                title: "Multiplayer",
-                description: "Nhiều người chơi cùng lúc (không giới hạn)",
-                color: Colors.purple,
-                onTap: () {
-                  Get.back();
-                  controller.createOneVsOneRoom(quizSet, mode: 1);
-                },
-              ),
-              
-              SizedBox(height: UtilsReponsive.height(16, context)),
-              
-              // Cancel Button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => Get.back(),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey[300]!),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: EdgeInsets.symmetric(
-                      vertical: UtilsReponsive.height(12, context),
-                    ),
-                  ),
-                  child: TextConstant.subTile2(
-                    context,
-                    text: "Hủy",
-                    color: Colors.grey[600]!,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGameModeOption(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String description,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: color.withOpacity(0.3),
-              width: 2,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: UtilsReponsive.height(24, context),
-                ),
-              ),
-              SizedBox(width: UtilsReponsive.width(16, context)),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextConstant.titleH3(
-                      context,
-                      text: title,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    SizedBox(height: UtilsReponsive.height(4, context)),
-                    TextConstant.subTile3(
-                      context,
-                      text: description,
-                      color: Colors.grey[600]!,
-                      size: 11,
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                color: color,
-                size: UtilsReponsive.height(16, context),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

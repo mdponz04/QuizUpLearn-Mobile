@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:quizkahoot/app/data/base_response.dart';
 import 'package:quizkahoot/app/modules/tournament/data/tournament_api.dart';
+import 'package:quizkahoot/app/modules/tournament/models/tournament_leaderboard_model.dart';
 import 'package:quizkahoot/app/modules/tournament/models/tournament_model.dart';
 
 class TournamentService {
@@ -113,6 +114,33 @@ class TournamentService {
       log("Error getting tournament today: ${e.toString()}");
       return BaseResponse.error(
         e.response?.data['message'] ?? 'An error occurred while getting tournament today',
+      );
+    } catch (e) {
+      log("Unexpected error: ${e.toString()}");
+      return BaseResponse.error('An unexpected error occurred');
+    }
+  }
+
+  Future<BaseResponse<List<TournamentLeaderboardRanking>>> getTournamentLeaderboard(String tournamentId) async {
+    try {
+      final response = await tournamentApi.getTournamentLeaderboard(tournamentId);
+      log("Get tournament leaderboard response: ${response.toString()}");
+      
+      if (response.success && response.data != null) {
+        return BaseResponse(
+          isSuccess: true,
+          message: response.message ?? 'Success',
+          data: response.data!,
+        );
+      } else {
+        return BaseResponse.error(
+          response.message ?? 'Failed to fetch tournament leaderboard',
+        );
+      }
+    } on DioException catch (e) {
+      log("Error getting tournament leaderboard: ${e.toString()}");
+      return BaseResponse.error(
+        e.response?.data['message'] ?? 'An error occurred while fetching tournament leaderboard',
       );
     } catch (e) {
       log("Unexpected error: ${e.toString()}");

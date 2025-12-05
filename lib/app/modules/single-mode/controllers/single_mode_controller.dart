@@ -271,6 +271,10 @@ class SingleModeController extends GetxController {
     _nextQuestion();
   }
 
+  void finishQuiz() {
+    _finishQuiz();
+  }
+
   Future<void> _finishQuiz() async {
     if (quizData.value == null) return;
     

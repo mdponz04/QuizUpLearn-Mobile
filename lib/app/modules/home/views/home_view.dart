@@ -9,6 +9,7 @@ import '../../tab-home/views/tab_home_view.dart';
 import '../../tab-home/controllers/tab_home_controller.dart';
 import '../../explore-quiz/models/quiz_set_model.dart';
 import '../../home/models/subscription_plan_model.dart';
+import '../widgets/event_tab_widget.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -25,7 +26,7 @@ class HomeView extends GetView<HomeController> {
             builder: (tabController) => TabHomeView(controller: tabController),
           ),
           _buildMyQuizTab(context),
-          _buildForumTab(context),
+          const EventTabWidget(),
           _buildAccountTab(context),
         ],
       ),
@@ -135,7 +136,7 @@ class HomeView extends GetView<HomeController> {
       appBar: AppBar(
         title: TextConstant.titleH2(
           context,
-          text: "My Quiz",
+          text: "Quiz của tôi",
           color: ColorsManager.primary,
           fontWeight: FontWeight.bold,
         ),
@@ -294,7 +295,7 @@ class HomeView extends GetView<HomeController> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => controller.startQuiz(quizSetModel),
+          onTap: () => Get.toNamed('/quiz-detail', arguments: quizSetModel.id),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
@@ -463,83 +464,36 @@ class HomeView extends GetView<HomeController> {
                     if (quizSetModel.totalAttempts > 0)
                       SizedBox(width: UtilsReponsive.width(8, context)),
                     
-                    // Room Game Button
-                    Obx(() => Container(
-                      margin: EdgeInsets.only(right: UtilsReponsive.width(8, context)),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: UtilsReponsive.width(12, context),
-                        vertical: UtilsReponsive.height(6, context),
-                      ),
-                      decoration: BoxDecoration(
-                        color: controller.isLoadingGame.value 
-                            ? Colors.grey[300] 
-                            : Colors.purple,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: GestureDetector(
-                        onTap: controller.isLoadingGame.value 
-                            ? null 
-                            : () => _showGameModeDialog(context, quizSetModel),
+                    // Chi tiết Button
+                    GestureDetector(
+                      onTap: () => Get.toNamed('/quiz-detail', arguments: quizSetModel.id),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: UtilsReponsive.width(12, context),
+                          vertical: UtilsReponsive.height(6, context),
+                        ),
+                        decoration: BoxDecoration(
+                          color: ColorsManager.primary,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (controller.isLoadingGame.value)
-                              SizedBox(
-                                width: UtilsReponsive.height(12, context),
-                                height: UtilsReponsive.height(12, context),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            else
-                              Icon(
-                                Icons.meeting_room,
-                                color: Colors.white,
-                                size: UtilsReponsive.height(12, context),
-                              ),
-                            if (!controller.isLoadingGame.value) ...[
-                              SizedBox(width: UtilsReponsive.width(4, context)),
-                              TextConstant.subTile3(
-                                context,
-                                text: "Room",
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                size: 12,
-                              ),
-                            ],
+                            TextConstant.subTile3(
+                              context,
+                              text: "Chi tiết",
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              size: 12,
+                            ),
+                            SizedBox(width: UtilsReponsive.width(4, context)),
+                            Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                              size: UtilsReponsive.height(12, context),
+                            ),
                           ],
                         ),
-                      ),
-                    )),
-                    
-                    // Start Button
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: UtilsReponsive.width(12, context),
-                        vertical: UtilsReponsive.height(6, context),
-                      ),
-                      decoration: BoxDecoration(
-                        color: ColorsManager.primary,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextConstant.subTile3(
-                            context,
-                            text: "Start",
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            size: 12,
-                          ),
-                          SizedBox(width: UtilsReponsive.width(4, context)),
-                          Icon(
-                            Icons.arrow_forward,
-                            color: Colors.white,
-                            size: UtilsReponsive.height(12, context),
-                          ),
-                        ],
                       ),
                     ),
                   ],
@@ -595,193 +549,6 @@ class HomeView extends GetView<HomeController> {
     return "${date.day}/${date.month}/${date.year}";
   }
 
-  void _showGameModeDialog(BuildContext context, QuizSetModel quizSet) {
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
-          constraints: BoxConstraints(
-            maxWidth: UtilsReponsive.width(400, context),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Icon(
-                    Icons.videogame_asset,
-                    color: ColorsManager.primary,
-                    size: UtilsReponsive.height(28, context),
-                  ),
-                  SizedBox(width: UtilsReponsive.width(8, context)),
-                  Expanded(
-                    child: TextConstant.titleH2(
-                      context,
-                      text: "Chọn chế độ chơi",
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Get.back(),
-                    icon: Icon(
-                      Icons.close,
-                      color: Colors.grey[600],
-                      size: UtilsReponsive.height(20, context),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: UtilsReponsive.height(24, context)),
-              
-              // Multi Player (Quản trò) Option
-              _buildGameModeOption(
-                context,
-                icon: Icons.people,
-                title: "Quản trò",
-                description: "Nhiều người chơi cùng lúc\nHost tạo phòng, players join bằng PIN",
-                color: Colors.purple,
-                onTap: () {
-                  Get.back();
-                  controller.createGameRoom(quizSet);
-                },
-              ),
-              
-              SizedBox(height: UtilsReponsive.height(16, context)),
-              
-              // 1 vs 1 Option
-              _buildGameModeOption(
-                context,
-                icon: Icons.person,
-                title: "1 vs 1",
-                description: "Đấu trực tiếp với 1 người chơi",
-                color: Colors.orange,
-                onTap: () {
-                  Get.back();
-                  controller.createOneVsOneRoom(quizSet, mode: 0);
-                },
-              ),
-              
-              SizedBox(height: UtilsReponsive.height(16, context)),
-              
-              // Multiplayer Option
-              _buildGameModeOption(
-                context,
-                icon: Icons.people_outline,
-                title: "Multiplayer",
-                description: "Nhiều người chơi cùng lúc (không giới hạn)",
-                color: Colors.purple,
-                onTap: () {
-                  Get.back();
-                  controller.createOneVsOneRoom(quizSet, mode: 1);
-                },
-              ),
-              
-              SizedBox(height: UtilsReponsive.height(16, context)),
-              
-              // Cancel Button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => Get.back(),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey[300]!),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: EdgeInsets.symmetric(
-                      vertical: UtilsReponsive.height(12, context),
-                    ),
-                  ),
-                  child: TextConstant.subTile2(
-                    context,
-                    text: "Hủy",
-                    color: Colors.grey[600]!,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGameModeOption(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String description,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: color.withOpacity(0.3),
-              width: 2,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: UtilsReponsive.height(24, context),
-                ),
-              ),
-              SizedBox(width: UtilsReponsive.width(16, context)),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextConstant.titleH3(
-                      context,
-                      text: title,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    SizedBox(height: UtilsReponsive.height(4, context)),
-                    TextConstant.subTile3(
-                      context,
-                      text: description,
-                      color: Colors.grey[600]!,
-                      size: 11,
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                color: color,
-                size: UtilsReponsive.height(16, context),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   void _showAIGenerateDialog(BuildContext context) {
     final topicController = TextEditingController();
@@ -882,14 +649,14 @@ class HomeView extends GetView<HomeController> {
                   children: [
                     TextConstant.subTile1(
                       context,
-                      text: "Difficulty Range",
+                      text: "Độ khó",
                       color: Colors.black,
                       fontWeight: FontWeight.w600,
                     ),
                     SizedBox(height: UtilsReponsive.height(4, context)),
                     TextConstant.subTile4(
                       context,
-                      text: "Select difficulty range (e.g., 70-100)",
+                      text: "Chọn mức độ khó phù hợp",
                       color: Colors.grey[600]!,
                       size: 10,
                     ),
@@ -1100,52 +867,13 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  Widget _buildForumTab(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: TextConstant.titleH2(
-          context,
-          text: "Forum",
-          color: ColorsManager.primary,
-          fontWeight: FontWeight.bold,
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.forum_outlined,
-              size: UtilsReponsive.height(80, context),
-              color: Colors.grey[400],
-            ),
-            SizedBox(height: UtilsReponsive.height(16, context)),
-            TextConstant.titleH3(
-              context,
-              text: "Forum coming soon",
-              color: Colors.grey[600]!,
-            ),
-            SizedBox(height: UtilsReponsive.height(8, context)),
-            TextConstant.subTile2(
-              context,
-              text: "Connect with other learners",
-              color: Colors.grey[500]!,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildAccountTab(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: TextConstant.titleH2(
           context,
-          text: "Account",
+          text: "Tài khoản",
           color: ColorsManager.primary,
           fontWeight: FontWeight.bold,
         ),
@@ -1359,7 +1087,7 @@ class HomeView extends GetView<HomeController> {
                         children: [
                           TextConstant.titleH3(
                             context,
-                            text: plan?.name ?? "Active Subscription",
+                            text: plan?.name ?? "Gói đang hoạt động",
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             size: 18,
@@ -1367,7 +1095,7 @@ class HomeView extends GetView<HomeController> {
                           SizedBox(height: UtilsReponsive.height(4, context)),
                           TextConstant.subTile3(
                             context,
-                            text: "Subscription Active",
+                            text: "Gói đang hoạt động",
                             color: Colors.white.withOpacity(0.9),
                             size: 12,
                           ),
@@ -1385,7 +1113,7 @@ class HomeView extends GetView<HomeController> {
                       ),
                       child: TextConstant.subTile4(
                         context,
-                        text: "ACTIVE",
+                        text: "ĐANG HOẠT ĐỘNG",
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         size: 10,
@@ -1403,7 +1131,7 @@ class HomeView extends GetView<HomeController> {
                       child: _buildSubscriptionInfoItem(
                         context,
                         Icons.calendar_today,
-                        "Expires",
+                        "Hết hạn",
                         _formatSubscriptionDate(subscription.endDate),
                       ),
                     ),
@@ -1412,8 +1140,8 @@ class HomeView extends GetView<HomeController> {
                       child: _buildSubscriptionInfoItem(
                         context,
                         Icons.auto_awesome,
-                        "AI Remaining",
-                        "${subscription.aiGenerateQuizSetRemaining} times",
+                        "AI còn lại",
+                        "${subscription.aiGenerateQuizSetRemaining} lần",
                       ),
                     ),
                   ],

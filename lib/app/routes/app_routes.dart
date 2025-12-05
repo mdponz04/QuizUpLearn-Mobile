@@ -22,8 +22,12 @@ abstract class Routes {
   static const ONE_VS_ONE_ROOM = _Paths.ONE_VS_ONE_ROOM;
   static const QUIZ_HISTORY = _Paths.QUIZ_HISTORY;
   static const QUIZ_HISTORY_DETAIL = _Paths.QUIZ_HISTORY_DETAIL;
+  static const QUIZ_DETAIL = _Paths.QUIZ_DETAIL;
+  static const DASHBOARD_DETAIL = _Paths.DASHBOARD_DETAIL;
   static const PAYMENT_RESULT = _Paths.PAYMENT_RESULT;
   static const TOURNAMENT = _Paths.TOURNAMENT;
+  static const TOURNAMENT_DETAIL = _Paths.TOURNAMENT_DETAIL;
+  static const EVENT_DETAIL = _Paths.EVENT_DETAIL;
 }
 
 abstract class _Paths {
@@ -47,6 +51,10 @@ abstract class _Paths {
   static const ONE_VS_ONE_ROOM = '/one-vs-one-room';
   static const QUIZ_HISTORY = '/quiz-history';
   static const QUIZ_HISTORY_DETAIL = '/quiz-history-detail';
+  static const QUIZ_DETAIL = '/quiz-detail';
+  static const DASHBOARD_DETAIL = '/dashboard-detail';
   static const PAYMENT_RESULT = '/payment-result';
   static const TOURNAMENT = '/tournament';
+  static const TOURNAMENT_DETAIL = '/tournament-detail';
+  static const EVENT_DETAIL = '/event-detail';
 }

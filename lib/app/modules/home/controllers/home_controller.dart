@@ -54,8 +54,8 @@ class HomeController extends GetxController {
   var activeSubscriptionPlan = Rxn<SubscriptionPlanModel>();
 
   // AI Quiz Dialog state
-  var selectedPart = 'Part 1'.obs;
-  var selectedDifficulty = '70-100'.obs;
+  var selectedPart = 'Part 1 – Photographs'.obs;
+  var selectedDifficulty = '100–300 – Sơ cấp (Beginner)'.obs;
   var topicContent = ''.obs;
   var questionCount = ''.obs;
 
@@ -64,43 +64,44 @@ class HomeController extends GetxController {
     NavigationItem(
       icon: Icons.home_outlined,
       activeIcon: Icons.home,
-      label: 'Home',
+      label: 'Trang chủ',
     ),
     NavigationItem(
       icon: Icons.quiz_outlined,
       activeIcon: Icons.quiz,
-      label: 'My Quiz',
+      label: 'Quiz của tôi',
     ),
     NavigationItem(
-      icon: Icons.forum_outlined,
-      activeIcon: Icons.forum,
-      label: 'Forum',
+      icon: Icons.event_outlined,
+      activeIcon: Icons.event,
+      label: 'Sự kiện',
     ),
     NavigationItem(
       icon: Icons.person_outline,
       activeIcon: Icons.person,
-      label: 'Account',
+      label: 'Tài khoản',
     ),
   ];
 
   // Part options
   final List<String> partOptions = [
-    'Part 1',
-    'Part 2',
-    'Part 3',
-    'Part 4',
-    'Part 5',
-    'Part 6',
-    'Part 7',
+    'Part 1 – Photographs',
+    'Part 2 – Question-Response',
+    'Part 3 – Conversations',
+    'Part 4 – Talks',
+    'Part 5 – Incomplete Sentences',
+    'Part 6 – Text Completion',
+    'Part 7 – Reading Comprehension',
   ];
 
-  // Difficulty options (ranges)
+  // Difficulty options (ranges with labels)
   final List<String> difficultyOptions = [
-    '50-100',
-    '60-100',
-    '70-100',
-    '80-100',
-    '90-100',
+    '100–300 – Sơ cấp (Beginner)',
+    '305–450 – Cơ bản (Elementary)',
+    '455–650 – Trung cấp (Intermediate)',
+    '655–785 – Trung cao cấp (Upper-Intermediate)',
+    '790–900 – Cao cấp (Advanced)',
+    '905–990 – Thành thạo (Proficient)',
   ];
 
   @override
@@ -294,7 +295,7 @@ class HomeController extends GetxController {
             children: [
               TextConstant.titleH2(
                 context,
-                text: "Chọn chế độ chơi",
+                text: "Chế độ chơi",
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
               ),
@@ -470,22 +471,46 @@ class HomeController extends GetxController {
   }
 
   void resetAIDialogForm() {
-    selectedPart.value = 'Part 1';
-    selectedDifficulty.value = '70-100';
+    selectedPart.value = 'Part 1 – Photographs';
+    selectedDifficulty.value = '100–300 – Sơ cấp (Beginner)';
     topicContent.value = '';
     questionCount.value = '';
   }
 
-  /// Map difficulty to range format (already in range format, just return as is)
+  /// Extract range from difficulty label (e.g., "100–300 – Sơ cấp (Beginner)" -> "100-300")
   String _mapDifficultyToRange(String difficulty) {
-    // Difficulty is already in range format (e.g., "50-100", "70-100")
-    return difficulty;
+    try {
+      // Extract range from format "100–300 – Sơ cấp (Beginner)"
+      // Match pattern: digits–digits
+      final match = RegExp(r'(\d+)–(\d+)').firstMatch(difficulty);
+      if (match != null && match.groupCount >= 2) {
+        // Convert en dash (–) to hyphen (-)
+        return '${match.group(1)}-${match.group(2)}';
+      }
+      // Fallback: try to find any range pattern
+      final fallbackMatch = RegExp(r'(\d+)[–-](\d+)').firstMatch(difficulty);
+      if (fallbackMatch != null && fallbackMatch.groupCount >= 2) {
+        return '${fallbackMatch.group(1)}-${fallbackMatch.group(2)}';
+      }
+      // If no match, return original (should not happen)
+      log('Warning: Could not extract range from difficulty: $difficulty');
+      return difficulty;
+    } catch (e) {
+      log('Error extracting difficulty range: $e');
+      return difficulty;
+    }
   }
 
-  /// Extract part number from "Part X" string
+  /// Extract part number from "Part X – ..." string
   int _extractPartNumber(String partString) {
     try {
-      final number = partString.replaceAll('Part ', '').trim();
+      // Extract number from "Part X – ..." format
+      final match = RegExp(r'Part (\d+)').firstMatch(partString);
+      if (match != null && match.groupCount >= 1) {
+        return int.parse(match.group(1)!);
+      }
+      // Fallback: try to extract just the number
+      final number = partString.replaceAll('Part ', '').split(' ').first.trim();
       return int.parse(number);
     } catch (e) {
       log('Error extracting part number: $e');

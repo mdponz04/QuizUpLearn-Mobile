@@ -5,6 +5,7 @@ import 'package:quizkahoot/app/resource/reponsive_utils.dart';
 import 'package:quizkahoot/app/resource/text_style.dart';
 
 import '../controllers/tab_home_controller.dart';
+import '../../home/models/dashboard_models.dart';
 
 class TabHomeView extends StatelessWidget {
   final TabHomeController? controller;
@@ -41,6 +42,19 @@ class TabHomeView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Dashboard Stats Section
+            Obx(() {
+              if (tabController.isLoadingDashboard.value) {
+                return _buildDashboardLoading(context);
+              }
+              if (tabController.dashboardData.value != null) {
+                return _buildDashboardStats(context, tabController.dashboardData.value!);
+              }
+              return const SizedBox.shrink();
+            }),
+            
+            SizedBox(height: UtilsReponsive.height(24, context)),
+            
             // Quick actions
             TextConstant.titleH3(
               context,
@@ -418,4 +432,195 @@ class TabHomeView extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildDashboardLoading(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(UtilsReponsive.width(20, context)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child: CircularProgressIndicator(
+          color: ColorsManager.primary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardStats(BuildContext context, DashboardData data) {
+    final stats = data.stats;
+    
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            ColorsManager.primary,
+            ColorsManager.primary.withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: ColorsManager.primary.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Icon(
+                  Icons.dashboard,
+                  color: Colors.white,
+                  size: UtilsReponsive.height(20, context),
+                ),
+                SizedBox(width: UtilsReponsive.width(8, context)),
+                Expanded(
+                  child: TextConstant.titleH3(
+                    context,
+                    text: "Thống kê",
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    size: 18,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => Get.toNamed('/dashboard-detail'),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: UtilsReponsive.width(12, context),
+                      vertical: UtilsReponsive.height(6, context),
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextConstant.subTile3(
+                          context,
+                          text: "Xem chi tiết",
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          size: 12,
+                        ),
+                        SizedBox(width: UtilsReponsive.width(4, context)),
+                        Icon(
+                          Icons.arrow_forward,
+                          color: Colors.white,
+                          size: UtilsReponsive.height(14, context),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            
+            SizedBox(height: UtilsReponsive.height(16, context)),
+            
+            // Compact Stats Row
+            Row(
+              children: [
+                Expanded(
+                  child: _buildCompactStat(
+                    context,
+                    Icons.quiz,
+                    "Quiz",
+                    "${stats.totalQuizzes}",
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: UtilsReponsive.height(40, context),
+                  color: Colors.white.withOpacity(0.3),
+                ),
+                Expanded(
+                  child: _buildCompactStat(
+                    context,
+                    Icons.trending_up,
+                    "Độ chính xác",
+                    "${stats.accuracyRate.toStringAsFixed(1)}%",
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: UtilsReponsive.height(40, context),
+                  color: Colors.white.withOpacity(0.3),
+                ),
+                Expanded(
+                  child: _buildCompactStat(
+                    context,
+                    Icons.local_fire_department,
+                    "Chuỗi",
+                    "${stats.currentStreak}",
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: UtilsReponsive.height(40, context),
+                  color: Colors.white.withOpacity(0.3),
+                ),
+                Expanded(
+                  child: _buildCompactStat(
+                    context,
+                    Icons.emoji_events,
+                    "Hạng",
+                    "#${stats.currentRank}",
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactStat(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.white, size: UtilsReponsive.height(20, context)),
+        SizedBox(height: UtilsReponsive.height(6, context)),
+        TextConstant.subTile2(
+          context,
+          text: value,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          size: 14,
+        ),
+        SizedBox(height: UtilsReponsive.height(2, context)),
+        TextConstant.subTile4(
+          context,
+          text: label,
+          color: Colors.white.withOpacity(0.9),
+          size: 10,
+        ),
+      ],
+    );
+  }
+
 }
+

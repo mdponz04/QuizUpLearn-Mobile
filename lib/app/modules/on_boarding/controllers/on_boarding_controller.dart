@@ -8,23 +8,23 @@ class OnBoardingController extends GetxController {
   // Onboarding data for English learning app
   final List<OnBoardingModel> onBoardingPages = [
     OnBoardingModel(
-      title: "Audio Book Learning",
-      description: "Listen to English stories and improve your pronunciation with our interactive audio books",
+      title: "Học qua Sách nói",
+      description: "Nghe các câu chuyện tiếng Anh và cải thiện phát âm với sách nói tương tác của chúng tôi",
       image: "assets/images/AUDIO_BOOK.png",
     ),
     OnBoardingModel(
-      title: "E-Book Learning",
-      description: "Read engaging stories and expand your vocabulary with our comprehensive e-book library",
+      title: "Học qua Sách điện tử",
+      description: "Đọc những câu chuyện hấp dẫn và mở rộng vốn từ vựng với thư viện sách điện tử toàn diện",
       image: "assets/images/E_BOOK_LEARNING.png",
     ),
     OnBoardingModel(
-      title: "Online Learning",
-      description: "Learn English anytime, anywhere with our mobile-friendly interactive lessons",
+      title: "Học trực tuyến",
+      description: "Học tiếng Anh mọi lúc, mọi nơi với các bài học tương tác thân thiện trên điện thoại",
       image: "assets/images/ONLINE_LEARNING_ON_PHONE.png",
     ),
     OnBoardingModel(
-      title: "Online Exam",
-      description: "Test your English skills with our comprehensive quizzes and track your progress",
+      title: "Thi trực tuyến",
+      description: "Kiểm tra kỹ năng tiếng Anh của bạn với các bài quiz toàn diện và theo dõi tiến độ",
       image: "assets/images/ONLINE_EXAM.png",
     ),
   ];

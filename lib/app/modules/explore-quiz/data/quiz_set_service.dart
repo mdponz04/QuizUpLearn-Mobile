@@ -77,4 +77,27 @@ class QuizSetService {
       );
     }
   }
+
+  Future<BaseResponse<QuizSetModel>> getQuizSetDetail(String quizSetId) async {
+    try {
+      final response = await quizSetApi.getQuizSetById(quizSetId);
+      log("Quiz set detail response: ${response.toString()}");
+      
+      if (response.success && response.data != null) {
+        return BaseResponse(
+          isSuccess: true,
+          message: 'Success',
+          data: response.data,
+        );
+      } else {
+        return BaseResponse.error(
+          response.message?.toString() ?? 'Failed to fetch quiz set detail',
+        );
+      }
+    } on DioException catch (e) {
+      return BaseResponse.error(
+        e.response?.data['message']?.toString() ?? 'An error occurred while fetching quiz set detail',
+      );
+    }
+  }
 }

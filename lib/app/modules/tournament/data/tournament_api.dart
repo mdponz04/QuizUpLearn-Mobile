@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:quizkahoot/app/modules/tournament/models/tournament_leaderboard_model.dart';
 import 'package:quizkahoot/app/modules/tournament/models/tournament_response.dart';
 import 'package:quizkahoot/app/modules/tournament/models/tournament_joined_response.dart';
 import 'package:quizkahoot/app/modules/tournament/models/tournament_join_response.dart';
@@ -29,6 +30,11 @@ abstract class TournamentApi {
   
   @GET('/tournament/{id}/today')
   Future<TournamentTodayResponse> getTournamentToday(
+    @Path('id') String tournamentId,
+  );
+  
+  @GET('/tournament/{id}/leaderboard')
+  Future<TournamentLeaderboardResponse> getTournamentLeaderboard(
     @Path('id') String tournamentId,
   );
 }

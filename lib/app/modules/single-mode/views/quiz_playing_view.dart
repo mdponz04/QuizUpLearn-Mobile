@@ -471,69 +471,161 @@ class QuizPlayingView extends GetView<SingleModeController> {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Previous button
-          if (!controller.isFirstQuestion)
-            Expanded(
-              child: OutlinedButton(
-                onPressed: controller.previousQuestion,
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: ColorsManager.primary),
-                  padding: EdgeInsets.symmetric(
-                    vertical: UtilsReponsive.height(12, context),
+          // Kết thúc bài button
+          Obx(() => SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: controller.isLoading.value ? null : () => _showFinishQuizDialog(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                padding: EdgeInsets.symmetric(
+                  vertical: UtilsReponsive.height(12, context),
+                ),
+              ),
+              child: controller.isLoading.value
+                  ? SizedBox(
+                      height: UtilsReponsive.height(20, context),
+                      width: UtilsReponsive.height(20, context),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.check_circle,
+                          color: Colors.white,
+                          size: UtilsReponsive.height(18, context),
+                        ),
+                        SizedBox(width: UtilsReponsive.width(8, context)),
+                        TextConstant.subTile2(
+                          context,
+                          text: "Kết thúc bài",
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ],
+                    ),
+            ),
+          )),
+          
+          SizedBox(height: UtilsReponsive.height(12, context)),
+          
+          // Navigation buttons row
+          Row(
+            children: [
+              // Previous button
+              if (!controller.isFirstQuestion)
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: controller.previousQuestion,
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: ColorsManager.primary),
+                      padding: EdgeInsets.symmetric(
+                        vertical: UtilsReponsive.height(12, context),
+                      ),
+                    ),
+                    child: TextConstant.subTile2(
+                      context,
+                      text: "Trước",
+                      color: ColorsManager.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                child: TextConstant.subTile2(
-                  context,
-                  text: "Previous",
-                  color: ColorsManager.primary,
-                  fontWeight: FontWeight.bold,
+              
+              if (!controller.isFirstQuestion)
+                SizedBox(width: UtilsReponsive.width(12, context)),
+              
+              // Skip button
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: controller.skipQuestion,
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.orange),
+                    padding: EdgeInsets.symmetric(
+                      vertical: UtilsReponsive.height(12, context),
+                    ),
+                  ),
+                    child: TextConstant.subTile2(
+                      context,
+                      text: "Bỏ qua",
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                    ),
                 ),
               ),
-            ),
-          
-          if (!controller.isFirstQuestion)
-            SizedBox(width: UtilsReponsive.width(12, context)),
-          
-          // Skip button
-          Expanded(
-            child: OutlinedButton(
-              onPressed: controller.skipQuestion,
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Colors.orange),
-                padding: EdgeInsets.symmetric(
-                  vertical: UtilsReponsive.height(12, context),
+              
+              SizedBox(width: UtilsReponsive.width(12, context)),
+              
+              // Next/Finish button
+              Expanded(
+                flex: 2,
+                child: ElevatedButton(
+                  onPressed: controller.nextQuestion,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorsManager.primary,
+                    padding: EdgeInsets.symmetric(
+                      vertical: UtilsReponsive.height(12, context),
+                    ),
+                  ),
+                  child: TextConstant.subTile2(
+                    context,
+                    text: controller.isLastQuestion ? "Hoàn thành" : "Tiếp theo",
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              child: TextConstant.subTile2(
-                context,
-                text: "Skip",
-                color: Colors.orange,
-                fontWeight: FontWeight.bold,
-              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFinishQuizDialog(BuildContext context) {
+    Get.dialog(
+      AlertDialog(
+        title: TextConstant.titleH3(
+          context,
+          text: "Kết thúc bài làm?",
+          color: Colors.black,
+          fontWeight: FontWeight.bold,
+        ),
+        content: TextConstant.subTile1(
+          context,
+          text: "Bạn có chắc chắn muốn kết thúc bài làm ngay bây giờ? Tất cả câu trả lời đã chọn sẽ được nộp.",
+          color: Colors.grey[600]!,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: TextConstant.subTile2(
+              context,
+              text: "Hủy",
+              color: Colors.grey[600]!,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          
-          SizedBox(width: UtilsReponsive.width(12, context)),
-          
-          // Next/Finish button
-          Expanded(
-            flex: 2,
-            child: ElevatedButton(
-              onPressed: controller.nextQuestion,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ColorsManager.primary,
-                padding: EdgeInsets.symmetric(
-                  vertical: UtilsReponsive.height(12, context),
-                ),
-              ),
-              child: TextConstant.subTile2(
-                context,
-                text: controller.isLastQuestion ? "Finish" : "Next",
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              controller.finishQuiz();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: TextConstant.subTile2(
+              context,
+              text: "Kết thúc",
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -546,13 +638,13 @@ class QuizPlayingView extends GetView<SingleModeController> {
       AlertDialog(
         title: TextConstant.titleH3(
           context,
-          text: "Exit Quiz?",
+          text: "Thoát bài làm?",
           color: Colors.black,
           fontWeight: FontWeight.bold,
         ),
         content: TextConstant.subTile1(
           context,
-          text: "Are you sure you want to exit? Your progress will be lost.",
+          text: "Bạn có chắc chắn muốn thoát? Tiến trình của bạn sẽ bị mất.",
           color: Colors.grey[600]!,
         ),
         actions: [
@@ -560,7 +652,7 @@ class QuizPlayingView extends GetView<SingleModeController> {
             onPressed: () => Get.back(),
             child: TextConstant.subTile2(
               context,
-              text: "Cancel",
+              text: "Hủy",
               color: Colors.grey[600]!,
             ),
           ),
@@ -571,7 +663,7 @@ class QuizPlayingView extends GetView<SingleModeController> {
             },
             child: TextConstant.subTile2(
               context,
-              text: "Exit",
+              text: "Thoát",
               color: Colors.red,
               fontWeight: FontWeight.bold,
             ),

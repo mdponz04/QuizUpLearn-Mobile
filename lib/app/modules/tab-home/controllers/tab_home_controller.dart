@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -6,7 +7,10 @@ import 'package:quizkahoot/app/modules/home/data/subscription_plan_api.dart';
 import 'package:quizkahoot/app/modules/home/data/subscription_plan_service.dart';
 import 'package:quizkahoot/app/modules/home/data/subscription_purchase_api.dart';
 import 'package:quizkahoot/app/modules/home/data/subscription_purchase_service.dart';
+import 'package:quizkahoot/app/modules/home/data/dashboard_api.dart';
+import 'package:quizkahoot/app/modules/home/data/dashboard_service.dart';
 import 'package:quizkahoot/app/modules/home/models/subscription_plan_model.dart';
+import 'package:quizkahoot/app/modules/home/models/dashboard_models.dart';
 import 'package:quizkahoot/app/resource/color_manager.dart';
 import 'package:quizkahoot/app/resource/reponsive_utils.dart';
 import 'package:quizkahoot/app/resource/text_style.dart';
@@ -31,6 +35,11 @@ class TabHomeController extends GetxController {
   var subscriptionPlans = <SubscriptionPlanModel>[].obs;
   var isLoadingPlans = false.obs;
   var isPurchasing = false.obs;
+
+  // Dashboard
+  late DashboardService dashboardService;
+  var dashboardData = Rxn<DashboardData>();
+  var isLoadingDashboard = false.obs;
 
   // Quick action methods
   void startQuiz() {
@@ -69,7 +78,7 @@ class TabHomeController extends GetxController {
                   Expanded(
                     child: TextConstant.titleH2(
                       context,
-                      text: "Chọn chế độ chơi",
+                      text: "Chế độ chơi",
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
                     ),
@@ -522,7 +531,9 @@ class TabHomeController extends GetxController {
   void onInit() {
     super.onInit();
     _initializeSubscriptionPlanService();
+    _initializeDashboardService();
     loadSubscriptionPlans();
+    loadDashboard();
   }
 
   void _initializeSubscriptionPlanService() {
@@ -534,6 +545,30 @@ class TabHomeController extends GetxController {
     subscriptionPurchaseService = SubscriptionPurchaseService(
       subscriptionPurchaseApi: SubscriptionPurchaseApi(dio, baseUrl: baseUrl),
     );
+  }
+
+  void _initializeDashboardService() {
+    Dio dio = Dio();
+    dio.interceptors.add(DioIntercepTorCustom());
+    dashboardService = DashboardService(
+      dashboardApi: DashboardApi(dio, baseUrl: baseUrl),
+    );
+  }
+
+  Future<void> loadDashboard() async {
+    try {
+      isLoadingDashboard.value = true;
+      final response = await dashboardService.getDashboard();
+      if (response.isSuccess && response.data != null) {
+        dashboardData.value = response.data;
+      } else {
+        log('Failed to load dashboard: ${response.message}');
+      }
+    } catch (e) {
+      log('Error loading dashboard: $e');
+    } finally {
+      isLoadingDashboard.value = false;
+    }
   }
 
   Future<void> purchaseSubscription(SubscriptionPlanModel plan) async {

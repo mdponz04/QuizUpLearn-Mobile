@@ -79,7 +79,7 @@ class _QuizSetApi implements QuizSetApi {
     Map<String, dynamic> body,
   ) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'creatorId': userId};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(body);
@@ -87,7 +87,7 @@ class _QuizSetApi implements QuizSetApi {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/quizset/creator/${userId}/search',
+            '/quizset/creator/search',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -105,7 +105,7 @@ class _QuizSetApi implements QuizSetApi {
   }
 
   @override
-  Future<QuizSetDetailResponse> getQuizSetById(String quizSetId) async {
+  Future<QuizSetDetailResponse> getQuizSetById(String id) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -114,7 +114,7 @@ class _QuizSetApi implements QuizSetApi {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/quizset/${quizSetId}',
+            '/quizset/${id}',
             queryParameters: queryParameters,
             data: _data,
           )
