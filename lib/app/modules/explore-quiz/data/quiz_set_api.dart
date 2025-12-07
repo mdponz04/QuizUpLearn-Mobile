@@ -20,4 +20,10 @@ abstract class QuizSetApi {
   
   @GET('/quizset/{id}')
   Future<QuizSetDetailResponse> getQuizSetById(@Path('id') String id);
+  
+  @PUT('/quizset/{id}')
+  Future<QuizSetDetailResponse> updateQuizSet(
+    @Path('id') String id,
+    @Body() Map<String, dynamic> body,
+  );
 }

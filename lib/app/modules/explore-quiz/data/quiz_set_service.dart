@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:quizkahoot/app/data/base_response.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_api.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_set_model.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/models/update_quiz_set_request.dart';
 
 class QuizSetService {
   QuizSetService({required this.quizSetApi});
@@ -97,6 +98,32 @@ class QuizSetService {
     } on DioException catch (e) {
       return BaseResponse.error(
         e.response?.data['message']?.toString() ?? 'An error occurred while fetching quiz set detail',
+      );
+    }
+  }
+
+  Future<BaseResponse<QuizSetModel>> updateQuizSet(
+    String quizSetId,
+    UpdateQuizSetRequest request,
+  ) async {
+    try {
+      final response = await quizSetApi.updateQuizSet(quizSetId, request.toJson());
+      log("Update quiz set response: ${response.toString()}");
+      
+      if (response.success && response.data != null) {
+        return BaseResponse(
+          isSuccess: true,
+          message: response.message?.toString() ?? 'Success',
+          data: response.data,
+        );
+      } else {
+        return BaseResponse.error(
+          response.message?.toString() ?? 'Failed to update quiz set',
+        );
+      }
+    } on DioException catch (e) {
+      return BaseResponse.error(
+        e.response?.data['message']?.toString() ?? 'An error occurred while updating quiz set',
       );
     }
   }

@@ -497,7 +497,7 @@ class HomeController extends GetxController {
       return difficulty;
     } catch (e) {
       log('Error extracting difficulty range: $e');
-      return difficulty;
+    return difficulty;
     }
   }
 

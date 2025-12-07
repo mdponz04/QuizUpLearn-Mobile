@@ -56,6 +56,29 @@ class EventService {
     }
   }
 
+  Future<BaseResponse<bool>> getEventJoinedStatus(String eventId) async {
+    try {
+      final response = await eventApi.getEventJoinedStatus(eventId);
+      log("Event joined status response: ${response.toString()}");
+
+      if (response.success && response.data != null) {
+        return BaseResponse(
+          isSuccess: true,
+          message: response.message ?? 'Success',
+          data: response.data!.isJoined,
+        );
+      } else {
+        return BaseResponse.error(
+          response.message ?? 'Failed to check joined status',
+        );
+      }
+    } on DioException catch (e) {
+      return BaseResponse.error(
+        e.response?.data['message'] ?? 'An error occurred while checking joined status',
+      );
+    }
+  }
+
   Future<BaseResponse<String>> joinEvent(String eventId) async {
     try {
       final response = await eventApi.joinEvent(eventId);

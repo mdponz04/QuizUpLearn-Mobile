@@ -2,16 +2,21 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:signalr_netcore/signalr_client.dart';
 
-/// Service để quản lý SignalR connection với GameHub
-/// Quản lý tất cả các events và methods cho Host và Player
-class GameHubService {
+/// GameHubService V2 - Improved version based on Web app structure
+/// 
+/// Key improvements:
+/// - Better state management
+/// - Cleaner event handling
+/// - Improved error handling
+/// - Better separation of concerns
+class GameHubServiceV2 {
   HubConnection? _connection;
   String? _currentGamePin;
   bool _isConnected = false;
 
   // ==================== CONNECTION MANAGEMENT ====================
 
-  /// Khởi tạo và kết nối đến SignalR Hub
+  /// Connect to SignalR Hub
   Future<bool> connect(String baseUrl) async {
     try {
       final hubUrl = '$baseUrl/game-hub';
@@ -30,18 +35,18 @@ class GameHubService {
 
       await _connection!.start();
       _isConnected = true;
-      log('SignalR connected successfully');
+      log('✅ SignalR V2 connected successfully');
       _onConnected?.call();
       return true;
     } catch (e) {
-      log('Error connecting to SignalR: $e');
+      log('❌ Error connecting to SignalR V2: $e');
       _isConnected = false;
       _onConnectionError?.call(e.toString());
       return false;
     }
   }
 
-  /// Ngắt kết nối
+  /// Disconnect from SignalR
   Future<void> disconnect() async {
     try {
       if (_connection != null) {
@@ -49,19 +54,103 @@ class GameHubService {
         _connection = null;
         _isConnected = false;
         _currentGamePin = null;
-        log('SignalR disconnected');
+        log('SignalR V2 disconnected');
       }
     } catch (e) {
-      log('Error disconnecting SignalR: $e');
+      log('Error disconnecting SignalR V2: $e');
     }
   }
 
-  /// Kiểm tra trạng thái kết nối
+  /// Check connection status
   bool get isConnected => _isConnected && _connection?.state == HubConnectionState.Connected;
+
+  // ==================== PLAYER METHODS ====================
+
+  /// Player join game
+  Future<void> joinGame(String gamePin, String playerName) async {
+    try {
+      if (!isConnected) {
+        throw Exception('Not connected to SignalR');
+      }
+      _currentGamePin = gamePin;
+      await _connection!.invoke('JoinGame', args: [gamePin, playerName]);
+      log('JoinGame V2 called: $playerName joined game $gamePin');
+    } catch (e) {
+      log('Error in joinGame V2: $e');
+      throw e;
+    }
+  }
+
+  /// Player leave game
+  Future<void> leaveGame(String gamePin) async {
+    try {
+      if (!isConnected) {
+        throw Exception('Not connected to SignalR');
+      }
+      await _connection!.invoke('LeaveGame', args: [gamePin]);
+      log('LeaveGame V2 called for game: $gamePin');
+    } catch (e) {
+      log('Error in leaveGame V2: $e');
+      throw e;
+    }
+  }
+
+  /// Player submit answer (normal mode)
+  Future<void> submitAnswer(String gamePin, String questionId, String answerId) async {
+    try {
+      if (!isConnected) {
+        throw Exception('Not connected to SignalR');
+      }
+      await _connection!.invoke('SubmitAnswer', args: [gamePin, questionId, answerId]);
+      log('SubmitAnswer V2 called: questionId=$questionId, answerId=$answerId');
+    } catch (e) {
+      log('Error in submitAnswer V2: $e');
+      throw e;
+    }
+  }
+
+  /// Player submit Boss Fight answer (per-player flow)
+  Future<void> submitBossFightAnswer(
+    String gamePin,
+    String questionId,
+    String answerId,
+  ) async {
+    try {
+      if (!isConnected) {
+        throw Exception('Not connected to SignalR');
+      }
+      await _connection!.invoke(
+        'SubmitBossFightAnswer',
+        args: [gamePin, questionId, answerId],
+      );
+      log('SubmitBossFightAnswer V2 called: questionId=$questionId, answerId=$answerId');
+    } catch (e) {
+      log('Error in submitBossFightAnswer V2: $e');
+      throw e;
+    }
+  }
+
+  /// Player request next question (Boss Fight per-player flow)
+  Future<void> getPlayerNextQuestion(String gamePin) async {
+    try {
+      log('📤 getPlayerNextQuestion V2 - Checking connection...');
+      if (!isConnected) {
+        log('❌ getPlayerNextQuestion V2 - Not connected to SignalR');
+        throw Exception('Not connected to SignalR');
+      }
+      log('📤 getPlayerNextQuestion V2 - Connection OK, invoking GetPlayerNextQuestion with gamePin: $gamePin');
+      await _connection!.invoke('GetPlayerNextQuestion', args: [gamePin]);
+      log('✅ GetPlayerNextQuestion V2 called successfully for game: $gamePin');
+    } catch (e) {
+      log('❌ Error in getPlayerNextQuestion V2: $e');
+      log('❌ Error stack trace: ${StackTrace.current}');
+      throw e;
+    }
+  }
 
   // ==================== HOST METHODS ====================
 
-  /// Host kết nối vào game sau khi tạo (qua API)
+  /// Host connect to game
   Future<void> hostConnect(String gamePin) async {
     try {
       if (!isConnected) {
@@ -69,79 +158,65 @@ class GameHubService {
       }
       _currentGamePin = gamePin;
       await _connection!.invoke('HostConnect', args: [gamePin]);
-      log('HostConnect called for game: $gamePin');
+      log('HostConnect V2 called for game: $gamePin');
     } catch (e) {
-      log('Error in hostConnect: $e');
+      log('Error in hostConnect V2: $e');
       throw e;
     }
   }
 
-  /// Host bắt đầu game
+  /// Host start game
   Future<void> startGame(String gamePin) async {
     try {
       if (!isConnected) {
         throw Exception('Not connected to SignalR');
       }
       await _connection!.invoke('StartGame', args: [gamePin]);
-      log('StartGame called for game: $gamePin');
+      log('StartGame V2 called for game: $gamePin');
     } catch (e) {
-      log('Error in startGame: $e');
+      log('Error in startGame V2: $e');
       throw e;
     }
   }
 
-  /// Host đặt thời gian cho câu hỏi hiện tại (giây)
-  Future<void> setCurrentQuestionTime(String gamePin, int seconds) async {
-    try {
-      if (!isConnected) {
-        throw Exception('Not connected to SignalR');
-      }
-      await _connection!.invoke('SetCurrentQuestionTime', args: [gamePin, seconds]);
-      log('SetCurrentQuestionTime called: $seconds seconds');
-    } catch (e) {
-      log('Error in setCurrentQuestionTime: $e');
-      throw e;
-    }
-  }
-
-  /// Host trigger hiển thị kết quả câu hỏi
+  /// Host show question result
   Future<void> showQuestionResult(String gamePin) async {
     try {
       if (!isConnected) {
         throw Exception('Not connected to SignalR');
       }
       await _connection!.invoke('ShowQuestionResult', args: [gamePin]);
-      log('ShowQuestionResult called for game: $gamePin');
+      log('ShowQuestionResult V2 called for game: $gamePin');
     } catch (e) {
-      log('Error in showQuestionResult: $e');
+      log('Error in showQuestionResult V2: $e');
       throw e;
     }
   }
 
-  /// Host chuyển sang câu hỏi tiếp theo
+  /// Host next question
   Future<void> nextQuestion(String gamePin) async {
     try {
       if (!isConnected) {
         throw Exception('Not connected to SignalR');
       }
       await _connection!.invoke('NextQuestion', args: [gamePin]);
-      log('NextQuestion called for game: $gamePin');
+      log('NextQuestion V2 called for game: $gamePin');
     } catch (e) {
-      log('Error in nextQuestion: $e');
+      log('Error in nextQuestion V2: $e');
       throw e;
     }
   }
 
-  /// Host hủy game
+  /// Host cancel game
   Future<void> cancelGame(String gamePin) async {
     try {
       if (!isConnected) {
         throw Exception('Not connected to SignalR');
       }
       await _connection!.invoke('CancelGame', args: [gamePin]);
-      log('CancelGame called for game: $gamePin');
+      log('CancelGame V2 called for game: $gamePin');
     } catch (e) {
-      log('Error in cancelGame: $e');
+      log('Error in cancelGame V2: $e');
       throw e;
     }
   }
@@ -160,7 +235,6 @@ class GameHubService {
       if (!isConnected) {
         throw Exception('Not connected to SignalR');
       }
-      // Build args list, handling nullable timeLimitSeconds
       final args = <dynamic>[
         gamePin,
         bossHP,
@@ -169,9 +243,9 @@ class GameHubService {
         autoNextQuestion,
       ];
       await _connection!.invoke('EnableBossFightMode', args: args.cast<Object>());
-      log('EnableBossFightMode called: bossHP=$bossHP, timeLimit=$timeLimitSeconds');
+      log('EnableBossFightMode V2 called: bossHP=$bossHP, timeLimit=$timeLimitSeconds');
     } catch (e) {
-      log('Error in enableBossFightMode: $e');
+      log('Error in enableBossFightMode V2: $e');
       throw e;
     }
   }
@@ -187,7 +261,6 @@ class GameHubService {
       if (!isConnected) {
         throw Exception('Not connected to SignalR');
       }
-      // Build args list, handling nullable timeLimitSeconds
       final args = <dynamic>[
         gamePin,
         bossMaxHP,
@@ -195,23 +268,9 @@ class GameHubService {
         questionTimeLimitSeconds,
       ];
       await _connection!.invoke('BroadcastLobbySettings', args: args.cast<Object>());
-      log('BroadcastLobbySettings called: bossMaxHP=$bossMaxHP');
+      log('BroadcastLobbySettings V2 called: bossMaxHP=$bossMaxHP');
     } catch (e) {
-      log('Error in broadcastLobbySettings: $e');
-      throw e;
-    }
-  }
-
-  /// Get current boss state
-  Future<void> getBossState(String gamePin) async {
-    try {
-      if (!isConnected) {
-        throw Exception('Not connected to SignalR');
-      }
-      await _connection!.invoke('GetBossState', args: [gamePin]);
-      log('GetBossState called for game: $gamePin');
-    } catch (e) {
-      log('Error in getBossState: $e');
+      log('Error in broadcastLobbySettings V2: $e');
       throw e;
     }
   }
@@ -223,37 +282,23 @@ class GameHubService {
         throw Exception('Not connected to SignalR');
       }
       await _connection!.invoke('BossFightNextQuestion', args: [gamePin]);
-      log('BossFightNextQuestion called for game: $gamePin');
+      log('BossFightNextQuestion V2 called for game: $gamePin');
     } catch (e) {
-      log('Error in bossFightNextQuestion: $e');
+      log('Error in bossFightNextQuestion V2: $e');
       throw e;
     }
   }
 
-  /// Get Boss Fight leaderboard (ranked by damage)
-  Future<void> getBossFightLeaderboard(String gamePin) async {
-    try {
-      if (!isConnected) {
-        throw Exception('Not connected to SignalR');
-      }
-      await _connection!.invoke('GetBossFightLeaderboard', args: [gamePin]);
-      log('GetBossFightLeaderboard called for game: $gamePin');
-    } catch (e) {
-      log('Error in getBossFightLeaderboard: $e');
-      throw e;
-    }
-  }
-
-  /// Get realtime leaderboard (for host/mod)
+  /// Get realtime leaderboard
   Future<void> getRealtimeLeaderboard(String gamePin) async {
     try {
       if (!isConnected) {
         throw Exception('Not connected to SignalR');
       }
       await _connection!.invoke('GetRealtimeLeaderboard', args: [gamePin]);
-      log('GetRealtimeLeaderboard called for game: $gamePin');
+      log('GetRealtimeLeaderboard V2 called for game: $gamePin');
     } catch (e) {
-      log('Error in getRealtimeLeaderboard: $e');
+      log('Error in getRealtimeLeaderboard V2: $e');
       throw e;
     }
   }
@@ -265,117 +310,35 @@ class GameHubService {
         throw Exception('Not connected to SignalR');
       }
       await _connection!.invoke('ForceEndGame', args: [gamePin, reason]);
-      log('ForceEndGame called for game: $gamePin, reason: $reason');
+      log('ForceEndGame V2 called for game: $gamePin, reason: $reason');
     } catch (e) {
-      log('Error in forceEndGame: $e');
-      throw e;
-    }
-  }
-
-  // ==================== PLAYER METHODS ====================
-
-  /// Player join vào game bằng PIN
-  Future<void> joinGame(String gamePin, String playerName) async {
-    try {
-      if (!isConnected) {
-        throw Exception('Not connected to SignalR');
-      }
-      _currentGamePin = gamePin;
-      await _connection!.invoke('JoinGame', args: [gamePin, playerName]);
-      log('JoinGame called: $playerName joined game $gamePin');
-    } catch (e) {
-      log('Error in joinGame: $e');
-      throw e;
-    }
-  }
-
-  /// Player rời game (trước khi start)
-  Future<void> leaveGame(String gamePin) async {
-    try {
-      if (!isConnected) {
-        throw Exception('Not connected to SignalR');
-      }
-      await _connection!.invoke('LeaveGame', args: [gamePin]);
-      log('LeaveGame called for game: $gamePin');
-    } catch (e) {
-      log('Error in leaveGame: $e');
-      throw e;
-    }
-  }
-
-  /// Player submit câu trả lời
-  Future<void> submitAnswer(String gamePin, String questionId, String answerId) async {
-    try {
-      if (!isConnected) {
-        throw Exception('Not connected to SignalR');
-      }
-      await _connection!.invoke('SubmitAnswer', args: [gamePin, questionId, answerId]);
-      log('SubmitAnswer called: questionId=$questionId, answerId=$answerId');
-    } catch (e) {
-      log('Error in submitAnswer: $e');
-      throw e;
-    }
-  }
-
-  // ==================== PER-PLAYER FLOW METHODS (BOSS FIGHT) ====================
-
-  /// Player request next question (Boss Fight per-player flow)
-  Future<void> getPlayerNextQuestion(String gamePin) async {
-    try {
-      if (!isConnected) {
-        throw Exception('Not connected to SignalR');
-      }
-      await _connection!.invoke('GetPlayerNextQuestion', args: [gamePin]);
-      log('GetPlayerNextQuestion called for game: $gamePin');
-    } catch (e) {
-      log('Error in getPlayerNextQuestion: $e');
-      throw e;
-    }
-  }
-
-  /// Player submit answer for Boss Fight mode (per-player flow)
-  Future<void> submitBossFightAnswer(String gamePin, String questionId, String answerId) async {
-    try {
-      if (!isConnected) {
-        throw Exception('Not connected to SignalR');
-      }
-      await _connection!.invoke('SubmitBossFightAnswer', args: [gamePin, questionId, answerId]);
-      log('SubmitBossFightAnswer called: questionId=$questionId, answerId=$answerId');
-    } catch (e) {
-      log('Error in submitBossFightAnswer: $e');
+      log('Error in forceEndGame V2: $e');
       throw e;
     }
   }
 
   // ==================== EVENT LISTENERS ====================
 
-  // Callbacks cho connection events
+  // Connection callbacks
   Function()? _onConnected;
   Function(String)? _onConnectionError;
   Function(Object?)? _onConnectionClosed;
 
-  // Callbacks cho Host events
-  Function(Map<String, dynamic>)? _onHostConnected;
+  // Player events
+  Function(Map<String, dynamic>)? _onJoinedGame;
   Function(Map<String, dynamic>)? _onLobbyUpdated;
   Function(Map<String, dynamic>)? _onPlayerJoined;
   Function(Map<String, dynamic>)? _onPlayerLeft;
   Function(Map<String, dynamic>)? _onPlayerDisconnected;
   Function(Map<String, dynamic>)? _onGameStarted;
   Function(Map<String, dynamic>)? _onShowQuestion;
-  Function(Map<String, dynamic>)? _onQuestionTimeUpdated;
-  Function(Map<String, dynamic>)? _onAnswerCount;
-  Function(Map<String, dynamic>)? _onUpdateLeaderboard;
-  Function(Map<String, dynamic>)? _onPlayerScoreUpdated;
+  Function(Map<String, dynamic>)? _onAnswerSubmitted;
   Function(Map<String, dynamic>)? _onShowAnswerResult;
   Function(Map<String, dynamic>)? _onShowLeaderboard;
   Function(Map<String, dynamic>)? _onGameEnded;
   Function(Map<String, dynamic>)? _onGameCancelled;
 
-  // Callbacks cho Player events
-  Function(Map<String, dynamic>)? _onJoinedGame;
-  Function(Map<String, dynamic>)? _onAnswerSubmitted;
-
-  // Callbacks cho Boss Fight events
+  // Boss Fight events
   Function(Map<String, dynamic>)? _onBossFightModeEnabled;
   Function(Map<String, dynamic>)? _onLobbySettingsUpdated;
   Function(Map<String, dynamic>)? _onBossDamaged;
@@ -392,33 +355,26 @@ class GameHubService {
   // Error callback
   Function(String)? _onError;
 
-  /// Setup tất cả event listeners
+  /// Setup all event listeners (based on Web app structure)
   void setupEventListeners({
     // Connection events
     Function()? onConnected,
     Function(String)? onConnectionError,
     Function(Object?)? onConnectionClosed,
 
-    // Host events
-    Function(Map<String, dynamic>)? onHostConnected,
+    // Player events
+    Function(Map<String, dynamic>)? onJoinedGame,
     Function(Map<String, dynamic>)? onLobbyUpdated,
     Function(Map<String, dynamic>)? onPlayerJoined,
     Function(Map<String, dynamic>)? onPlayerLeft,
     Function(Map<String, dynamic>)? onPlayerDisconnected,
     Function(Map<String, dynamic>)? onGameStarted,
     Function(Map<String, dynamic>)? onShowQuestion,
-    Function(Map<String, dynamic>)? onQuestionTimeUpdated,
-    Function(Map<String, dynamic>)? onAnswerCount,
-    Function(Map<String, dynamic>)? onUpdateLeaderboard,
-    Function(Map<String, dynamic>)? onPlayerScoreUpdated,
+    Function(Map<String, dynamic>)? onAnswerSubmitted,
     Function(Map<String, dynamic>)? onShowAnswerResult,
     Function(Map<String, dynamic>)? onShowLeaderboard,
     Function(Map<String, dynamic>)? onGameEnded,
     Function(Map<String, dynamic>)? onGameCancelled,
-
-    // Player events
-    Function(Map<String, dynamic>)? onJoinedGame,
-    Function(Map<String, dynamic>)? onAnswerSubmitted,
 
     // Boss Fight events
     Function(Map<String, dynamic>)? onBossFightModeEnabled,
@@ -441,23 +397,18 @@ class GameHubService {
     _onConnected = onConnected;
     _onConnectionError = onConnectionError;
     _onConnectionClosed = onConnectionClosed;
-    _onHostConnected = onHostConnected;
+    _onJoinedGame = onJoinedGame;
     _onLobbyUpdated = onLobbyUpdated;
     _onPlayerJoined = onPlayerJoined;
     _onPlayerLeft = onPlayerLeft;
     _onPlayerDisconnected = onPlayerDisconnected;
     _onGameStarted = onGameStarted;
     _onShowQuestion = onShowQuestion;
-    _onQuestionTimeUpdated = onQuestionTimeUpdated;
-    _onAnswerCount = onAnswerCount;
-    _onUpdateLeaderboard = onUpdateLeaderboard;
-    _onPlayerScoreUpdated = onPlayerScoreUpdated;
+    _onAnswerSubmitted = onAnswerSubmitted;
     _onShowAnswerResult = onShowAnswerResult;
     _onShowLeaderboard = onShowLeaderboard;
     _onGameEnded = onGameEnded;
     _onGameCancelled = onGameCancelled;
-    _onJoinedGame = onJoinedGame;
-    _onAnswerSubmitted = onAnswerSubmitted;
     _onBossFightModeEnabled = onBossFightModeEnabled;
     _onLobbySettingsUpdated = onLobbySettingsUpdated;
     _onBossDamaged = onBossDamaged;
@@ -473,185 +424,173 @@ class GameHubService {
     _onError = onError;
 
     if (_connection == null) {
-      log('Warning: Cannot setup listeners, connection is null');
+      log('⚠️ Warning: Cannot setup listeners V2, connection is null');
       return;
     }
 
-    // ==================== CONNECTION EVENTS ====================
-    // (Handled in connect() method)
+    if (_connection!.state != HubConnectionState.Connected) {
+      log('⚠️ Warning: Cannot setup listeners V2, connection state is: ${_connection!.state}');
+      // Vẫn tiếp tục setup listeners, chúng sẽ được đăng ký khi connection ready
+    }
 
-    // ==================== HOST EVENTS ====================
-    _connection!.on('HostConnected', (arguments) {
-      log('Event: HostConnected');
-      _onHostConnected?.call(_parseArguments(arguments));
+    log('🔧 Setting up event listeners V2...');
+
+    // ==================== PLAYER EVENTS ====================
+    _connection!.on('JoinedGame', (arguments) {
+      log('Event V2: JoinedGame received, arguments: $arguments');
+      final parsedData = _parseArguments(arguments);
+      log('Event V2: JoinedGame parsed data: $parsedData');
+      _onJoinedGame?.call(parsedData);
+      log('Event V2: JoinedGame callback called');
     });
 
     _connection!.on('LobbyUpdated', (arguments) {
-      log('Event: LobbyUpdated');
+      log('Event V2: LobbyUpdated');
       _onLobbyUpdated?.call(_parseArguments(arguments));
     });
 
     _connection!.on('PlayerJoined', (arguments) {
-      log('Event: PlayerJoined');
+      log('Event V2: PlayerJoined');
       _onPlayerJoined?.call(_parseArguments(arguments));
     });
 
     _connection!.on('PlayerLeft', (arguments) {
-      log('Event: PlayerLeft');
+      log('Event V2: PlayerLeft');
       _onPlayerLeft?.call(_parseArguments(arguments));
     });
 
     _connection!.on('PlayerDisconnected', (arguments) {
-      log('Event: PlayerDisconnected');
+      log('Event V2: PlayerDisconnected');
       _onPlayerDisconnected?.call(_parseArguments(arguments));
     });
 
     _connection!.on('GameStarted', (arguments) {
-      log('Event: GameStarted');
+      log('Event V2: GameStarted');
       _onGameStarted?.call(_parseArguments(arguments));
     });
 
     _connection!.on('ShowQuestion', (arguments) {
-      log('Event: ShowQuestion');
+      log('Event V2: ShowQuestion');
       _onShowQuestion?.call(_parseArguments(arguments));
     });
 
-    _connection!.on('QuestionTimeUpdated', (arguments) {
-      log('Event: QuestionTimeUpdated');
-      _onQuestionTimeUpdated?.call(_parseArguments(arguments));
-    });
-
-    _connection!.on('AnswerCount', (arguments) {
-      log('Event: AnswerCount');
-      _onAnswerCount?.call(_parseArguments(arguments));
-    });
-
-    _connection!.on('UpdateLeaderboard', (arguments) {
-      log('Event: UpdateLeaderboard');
-      _onUpdateLeaderboard?.call(_parseArguments(arguments));
-    });
-
-    _connection!.on('PlayerScoreUpdated', (arguments) {
-      log('Event: PlayerScoreUpdated');
-      _onPlayerScoreUpdated?.call(_parseArguments(arguments));
+    _connection!.on('AnswerSubmitted', (arguments) {
+      log('Event V2: AnswerSubmitted');
+      _onAnswerSubmitted?.call(_parseArguments(arguments));
     });
 
     _connection!.on('ShowAnswerResult', (arguments) {
-      log('Event: ShowAnswerResult');
+      log('Event V2: ShowAnswerResult');
       _onShowAnswerResult?.call(_parseArguments(arguments));
     });
 
     _connection!.on('ShowLeaderboard', (arguments) {
-      log('Event: ShowLeaderboard');
+      log('Event V2: ShowLeaderboard');
       _onShowLeaderboard?.call(_parseArguments(arguments));
     });
 
     _connection!.on('GameEnded', (arguments) {
-      log('Event: GameEnded');
+      log('Event V2: GameEnded');
       _onGameEnded?.call(_parseArguments(arguments));
     });
 
     _connection!.on('GameCancelled', (arguments) {
-      log('Event: GameCancelled');
+      log('Event V2: GameCancelled');
       _onGameCancelled?.call(_parseArguments(arguments));
-    });
-
-    // ==================== PLAYER EVENTS ====================
-    _connection!.on('JoinedGame', (arguments) {
-      log('Event: JoinedGame');
-      _onJoinedGame?.call(_parseArguments(arguments));
-    });
-
-    _connection!.on('AnswerSubmitted', (arguments) {
-      log('Event: AnswerSubmitted');
-      _onAnswerSubmitted?.call(_parseArguments(arguments));
     });
 
     // ==================== BOSS FIGHT EVENTS ====================
     _connection!.on('BossFightModeEnabled', (arguments) {
-      log('Event: BossFightModeEnabled');
+      log('Event V2: BossFightModeEnabled');
       _onBossFightModeEnabled?.call(_parseArguments(arguments));
     });
 
     _connection!.on('LobbySettingsUpdated', (arguments) {
-      log('Event: LobbySettingsUpdated');
+      log('Event V2: LobbySettingsUpdated');
       _onLobbySettingsUpdated?.call(_parseArguments(arguments));
     });
 
     _connection!.on('BossDamaged', (arguments) {
-      log('Event: BossDamaged');
+      log('Event V2: BossDamaged');
       _onBossDamaged?.call(_parseArguments(arguments));
     });
 
     _connection!.on('BossDefeated', (arguments) {
-      log('Event: BossDefeated');
+      log('Event V2: BossDefeated');
       _onBossDefeated?.call(_parseArguments(arguments));
     });
 
     _connection!.on('BossFightTimeUp', (arguments) {
-      log('Event: BossFightTimeUp');
+      log('Event V2: BossFightTimeUp');
       _onBossFightTimeUp?.call(_parseArguments(arguments));
     });
 
     _connection!.on('BossFightQuestionsExhausted', (arguments) {
-      log('Event: BossFightQuestionsExhausted');
+      log('Event V2: BossFightQuestionsExhausted');
       _onBossFightQuestionsExhausted?.call(_parseArguments(arguments));
     });
 
     _connection!.on('BossFightAnswerResult', (arguments) {
-      log('Event: BossFightAnswerResult');
-      _onBossFightAnswerResult?.call(_parseArguments(arguments));
+      log('✅ Event V2: BossFightAnswerResult received, arguments: $arguments');
+      final parsedData = _parseArguments(arguments);
+      log('✅ Event V2: BossFightAnswerResult parsed data: $parsedData');
+      if (_onBossFightAnswerResult != null) {
+        _onBossFightAnswerResult!.call(parsedData);
+        log('✅ Event V2: BossFightAnswerResult callback called');
+      } else {
+        log('⚠️ Event V2: BossFightAnswerResult callback is null!');
+      }
     });
 
     _connection!.on('PlayerQuestion', (arguments) {
-      log('Event: PlayerQuestion');
+      log('Event V2: PlayerQuestion');
       _onPlayerQuestion?.call(_parseArguments(arguments));
     });
 
     _connection!.on('RealtimeLeaderboard', (arguments) {
-      log('Event: RealtimeLeaderboard');
+      log('Event V2: RealtimeLeaderboard');
       _onRealtimeLeaderboard?.call(_parseArguments(arguments));
     });
 
     _connection!.on('BossFightLeaderboard', (arguments) {
-      log('Event: BossFightLeaderboard');
+      log('Event V2: BossFightLeaderboard');
       _onBossFightLeaderboard?.call(_parseArguments(arguments));
     });
 
     _connection!.on('BossState', (arguments) {
-      log('Event: BossState');
+      log('Event V2: BossState');
       _onBossState?.call(_parseArguments(arguments));
     });
 
     _connection!.on('GameForceEnded', (arguments) {
-      log('Event: GameForceEnded');
+      log('Event V2: GameForceEnded');
       _onGameForceEnded?.call(_parseArguments(arguments));
     });
 
     // ==================== ERROR EVENT ====================
     _connection!.on('Error', (arguments) {
-      log('Event: Error');
-      final errorMessage = arguments?.isNotEmpty == true 
-          ? arguments![0].toString() 
+      log('Event V2: Error');
+      final errorMessage = arguments?.isNotEmpty == true
+          ? arguments![0].toString()
           : 'Unknown error';
       _onError?.call(errorMessage);
     });
 
-    log('All event listeners setup completed');
+    log('✅ All event listeners V2 setup completed');
   }
 
-  /// Parse arguments từ SignalR event
+  /// Parse arguments from SignalR event
   Map<String, dynamic> _parseArguments(List<dynamic>? arguments) {
     if (arguments == null || arguments.isEmpty) {
       return {};
     }
 
-    // Nếu argument là một object (Map), trả về trực tiếp
+    // If argument is a Map, return directly
     if (arguments.length == 1 && arguments[0] is Map) {
       return Map<String, dynamic>.from(arguments[0] as Map);
     }
 
-    // Nếu là list các arguments, convert sang Map
+    // If it's a list of arguments, convert to Map
     final result = <String, dynamic>{};
     for (var i = 0; i < arguments.length; i++) {
       result['arg$i'] = arguments[i];
@@ -668,28 +607,23 @@ class GameHubService {
     _connection = null;
     _currentGamePin = null;
     _isConnected = false;
-    
+
     // Clear all callbacks
     _onConnected = null;
     _onConnectionError = null;
     _onConnectionClosed = null;
-    _onHostConnected = null;
+    _onJoinedGame = null;
     _onLobbyUpdated = null;
     _onPlayerJoined = null;
     _onPlayerLeft = null;
     _onPlayerDisconnected = null;
     _onGameStarted = null;
     _onShowQuestion = null;
-    _onQuestionTimeUpdated = null;
-    _onAnswerCount = null;
-    _onUpdateLeaderboard = null;
-    _onPlayerScoreUpdated = null;
+    _onAnswerSubmitted = null;
     _onShowAnswerResult = null;
     _onShowLeaderboard = null;
     _onGameEnded = null;
     _onGameCancelled = null;
-    _onJoinedGame = null;
-    _onAnswerSubmitted = null;
     _onBossFightModeEnabled = null;
     _onLobbySettingsUpdated = null;
     _onBossDamaged = null;

@@ -23,8 +23,23 @@ class QuizDetailView extends GetView<QuizDetailController> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: ColorsManager.primary),
-          onPressed: () => Get.back(),
+          onPressed: () {
+            // Return true if quiz was updated, so parent can refresh
+            Get.back(result: controller.hasUpdated.value);
+          },
         ),
+        actions: [
+          Obx(() {
+            if (controller.isOwner) {
+              return IconButton(
+                icon: Icon(Icons.edit, color: ColorsManager.primary),
+                onPressed: () => controller.showEditDialog(context),
+                tooltip: 'Chỉnh sửa',
+              );
+            }
+            return const SizedBox.shrink();
+          }),
+        ],
       ),
       body: Obx(() {
         if (controller.isLoading.value) {

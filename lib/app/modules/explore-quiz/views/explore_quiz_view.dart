@@ -339,31 +339,31 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
                     GestureDetector(
                       onTap: () => Get.toNamed('/quiz-detail', arguments: quizSet.id),
                       child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: UtilsReponsive.width(12, context),
-                          vertical: UtilsReponsive.height(6, context),
-                        ),
-                        decoration: BoxDecoration(
-                          color: ColorsManager.primary,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            TextConstant.subTile3(
-                              context,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: UtilsReponsive.width(12, context),
+                        vertical: UtilsReponsive.height(6, context),
+                      ),
+                      decoration: BoxDecoration(
+                        color: ColorsManager.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextConstant.subTile3(
+                            context,
                               text: "Chi tiết",
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              size: 12,
-                            ),
-                            SizedBox(width: UtilsReponsive.width(4, context)),
-                            Icon(
-                              Icons.arrow_forward,
-                              color: Colors.white,
-                              size: UtilsReponsive.height(12, context),
-                            ),
-                          ],
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            size: 12,
+                          ),
+                          SizedBox(width: UtilsReponsive.width(4, context)),
+                          Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                            size: UtilsReponsive.height(12, context),
+                          ),
+                        ],
                         ),
                       ),
                     ),

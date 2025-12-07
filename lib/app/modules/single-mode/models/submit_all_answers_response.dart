@@ -54,6 +54,12 @@ class Data {
   List<AnswerResult>? answerResults;
   dynamic weakPoints;
 
+  // Placement test specific fields
+  int? lisPoint;
+  int? totalCorrectLisAns;
+  int? reaPoint;
+  int? totalCorrectReaAns;
+
   Data({
     this.attemptId,
     this.totalQuestions,
@@ -64,6 +70,10 @@ class Data {
     this.status,
     this.answerResults,
     this.weakPoints,
+    this.lisPoint,
+    this.totalCorrectLisAns,
+    this.reaPoint,
+    this.totalCorrectReaAns,
   });
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
@@ -79,6 +89,10 @@ class Data {
             : List<AnswerResult>.from(
                 json["answerResults"]!.map((x) => AnswerResult.fromJson(x))),
         weakPoints: json["weakPoints"],
+        lisPoint: json["lisPoint"],
+        totalCorrectLisAns: json["totalCorrectLisAns"],
+        reaPoint: json["reaPoint"],
+        totalCorrectReaAns: json["totalCorrectReaAns"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -93,10 +107,20 @@ class Data {
             ? []
             : List<dynamic>.from(answerResults!.map((x) => x.toJson())),
         "weakPoints": weakPoints,
+        "lisPoint": lisPoint,
+        "totalCorrectLisAns": totalCorrectLisAns,
+        "reaPoint": reaPoint,
+        "totalCorrectReaAns": totalCorrectReaAns,
       };
 
   // Helper methods
   String get formattedAccuracy => '${(accuracy ?? 0.0).toStringAsFixed(1)}%';
+  
+  // Check if this is a placement test result
+  bool get isPlacementTest => lisPoint != null || reaPoint != null;
+  
+  // Calculate total points for placement test
+  int get totalPlacementPoints => (lisPoint ?? 0) + (reaPoint ?? 0);
 }
 
 class AnswerResult {

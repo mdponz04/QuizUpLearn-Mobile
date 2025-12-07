@@ -42,6 +42,14 @@ class _GameRoomViewState extends State<GameRoomView> {
   int _totalAnswers = 0;
   Map<String, dynamic>? _currentQuestion; // Lưu câu hỏi hiện tại để hiển thị
   List<Map<String, dynamic>>? _leaderboard; // Leaderboard data
+  Map<String, dynamic>? _currentGroupItem; // GroupItem cho TOEIC grouped questions
+  
+  // Boss Fight mode
+  bool _isBossFightMode = false;
+  int? _bossCurrentHP;
+  int? _bossMaxHP;
+  List<Map<String, dynamic>>? _damageLeaderboard;
+  Map<String, dynamic>? _lobbySettings;
 
   @override
   void initState() {
@@ -134,6 +142,8 @@ class _GameRoomViewState extends State<GameRoomView> {
           _totalQuestions = data['totalQuestions'] ?? data['TotalQuestions'] ?? _totalQuestions;
           _answerCount = 0;
           _totalAnswers = _totalPlayers;
+          // Xử lý GroupItem cho TOEIC grouped questions
+          _currentGroupItem = data['groupItem'] ?? data['GroupItem'];
         });
         log('Host phase changed to: question, questionIndex: $_currentQuestionIndex');
         Get.snackbar(
@@ -214,6 +224,96 @@ class _GameRoomViewState extends State<GameRoomView> {
           'Lỗi',
           error,
           backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      },
+      // Boss Fight events
+      onBossFightModeEnabled: (data) {
+        setState(() {
+          _isBossFightMode = true;
+        });
+        Get.snackbar(
+          'Thông báo',
+          'Boss Fight Mode đã được bật!',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
+      },
+      onLobbySettingsUpdated: (data) {
+        setState(() {
+          _lobbySettings = data;
+          _bossMaxHP = data['bossMaxHP'] ?? data['BossMaxHP'];
+        });
+        log('Lobby settings updated: ${data.toString()}');
+      },
+      onBossDamaged: (data) {
+        setState(() {
+          _bossCurrentHP = data['currentHP'] ?? data['CurrentHP'];
+          _bossMaxHP = data['maxHP'] ?? data['MaxHP'] ?? _bossMaxHP;
+        });
+        log('Boss damaged: ${_bossCurrentHP}/${_bossMaxHP}');
+      },
+      onBossDefeated: (data) {
+        setState(() {
+          _bossCurrentHP = 0;
+        });
+        Get.snackbar(
+          'Chiến thắng!',
+          'Boss đã bị đánh bại!',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      },
+      onBossFightTimeUp: (data) {
+        Get.snackbar(
+          'Thông báo',
+          'Hết thời gian!',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
+      },
+      onBossFightQuestionsExhausted: (data) {
+        Get.snackbar(
+          'Thông báo',
+          'Đã hết câu hỏi!',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
+      },
+      onBossFightAnswerResult: (data) {
+        log('Boss Fight answer result: ${data.toString()}');
+      },
+      onRealtimeLeaderboard: (data) {
+        setState(() {
+          _damageLeaderboard = List<Map<String, dynamic>>.from(
+            data['players'] ?? data['Players'] ?? []
+          );
+        });
+        log('Realtime leaderboard updated: ${_damageLeaderboard?.length} players');
+      },
+      onBossFightLeaderboard: (data) {
+        setState(() {
+          _damageLeaderboard = List<Map<String, dynamic>>.from(
+            data['players'] ?? data['Players'] ?? []
+          );
+        });
+        log('Boss Fight leaderboard updated: ${_damageLeaderboard?.length} players');
+      },
+      onBossState: (data) {
+        setState(() {
+          _bossCurrentHP = data['currentHP'] ?? data['CurrentHP'];
+          _bossMaxHP = data['maxHP'] ?? data['MaxHP'];
+        });
+        log('Boss state: ${_bossCurrentHP}/${_bossMaxHP}');
+      },
+      onGameForceEnded: (data) {
+        setState(() {
+          _currentPhase = HostGamePhase.gameEnd;
+        });
+        Get.snackbar(
+          'Thông báo',
+          'Game đã bị kết thúc bởi moderator',
+          backgroundColor: Colors.orange,
           colorText: Colors.white,
         );
       },
@@ -314,6 +414,279 @@ class _GameRoomViewState extends State<GameRoomView> {
       Get.snackbar(
         'Lỗi',
         'Không thể chuyển câu hỏi: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> _showBossFightDialog() async {
+    int bossHP = 100;
+    int? timeLimitSeconds;
+    int questionTimeLimitSeconds = 30;
+    bool autoNextQuestion = false;
+
+    final bossHPController = TextEditingController(text: '100');
+    final timeLimitController = TextEditingController();
+    final questionTimeController = TextEditingController(text: '30');
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: TextConstant.subTile1(
+          context,
+          text: 'Bật Boss Fight Mode',
+          fontWeight: FontWeight.bold,
+          size: 16,
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: bossHPController,
+                decoration: InputDecoration(
+                  labelText: TextConstant.subTile2(
+                    context,
+                    text: 'Boss HP',
+                    size: 12,
+                  ).data,
+                  labelStyle: TextStyle(fontSize: 12),
+                ),
+                keyboardType: TextInputType.number,
+                style: TextStyle(fontSize: 14),
+              ),
+              SizedBox(height: UtilsReponsive.height(12, context)),
+              TextField(
+                controller: timeLimitController,
+                decoration: InputDecoration(
+                  labelText: TextConstant.subTile2(
+                    context,
+                    text: 'Thời gian giới hạn (giây, để trống = không giới hạn)',
+                    size: 12,
+                  ).data,
+                  labelStyle: TextStyle(fontSize: 12),
+                ),
+                keyboardType: TextInputType.number,
+                style: TextStyle(fontSize: 14),
+              ),
+              SizedBox(height: UtilsReponsive.height(12, context)),
+              TextField(
+                controller: questionTimeController,
+                decoration: InputDecoration(
+                  labelText: TextConstant.subTile2(
+                    context,
+                    text: 'Thời gian mỗi câu hỏi (giây)',
+                    size: 12,
+                  ).data,
+                  labelStyle: TextStyle(fontSize: 12),
+                ),
+                keyboardType: TextInputType.number,
+                style: TextStyle(fontSize: 14),
+              ),
+              SizedBox(height: UtilsReponsive.height(12, context)),
+              Row(
+                children: [
+                  TextConstant.subTile2(
+                    context,
+                    text: 'Tự động chuyển câu hỏi',
+                    size: 12,
+                  ),
+                  Spacer(),
+                  Switch(
+                    value: autoNextQuestion,
+                    onChanged: (value) {
+                      setState(() {
+                        autoNextQuestion = value;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: TextConstant.subTile2(
+              context,
+              text: 'Hủy',
+              size: 12,
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              bossHP = int.tryParse(bossHPController.text) ?? 100;
+              timeLimitSeconds = timeLimitController.text.isEmpty
+                  ? null
+                  : int.tryParse(timeLimitController.text);
+              questionTimeLimitSeconds =
+                  int.tryParse(questionTimeController.text) ?? 30;
+              Navigator.pop(context);
+              _enableBossFightMode(
+                bossHP,
+                timeLimitSeconds,
+                questionTimeLimitSeconds,
+                autoNextQuestion,
+              );
+            },
+            child: TextConstant.subTile2(
+              context,
+              text: 'Xác nhận',
+              size: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _enableBossFightMode(
+    int bossHP,
+    int? timeLimitSeconds,
+    int questionTimeLimitSeconds,
+    bool autoNextQuestion,
+  ) async {
+    if (_gamePin == null) return;
+
+    try {
+      await _gameHub.enableBossFightMode(
+        _gamePin!,
+        bossHP: bossHP,
+        timeLimitSeconds: timeLimitSeconds,
+        questionTimeLimitSeconds: questionTimeLimitSeconds,
+        autoNextQuestion: autoNextQuestion,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Lỗi',
+        'Không thể bật Boss Fight Mode: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> _showLobbySettingsDialog() async {
+    int bossMaxHP = 100;
+    int? timeLimitSeconds;
+    int questionTimeLimitSeconds = 30;
+
+    final bossHPController = TextEditingController(text: '100');
+    final timeLimitController = TextEditingController();
+    final questionTimeController = TextEditingController(text: '30');
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: TextConstant.subTile1(
+          context,
+          text: 'Cấu hình Lobby',
+          fontWeight: FontWeight.bold,
+          size: 16,
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: bossHPController,
+                decoration: InputDecoration(
+                  labelText: TextConstant.subTile2(
+                    context,
+                    text: 'Boss Max HP',
+                    size: 12,
+                  ).data,
+                  labelStyle: TextStyle(fontSize: 12),
+                ),
+                keyboardType: TextInputType.number,
+                style: TextStyle(fontSize: 14),
+              ),
+              SizedBox(height: UtilsReponsive.height(12, context)),
+              TextField(
+                controller: timeLimitController,
+                decoration: InputDecoration(
+                  labelText: TextConstant.subTile2(
+                    context,
+                    text: 'Thời gian giới hạn (giây, để trống = không giới hạn)',
+                    size: 12,
+                  ).data,
+                  labelStyle: TextStyle(fontSize: 12),
+                ),
+                keyboardType: TextInputType.number,
+                style: TextStyle(fontSize: 14),
+              ),
+              SizedBox(height: UtilsReponsive.height(12, context)),
+              TextField(
+                controller: questionTimeController,
+                decoration: InputDecoration(
+                  labelText: TextConstant.subTile2(
+                    context,
+                    text: 'Thời gian mỗi câu hỏi (giây)',
+                    size: 12,
+                  ).data,
+                  labelStyle: TextStyle(fontSize: 12),
+                ),
+                keyboardType: TextInputType.number,
+                style: TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: TextConstant.subTile2(
+              context,
+              text: 'Hủy',
+              size: 12,
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              bossMaxHP = int.tryParse(bossHPController.text) ?? 100;
+              timeLimitSeconds = timeLimitController.text.isEmpty
+                  ? null
+                  : int.tryParse(timeLimitController.text);
+              questionTimeLimitSeconds =
+                  int.tryParse(questionTimeController.text) ?? 30;
+              Navigator.pop(context);
+              _broadcastLobbySettings(
+                bossMaxHP,
+                timeLimitSeconds,
+                questionTimeLimitSeconds,
+              );
+            },
+            child: TextConstant.subTile2(
+              context,
+              text: 'Gửi',
+              size: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _broadcastLobbySettings(
+    int bossMaxHP,
+    int? timeLimitSeconds,
+    int questionTimeLimitSeconds,
+  ) async {
+    if (_gamePin == null) return;
+
+    try {
+      await _gameHub.broadcastLobbySettings(
+        _gamePin!,
+        bossMaxHP: bossMaxHP,
+        timeLimitSeconds: timeLimitSeconds,
+        questionTimeLimitSeconds: questionTimeLimitSeconds,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Lỗi',
+        'Không thể gửi cấu hình: $e',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -775,69 +1148,117 @@ class _GameRoomViewState extends State<GameRoomView> {
         children: [
           // Main action button
           if (_currentPhase == HostGamePhase.lobby)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: (_isConnecting || _isStartingGame) 
-                    ? null 
-                    : (_isConnected ? _startGame : _testConnect),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isConnected 
-                      ? Colors.green 
-                      : ColorsManager.primary,
-                  disabledBackgroundColor: Colors.grey[300],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: EdgeInsets.symmetric(
-                    vertical: UtilsReponsive.height(16, context),
+            Column(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: (_isConnecting || _isStartingGame) 
+                        ? null 
+                        : (_isConnected ? _startGame : _testConnect),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _isConnected 
+                          ? Colors.green 
+                          : ColorsManager.primary,
+                      disabledBackgroundColor: Colors.grey[300],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        vertical: UtilsReponsive.height(16, context),
+                      ),
+                    ),
+                    child: _isConnecting || _isStartingGame
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: UtilsReponsive.height(20, context),
+                                height: UtilsReponsive.height(20, context),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              ),
+                              SizedBox(width: UtilsReponsive.width(12, context)),
+                              TextConstant.subTile1(
+                                context,
+                                text: _isConnecting 
+                                    ? "Đang kết nối..." 
+                                    : "Đang bắt đầu game...",
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                size: 12,
+                              ),
+                            ],
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                _isConnected 
+                                    ? Icons.play_arrow 
+                                    : Icons.wifi,
+                                color: Colors.white,
+                                size: UtilsReponsive.height(20, context),
+                              ),
+                              SizedBox(width: UtilsReponsive.width(8, context)),
+                              TextConstant.subTile1(
+                                context,
+                                text: _isConnected 
+                                    ? "Start Game" 
+                                    : "Connect",
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                size: 12,
+                              ),
+                            ],
+                          ),
                   ),
                 ),
-                child: _isConnecting || _isStartingGame
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: UtilsReponsive.height(20, context),
-                            height: UtilsReponsive.height(20, context),
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                if (_isConnected) ...[
+                  SizedBox(height: UtilsReponsive.height(8, context)),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _showBossFightDialog,
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: Colors.orange, width: 1),
+                            padding: EdgeInsets.symmetric(
+                              vertical: UtilsReponsive.height(12, context),
                             ),
                           ),
-                          SizedBox(width: UtilsReponsive.width(12, context)),
-                          TextConstant.subTile1(
+                          child: TextConstant.subTile2(
                             context,
-                            text: _isConnecting 
-                                ? "Đang kết nối..." 
-                                : "Đang bắt đầu game...",
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                            text: 'Boss Fight',
+                            color: Colors.orange,
+                            size: 11,
                           ),
-                        ],
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _isConnected 
-                                ? Icons.play_arrow 
-                                : Icons.wifi,
-                            color: Colors.white,
-                            size: UtilsReponsive.height(20, context),
-                          ),
-                          SizedBox(width: UtilsReponsive.width(8, context)),
-                          TextConstant.subTile1(
-                            context,
-                            text: _isConnected 
-                                ? "Start Game" 
-                                : "Connect",
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ],
+                        ),
                       ),
-              ),
+                      SizedBox(width: UtilsReponsive.width(8, context)),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _showLobbySettingsDialog,
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: Colors.blue, width: 1),
+                            padding: EdgeInsets.symmetric(
+                              vertical: UtilsReponsive.height(12, context),
+                            ),
+                          ),
+                          child: TextConstant.subTile2(
+                            context,
+                            text: 'Cấu hình',
+                            color: Colors.blue,
+                            size: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
             )
           else if (_currentPhase == HostGamePhase.gameStarted)
             Container(
@@ -863,6 +1284,15 @@ class _GameRoomViewState extends State<GameRoomView> {
           else if (_currentPhase == HostGamePhase.question)
             Column(
               children: [
+                // Boss HP Bar và Damage Leaderboard
+                if (_isBossFightMode) ...[
+                  _buildBossHPBar(context),
+                  if (_damageLeaderboard != null && _damageLeaderboard!.isNotEmpty)
+                    _buildDamageLeaderboard(context),
+                ],
+                // GroupItem (TOEIC grouped questions)
+                if (_currentGroupItem != null)
+                  _buildGroupItem(context, _currentGroupItem!),
                 // Question Info Card
                 if (_currentQuestion != null)
                   Container(
@@ -889,6 +1319,7 @@ class _GameRoomViewState extends State<GameRoomView> {
                               context,
                               text: "Câu $_currentQuestionIndex/$_totalQuestions",
                               color: Colors.grey[600]!,
+                              size: 11,
                             ),
                             Container(
                               padding: EdgeInsets.symmetric(
@@ -902,13 +1333,14 @@ class _GameRoomViewState extends State<GameRoomView> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.people, color: Colors.blue, size: 16),
+                                  Icon(Icons.people, color: Colors.blue, size: 14),
                                   SizedBox(width: UtilsReponsive.width(4, context)),
                                   TextConstant.subTile3(
                                     context,
                                     text: "$_answerCount/$_totalAnswers",
                                     color: Colors.blue,
                                     fontWeight: FontWeight.bold,
+                                    size: 10,
                                   ),
                                 ],
                               ),
@@ -923,6 +1355,7 @@ class _GameRoomViewState extends State<GameRoomView> {
                                 'Câu hỏi',
                           color: Colors.black,
                           fontWeight: FontWeight.bold,
+                          size: 14,
                         ),
                         SizedBox(height: UtilsReponsive.height(16, context)),
                         // Answer options (chỉ để xem)
@@ -955,6 +1388,7 @@ class _GameRoomViewState extends State<GameRoomView> {
                                       text: answerLabels[index],
                                       color: Colors.black,
                                       fontWeight: FontWeight.bold,
+                                      size: 11,
                                     ),
                                   ),
                                 ),
@@ -964,6 +1398,7 @@ class _GameRoomViewState extends State<GameRoomView> {
                                     context,
                                     text: optionText,
                                     color: Colors.black,
+                                    size: 12,
                                   ),
                                 ),
                               ],
@@ -1108,6 +1543,205 @@ class _GameRoomViewState extends State<GameRoomView> {
                   ? Colors.green 
                   : Colors.grey[600]!,
               fontWeight: FontWeight.w500,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBossHPBar(BuildContext context) {
+    if (!_isBossFightMode || _bossMaxHP == null) return SizedBox.shrink();
+    
+    final currentHP = _bossCurrentHP ?? _bossMaxHP!;
+    final percentage = currentHP / _bossMaxHP!;
+    
+    return Container(
+      padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+      margin: EdgeInsets.only(bottom: UtilsReponsive.height(12, context)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextConstant.subTile2(
+                context,
+                text: 'Boss HP',
+                fontWeight: FontWeight.bold,
+                size: 11,
+              ),
+              TextConstant.subTile2(
+                context,
+                text: '$currentHP / $_bossMaxHP',
+                size: 11,
+              ),
+            ],
+          ),
+          SizedBox(height: UtilsReponsive.height(8, context)),
+          LinearProgressIndicator(
+            value: percentage,
+            backgroundColor: Colors.grey[300],
+            valueColor: AlwaysStoppedAnimation<Color>(
+              percentage > 0.5 ? Colors.red : Colors.orange,
+            ),
+            minHeight: 16,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDamageLeaderboard(BuildContext context) {
+    if (!_isBossFightMode || _damageLeaderboard == null || _damageLeaderboard!.isEmpty) {
+      return SizedBox.shrink();
+    }
+    
+    return Container(
+      padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+      margin: EdgeInsets.only(bottom: UtilsReponsive.height(12, context)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextConstant.subTile2(
+            context,
+            text: 'Bảng xếp hạng Damage',
+            fontWeight: FontWeight.bold,
+            size: 11,
+          ),
+          SizedBox(height: UtilsReponsive.height(8, context)),
+          ..._damageLeaderboard!.take(5).toList().asMap().entries.map((entry) {
+            final index = entry.key;
+            final player = entry.value;
+            final playerName = player['playerName'] ?? player['PlayerName'] ?? '';
+            final damage = player['damage'] ?? player['Damage'] ?? 0;
+            
+            return Padding(
+              padding: EdgeInsets.only(bottom: UtilsReponsive.height(6, context)),
+              child: Row(
+                children: [
+                  Container(
+                    width: UtilsReponsive.width(24, context),
+                    height: UtilsReponsive.width(24, context),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: TextConstant.subTile3(
+                        context,
+                        text: '${index + 1}',
+                        size: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: UtilsReponsive.width(8, context)),
+                  Expanded(
+                    child: Text(
+                      playerName,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.black,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  TextConstant.subTile2(
+                    context,
+                    text: '$damage',
+                    size: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupItem(BuildContext context, Map<String, dynamic> groupItem) {
+    return Container(
+      padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+      margin: EdgeInsets.only(bottom: UtilsReponsive.height(12, context)),
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue[200]!, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Passage Text
+          if (groupItem['passageText'] != null && 
+              groupItem['passageText'].toString().isNotEmpty) ...[
+            TextConstant.subTile2(
+              context,
+              text: groupItem['passageText'],
+              size: 11,
+            ),
+            SizedBox(height: UtilsReponsive.height(8, context)),
+          ],
+          // Image
+          if (groupItem['imageUrl'] != null && 
+              groupItem['imageUrl'].toString().isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                groupItem['imageUrl'].toString(),
+                width: double.infinity,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: UtilsReponsive.height(100, context),
+                    color: Colors.grey[200],
+                    child: Icon(Icons.broken_image, color: Colors.grey[400], size: 32),
+                  );
+                },
+              ),
+            ),
+          // Audio URL (chỉ hiển thị text, không có player)
+          if (groupItem['audioUrl'] != null && 
+              groupItem['audioUrl'].toString().isNotEmpty) ...[
+            SizedBox(height: UtilsReponsive.height(8, context)),
+            Row(
+              children: [
+                Icon(Icons.audiotrack, size: 16, color: Colors.blue),
+                SizedBox(width: UtilsReponsive.width(4, context)),
+                Expanded(
+                  child: TextConstant.subTile3(
+                    context,
+                    text: 'Có audio',
+                    size: 10,
+                    color: Colors.blue,
+                  ),
+                ),
+              ],
             ),
           ],
         ],

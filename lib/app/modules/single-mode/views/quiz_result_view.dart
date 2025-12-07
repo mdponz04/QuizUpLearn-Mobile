@@ -18,7 +18,7 @@ class QuizResultView extends StatelessWidget {
       appBar: AppBar(
         title: TextConstant.titleH3(
           context,
-          text: "Quiz Result",
+          text: "Kết quả Quiz",
           color: Colors.white,
           fontWeight: FontWeight.bold,
         ),
@@ -43,12 +43,18 @@ class QuizResultView extends StatelessWidget {
             SizedBox(height: UtilsReponsive.height(24, context)),
             
             // Score overview
-            _buildScoreOverview(context),
+            if (result.isPlacementTest)
+              _buildPlacementTestScoreOverview(context)
+            else
+              _buildScoreOverview(context),
             
             SizedBox(height: UtilsReponsive.height(24, context)),
             
             // Detailed stats
-            _buildDetailedStats(context),
+            if (result.isPlacementTest)
+              _buildPlacementTestDetailedStats(context)
+            else
+              _buildDetailedStats(context),
             
             SizedBox(height: UtilsReponsive.height(24, context)),
             
@@ -110,22 +116,24 @@ class QuizResultView extends StatelessWidget {
           
           SizedBox(height: UtilsReponsive.height(16, context)),
           
-          TextConstant.titleH2(
-            context,
-            text: "Congratulations!",
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            size: 24,
-          ),
+          // TextConstant.titleH2(
+          //   context,
+          //   text: result.isPlacementTest ? "Hoàn thành Bài Kiểm tra Xếp lớp!" : "Chúc mừng!",
+          //   color: Colors.white,
+          //   fontWeight: FontWeight.bold,
+          //   size: 24,
+          // ),
           
-          SizedBox(height: UtilsReponsive.height(8, context)),
+          // SizedBox(height: UtilsReponsive.height(8, context)),
           
-          TextConstant.subTile1(
-            context,
-            text: "You completed the quiz",
-            color: Colors.white.withOpacity(0.9),
-            size: 16,
-          ),
+          // TextConstant.subTile1(
+          //   context,
+          //   text: result.isPlacementTest 
+          //       ? "Bạn đã hoàn thành bài kiểm tra xếp lớp"
+          //       : "Bạn đã hoàn thành bài quiz",
+          //   color: Colors.white.withOpacity(0.9),
+          //   size: 16,
+          // ),
           
           SizedBox(height: UtilsReponsive.height(12, context)),
           
@@ -140,7 +148,7 @@ class QuizResultView extends StatelessWidget {
             ),
             child: TextConstant.subTile2(
             context,
-            text: result.status ?? 'Completed',
+            text: result.status == 'completed' ? 'Hoàn thành' : (result.status ?? 'Hoàn thành'),
             color: Colors.white,
             fontWeight: FontWeight.bold,
             size: 14,
@@ -169,7 +177,7 @@ class QuizResultView extends StatelessWidget {
         children: [
           TextConstant.titleH3(
             context,
-            text: "Your Score",
+            text: "Điểm của bạn",
             color: Colors.black,
             fontWeight: FontWeight.bold,
             size: 18,
@@ -182,7 +190,7 @@ class QuizResultView extends StatelessWidget {
               Expanded(
                 child: _buildScoreItem(
                   context,
-                  "Score",
+                  "Điểm",
                   "${result.score ?? 0}",
                   Icons.star,
                   Colors.amber,
@@ -196,7 +204,7 @@ class QuizResultView extends StatelessWidget {
               Expanded(
                 child: _buildScoreItem(
                   context,
-                  "Accuracy",
+                  "Độ chính xác",
                   result.formattedAccuracy,
                   Icons.trending_up,
                   Colors.green,
@@ -242,6 +250,242 @@ class QuizResultView extends StatelessWidget {
     );
   }
 
+  Widget _buildPlacementTestScoreOverview(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(UtilsReponsive.width(20, context)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          TextConstant.titleH3(
+            context,
+            text: "Điểm Bài Kiểm tra Xếp lớp",
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            size: 18,
+          ),
+          
+          SizedBox(height: UtilsReponsive.height(16, context)),
+          
+          Row(
+            children: [
+              Expanded(
+                child: _buildScoreItem(
+                  context,
+                  "Nghe",
+                  "${result.lisPoint ?? 0}",
+                  Icons.headphones,
+                  Colors.blue,
+                ),
+              ),
+              Container(
+                width: 1,
+                height: UtilsReponsive.height(40, context),
+                color: Colors.grey[300],
+              ),
+              Expanded(
+                child: _buildScoreItem(
+                  context,
+                  "Đọc",
+                  "${result.reaPoint ?? 0}",
+                  Icons.menu_book,
+                  Colors.purple,
+                ),
+              ),
+            ],
+          ),
+          
+          SizedBox(height: UtilsReponsive.height(16, context)),
+          
+          Container(
+            padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+            decoration: BoxDecoration(
+              color: ColorsManager.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: ColorsManager.primary.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextConstant.subTile1(
+                  context,
+                  text: "Tổng điểm: ",
+                  color: Colors.grey[700]!,
+                  size: 14,
+                ),
+                TextConstant.titleH3(
+                  context,
+                  text: "${result.totalPlacementPoints}",
+                  color: ColorsManager.primary,
+                  fontWeight: FontWeight.bold,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlacementTestDetailedStats(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(UtilsReponsive.width(20, context)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextConstant.titleH3(
+            context,
+            text: "Thống kê Bài Kiểm tra Xếp lớp",
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            size: 18,
+          ),
+          
+          SizedBox(height: UtilsReponsive.height(16, context)),
+          
+          // Listening Section
+          Container(
+            padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.blue.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.headphones,
+                      color: Colors.blue,
+                      size: UtilsReponsive.height(20, context),
+                    ),
+                    SizedBox(width: UtilsReponsive.width(8, context)),
+                    TextConstant.titleH3(
+                      context,
+                      text: "Nghe",
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                      size: 16,
+                    ),
+                  ],
+                ),
+                SizedBox(height: UtilsReponsive.height(12, context)),
+                _buildStatRow(
+                  context,
+                  "Số câu đúng",
+                  "${result.totalCorrectLisAns ?? 0}",
+                  Icons.check_circle,
+                  Colors.green,
+                ),
+                SizedBox(height: UtilsReponsive.height(8, context)),
+                _buildStatRow(
+                  context,
+                  "Điểm",
+                  "${result.lisPoint ?? 0}",
+                  Icons.star,
+                  Colors.amber,
+                ),
+              ],
+            ),
+          ),
+          
+          SizedBox(height: UtilsReponsive.height(16, context)),
+          
+          // Reading Section
+          Container(
+            padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+            decoration: BoxDecoration(
+              color: Colors.purple.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.purple.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.menu_book,
+                      color: Colors.purple,
+                      size: UtilsReponsive.height(20, context),
+                    ),
+                    SizedBox(width: UtilsReponsive.width(8, context)),
+                    TextConstant.titleH3(
+                      context,
+                      text: "Đọc",
+                      color: Colors.purple,
+                      fontWeight: FontWeight.bold,
+                      size: 16,
+                    ),
+                  ],
+                ),
+                SizedBox(height: UtilsReponsive.height(12, context)),
+                _buildStatRow(
+                  context,
+                  "Số câu đúng",
+                  "${result.totalCorrectReaAns ?? 0}",
+                  Icons.check_circle,
+                  Colors.green,
+                ),
+                SizedBox(height: UtilsReponsive.height(8, context)),
+                _buildStatRow(
+                  context,
+                  "Điểm",
+                  "${result.reaPoint ?? 0}",
+                  Icons.star,
+                  Colors.amber,
+                ),
+              ],
+            ),
+          ),
+          
+          SizedBox(height: UtilsReponsive.height(16, context)),
+          
+          // Total Questions
+          _buildStatRow(
+            context,
+            "Tổng số câu hỏi",
+            "${result.totalQuestions ?? 0}",
+            Icons.quiz,
+            Colors.blue,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDetailedStats(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(UtilsReponsive.width(20, context)),
@@ -261,7 +505,7 @@ class QuizResultView extends StatelessWidget {
         children: [
           TextConstant.titleH3(
             context,
-            text: "Quiz Statistics",
+            text: "Thống kê Quiz",
             color: Colors.black,
             fontWeight: FontWeight.bold,
             size: 18,
@@ -271,7 +515,7 @@ class QuizResultView extends StatelessWidget {
           
           _buildStatRow(
             context,
-            "Total Questions",
+            "Tổng số câu hỏi",
             "${result.totalQuestions ?? 0}",
             Icons.quiz,
             Colors.blue,
@@ -281,7 +525,7 @@ class QuizResultView extends StatelessWidget {
           
           _buildStatRow(
             context,
-            "Correct Answers",
+            "Số câu đúng",
             "${result.correctAnswers ?? 0}",
             Icons.check_circle,
             Colors.green,
@@ -291,7 +535,7 @@ class QuizResultView extends StatelessWidget {
           
           _buildStatRow(
             context,
-            "Wrong Answers",
+            "Số câu sai",
             "${result.wrongAnswers ?? 0}",
             Icons.cancel,
             Colors.red,
@@ -384,7 +628,7 @@ class QuizResultView extends StatelessWidget {
               SizedBox(width: UtilsReponsive.width(8, context)),
               TextConstant.titleH3(
                 context,
-                text: "Answer Results",
+                text: "Kết quả Câu trả lời",
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
                 size: 18,
@@ -400,7 +644,7 @@ class QuizResultView extends StatelessWidget {
               Expanded(
                 child: _buildAnswerResultSummary(
                   context,
-                  "Correct",
+                  "Đúng",
                   "${result.correctAnswers ?? 0}",
                   Colors.green,
                 ),
@@ -409,7 +653,7 @@ class QuizResultView extends StatelessWidget {
               Expanded(
                 child: _buildAnswerResultSummary(
                   context,
-                  "Wrong",
+                  "Sai",
                   "${result.wrongAnswers ?? 0}",
                   Colors.red,
                 ),
@@ -456,66 +700,27 @@ class QuizResultView extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context) {
-    return Column(
-      children: [
-        // Play again button
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () {
-              // TODO: Navigate to quiz selection
-              Get.snackbar(
-                'Info',
-                'Play again feature coming soon!',
-                backgroundColor: Colors.blue,
-                colorText: Colors.white,
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: ColorsManager.primary,
-              padding: EdgeInsets.symmetric(
-                vertical: UtilsReponsive.height(16, context),
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: TextConstant.subTile1(
-              context,
-              text: "Play Again",
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              size: 16,
-            ),
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () => Get.offAllNamed('/home'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: ColorsManager.primary,
+          padding: EdgeInsets.symmetric(
+            vertical: UtilsReponsive.height(16, context),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
-        
-        SizedBox(height: UtilsReponsive.height(12, context)),
-        
-        // Back to home button
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            onPressed: () => Get.offAllNamed('/home'),
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: ColorsManager.primary),
-              padding: EdgeInsets.symmetric(
-                vertical: UtilsReponsive.height(16, context),
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: TextConstant.subTile1(
-              context,
-              text: "Back to Home",
-              color: ColorsManager.primary,
-              fontWeight: FontWeight.bold,
-              size: 16,
-            ),
-          ),
+        child: TextConstant.subTile1(
+          context,
+          text: "Về Trang chủ",
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          size: 16,
         ),
-      ],
+      ),
     );
   }
 

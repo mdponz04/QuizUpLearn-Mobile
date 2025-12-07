@@ -20,7 +20,7 @@ class TabHomeView extends StatelessWidget {
       appBar: AppBar(
         title: TextConstant.titleH2(
           context,
-          text: "QuizUpLearn",
+          text: "Trang chủ",
           color: ColorsManager.primary,
           fontWeight: FontWeight.bold,
         ),
@@ -58,7 +58,7 @@ class TabHomeView extends StatelessWidget {
             // Quick actions
             TextConstant.titleH3(
               context,
-              text: "Quick Actions",
+              text: "Thao tác nhanh",
               color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
@@ -70,7 +70,7 @@ class TabHomeView extends StatelessWidget {
                 Expanded(
                   child: _buildActionCard(
                     context,
-                    "Explore Quiz",
+                    "Tìm Quiz",
                     'assets/images/do_quiz.png',
                     ColorsManager.primary,
                     tabController.startQuiz,
@@ -80,7 +80,7 @@ class TabHomeView extends StatelessWidget {
                 Expanded(
                   child: _buildActionCard(
                     context,
-                    "Play Game",
+                    "Trò chơi",
                     'assets/images/practice.png',
                     Colors.orange,
                     tabController.playGame,
@@ -96,7 +96,7 @@ class TabHomeView extends StatelessWidget {
                 Expanded(
                   child: _buildActionCard(
                     context,
-                    "Placement tests",
+                    "Kiểm tra xếp lớp",
                     'assets/images/vocabulary.png',
                     Colors.green,
                     tabController.openPlacementTests,
@@ -106,7 +106,7 @@ class TabHomeView extends StatelessWidget {
                 Expanded(
                   child: _buildActionCard(
                     context,
-                    "Tournament",
+                    "Giải đấu",
                     'assets/images/trophy.png',
                     Colors.purple,
                     tabController.viewTournament,

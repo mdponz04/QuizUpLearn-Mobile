@@ -518,68 +518,68 @@ class QuizPlayingView extends GetView<SingleModeController> {
           
           // Navigation buttons row
           Row(
-            children: [
-              // Previous button
-              if (!controller.isFirstQuestion)
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: controller.previousQuestion,
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: ColorsManager.primary),
-                      padding: EdgeInsets.symmetric(
-                        vertical: UtilsReponsive.height(12, context),
-                      ),
-                    ),
-                    child: TextConstant.subTile2(
-                      context,
-                      text: "Trước",
-                      color: ColorsManager.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
+        children: [
+          // Previous button
+          if (!controller.isFirstQuestion)
+            Expanded(
+              child: OutlinedButton(
+                onPressed: controller.previousQuestion,
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: ColorsManager.primary),
+                  padding: EdgeInsets.symmetric(
+                    vertical: UtilsReponsive.height(12, context),
                   ),
                 ),
-              
-              if (!controller.isFirstQuestion)
-                SizedBox(width: UtilsReponsive.width(12, context)),
-              
-              // Skip button
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: controller.skipQuestion,
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.orange),
-                    padding: EdgeInsets.symmetric(
-                      vertical: UtilsReponsive.height(12, context),
-                    ),
-                  ),
-                    child: TextConstant.subTile2(
-                      context,
-                      text: "Bỏ qua",
-                      color: Colors.orange,
-                      fontWeight: FontWeight.bold,
-                    ),
+                child: TextConstant.subTile2(
+                  context,
+                      text: "Trước",
+                  color: ColorsManager.primary,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              
-              SizedBox(width: UtilsReponsive.width(12, context)),
-              
-              // Next/Finish button
-              Expanded(
-                flex: 2,
-                child: ElevatedButton(
-                  onPressed: controller.nextQuestion,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorsManager.primary,
-                    padding: EdgeInsets.symmetric(
-                      vertical: UtilsReponsive.height(12, context),
-                    ),
-                  ),
-                  child: TextConstant.subTile2(
-                    context,
+            ),
+          
+          if (!controller.isFirstQuestion)
+            SizedBox(width: UtilsReponsive.width(12, context)),
+          
+          // Skip button
+          Expanded(
+            child: OutlinedButton(
+              onPressed: controller.skipQuestion,
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: Colors.orange),
+                padding: EdgeInsets.symmetric(
+                  vertical: UtilsReponsive.height(12, context),
+                ),
+              ),
+              child: TextConstant.subTile2(
+                context,
+                      text: "Bỏ qua",
+                color: Colors.orange,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          
+          SizedBox(width: UtilsReponsive.width(12, context)),
+          
+          // Next/Finish button
+          Expanded(
+            flex: 2,
+            child: ElevatedButton(
+              onPressed: controller.nextQuestion,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorsManager.primary,
+                padding: EdgeInsets.symmetric(
+                  vertical: UtilsReponsive.height(12, context),
+                ),
+              ),
+              child: TextConstant.subTile2(
+                context,
                     text: controller.isLastQuestion ? "Hoàn thành" : "Tiếp theo",
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
                 ),
               ),
             ],

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:quizkahoot/app/modules/home/models/event_join_response.dart';
+import 'package:quizkahoot/app/modules/home/models/event_joined_status_response.dart';
 import 'package:quizkahoot/app/modules/home/models/event_leaderboard_model.dart';
 import 'package:quizkahoot/app/modules/home/models/event_response.dart';
 import 'package:retrofit/retrofit.dart';
@@ -15,6 +16,9 @@ abstract class EventApi {
 
   @GET('/event/{id}/leaderboard')
   Future<EventLeaderboardResponse> getEventLeaderboard(@Path('id') String eventId);
+
+  @GET('/event/{id}/joined')
+  Future<EventJoinedStatusResponse> getEventJoinedStatus(@Path('id') String eventId);
 
   @POST('/event/{id}/join')
   Future<EventJoinResponse> joinEvent(@Path('id') String eventId);

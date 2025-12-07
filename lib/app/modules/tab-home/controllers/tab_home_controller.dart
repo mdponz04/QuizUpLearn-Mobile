@@ -76,11 +76,12 @@ class TabHomeController extends GetxController {
                   ),
                   SizedBox(width: UtilsReponsive.width(8, context)),
                   Expanded(
-                    child: TextConstant.titleH2(
+                    child: TextConstant.titleH3(
                       context,
                       text: "Chế độ chơi",
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
+                      size: 18,
                     ),
                   ),
                   IconButton(
@@ -114,8 +115,23 @@ class TabHomeController extends GetxController {
               _buildGameModeOption(
                 context,
                 icon: Icons.person,
-                title: "1 vs 1/Multi Player thường",
+                title: "1 vs 1",
                 description: "Đấu trực tiếp với 1 người chơi\nNhập PIN hoặc quét QR để tham gia",
+                color: Colors.orange,
+                onTap: () {
+                  Get.back();
+                  _showOneVsOneJoinDialog(context);
+                },
+              ),
+              
+              SizedBox(height: UtilsReponsive.height(16, context)),
+              
+              // Multi Player thường Option
+              _buildGameModeOption(
+                context,
+                icon: Icons.people_outline,
+                title: "Multi Player thường",
+                description: "Nhiều người chơi cùng lúc\nNhập PIN hoặc quét QR để tham gia",
                 color: Colors.orange,
                 onTap: () {
                   Get.back();
@@ -168,7 +184,7 @@ class TabHomeController extends GetxController {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+          padding: EdgeInsets.all(UtilsReponsive.width(8, context)),
           decoration: BoxDecoration(
             color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
@@ -180,7 +196,7 @@ class TabHomeController extends GetxController {
           child: Row(
             children: [
               Container(
-                padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+                padding: EdgeInsets.all(UtilsReponsive.width(4, context)),
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(12),
@@ -196,19 +212,18 @@ class TabHomeController extends GetxController {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextConstant.titleH3(
+                    TextConstant.subTile3(
                       context,
                       text: title,
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
                     ),
                     SizedBox(height: UtilsReponsive.height(4, context)),
-                    TextConstant.subTile3(
-                      context,
-                      text: description,
-                      color: Colors.grey[600]!,
-                      size: 11,
-                    ),
+                    // TextConstant.subTile4(
+                    //   context,
+                    //   text: description,
+                    //   color: Colors.grey[600]!,
+                    // ),
                   ],
                 ),
               ),

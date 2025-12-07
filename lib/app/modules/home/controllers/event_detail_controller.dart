@@ -15,6 +15,8 @@ class EventDetailController extends GetxController {
   // Observable variables
   var isLoading = false.obs;
   var isJoining = false.obs;
+  var isCheckingJoined = false.obs;
+  var isJoined = false.obs;
   var leaderboardData = Rxn<EventLeaderboardData>();
   var errorMessage = ''.obs;
 
@@ -26,6 +28,7 @@ class EventDetailController extends GetxController {
     // Get event ID from arguments
     final eventId = Get.arguments as String?;
     if (eventId != null) {
+      checkEventJoinedStatus(eventId);
       loadEventLeaderboard(eventId);
     }
   }
@@ -62,6 +65,26 @@ class EventDetailController extends GetxController {
     }
   }
 
+  Future<void> checkEventJoinedStatus(String eventId) async {
+    try {
+      isCheckingJoined.value = true;
+      
+      final response = await eventService.getEventJoinedStatus(eventId);
+      if (response.isSuccess && response.data != null) {
+        isJoined.value = response.data!;
+      } else {
+        // Default to false if check fails
+        isJoined.value = false;
+      }
+    } catch (e) {
+      log('Error checking joined status: $e');
+      // Default to false on error
+      isJoined.value = false;
+    } finally {
+      isCheckingJoined.value = false;
+    }
+  }
+
   Future<bool> joinEvent() async {
     try {
       final eventId = Get.arguments as String?;
@@ -73,6 +96,8 @@ class EventDetailController extends GetxController {
       
       final response = await eventService.joinEvent(eventId);
       if (response.isSuccess) {
+        // Update joined status
+        isJoined.value = true;
         // Refresh leaderboard after joining
         await loadEventLeaderboard(eventId);
         return true;

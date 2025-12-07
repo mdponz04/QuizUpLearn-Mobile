@@ -48,6 +48,21 @@ class EventDetailView extends GetView<EventDetailController> {
         
         return _buildLeaderboardContent(context, controller.leaderboardData.value!);
       }),
+      bottomNavigationBar: Obx(() {
+        if (controller.leaderboardData.value == null) {
+          return const SizedBox.shrink();
+        }
+        final data = controller.leaderboardData.value!;
+        // Chỉ hiển thị nút nếu event đang ongoing/upcoming và chưa join
+        if ((data.eventStatus.toLowerCase() == 'ongoing' || 
+            data.eventStatus.toLowerCase() == 'upcoming') &&
+            !controller.isJoined.value) {
+          return _buildJoinButtonBottomBar(context, data);
+        } else if (controller.isJoined.value) {
+          return _buildJoinedStatusBottomBar(context);
+        }
+        return const SizedBox.shrink();
+      }),
     );
   }
 
@@ -148,13 +163,6 @@ class EventDetailView extends GetView<EventDetailController> {
           children: [
             // Event Info Card
             _buildEventInfoCard(context, data, dateFormat),
-            
-            // Join Button (only for Ongoing or Upcoming events)
-            if (data.eventStatus.toLowerCase() == 'ongoing' || 
-                data.eventStatus.toLowerCase() == 'upcoming') ...[
-              SizedBox(height: UtilsReponsive.height(16, context)),
-              _buildJoinButton(context, data),
-            ],
             
             SizedBox(height: UtilsReponsive.height(24, context)),
             
@@ -570,46 +578,6 @@ class EventDetailView extends GetView<EventDetailController> {
     }
   }
 
-  Widget _buildJoinButton(BuildContext context, EventLeaderboardData data) {
-    return Obx(() => SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: controller.isJoining.value ? null : () => _handleJoinEvent(context),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: ColorsManager.primary,
-          foregroundColor: Colors.white,
-          padding: EdgeInsets.symmetric(
-            vertical: UtilsReponsive.height(14, context),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 2,
-        ),
-        icon: controller.isJoining.value
-            ? SizedBox(
-                width: UtilsReponsive.height(20, context),
-                height: UtilsReponsive.height(20, context),
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : Icon(
-                Icons.how_to_reg,
-                size: UtilsReponsive.height(20, context),
-              ),
-        label: TextConstant.subTile2(
-          context,
-          text: controller.isJoining.value 
-              ? "Đang đăng ký..." 
-              : "Đăng ký tham gia",
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    ));
-  }
 
   Future<void> _handleJoinEvent(BuildContext context) async {
     final success = await controller.joinEvent();
@@ -643,6 +611,111 @@ class EventDetailView extends GetView<EventDetailController> {
         );
       }
     }
+  }
+
+  Widget _buildJoinButtonBottomBar(BuildContext context, EventLeaderboardData data) {
+    return Container(
+      padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Obx(() => SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: controller.isJoining.value ? null : () => _handleJoinEvent(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ColorsManager.primary,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(
+                vertical: UtilsReponsive.height(14, context),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 2,
+            ),
+            icon: controller.isJoining.value
+                ? SizedBox(
+                    width: UtilsReponsive.height(20, context),
+                    height: UtilsReponsive.height(20, context),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Icon(
+                    Icons.how_to_reg,
+                    size: UtilsReponsive.height(20, context),
+                  ),
+            label: TextConstant.subTile2(
+              context,
+              text: controller.isJoining.value 
+                  ? "Đang đăng ký..." 
+                  : "Đăng ký tham gia",
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        )),
+      ),
+    );
+  }
+
+  Widget _buildJoinedStatusBottomBar(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(
+            vertical: UtilsReponsive.height(14, context),
+          ),
+          decoration: BoxDecoration(
+            color: Colors.green.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.green,
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: UtilsReponsive.height(20, context),
+              ),
+              SizedBox(width: UtilsReponsive.width(8, context)),
+              TextConstant.subTile2(
+                context,
+                text: "Đã tham gia sự kiện",
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

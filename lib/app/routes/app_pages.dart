@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:quizkahoot/app/modules/player-game-room/views/player_game_room_view_v2.dart';
 
 import '../modules/badge/bindings/badge_binding.dart';
 import '../modules/badge/views/badge_view.dart';
@@ -129,7 +130,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.PLAYER_GAME_ROOM,
-      page: () => const PlayerGameRoomView(),
+      page: () => const PlayerGameRoomViewV2(),
     ),
     GetPage(
       name: _Paths.ONE_VS_ONE_ROOM,

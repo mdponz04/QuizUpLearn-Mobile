@@ -9,13 +9,31 @@ import 'package:quizkahoot/app/resource/text_style.dart';
 import '../controllers/event_controller.dart';
 import '../models/event_model.dart';
 
-class EventTabWidget extends StatelessWidget {
+class EventTabWidget extends StatefulWidget {
   const EventTabWidget({super.key});
 
   @override
+  State<EventTabWidget> createState() => _EventTabWidgetState();
+}
+
+class _EventTabWidgetState extends State<EventTabWidget> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final EventController controller = Get.put(EventController());
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final controller = Get.put(EventController());
-    
     return Scaffold(
       appBar: AppBar(
         title: TextConstant.titleH2(
@@ -34,22 +52,101 @@ class EventTabWidget extends StatelessWidget {
             color: ColorsManager.primary,
           ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: ColorsManager.primary,
+          unselectedLabelColor: Colors.grey[600],
+          indicatorColor: ColorsManager.primary,
+          labelStyle: TextStyle(
+            fontSize: UtilsReponsive.height(14, context),
+            fontWeight: FontWeight.bold,
+          ),
+          unselectedLabelStyle: TextStyle(
+            fontSize: UtilsReponsive.height(14, context),
+            fontWeight: FontWeight.normal,
+          ),
+          tabs: const [
+            Tab(text: 'Tất cả'),
+            Tab(text: 'Đang hoạt động'),
+          ],
+        ),
       ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return _buildLoadingState(context);
-        }
-        
-        if (controller.errorMessage.value.isNotEmpty) {
-          return _buildErrorState(context, controller.errorMessage.value);
-        }
-        
-        if (controller.events.isEmpty) {
-          return _buildEmptyState(context);
-        }
-        
-        return _buildEventList(context, controller.events);
-      }),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildAllEventsTab(context),
+          _buildActiveEventsTab(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAllEventsTab(BuildContext context) {
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return _buildLoadingState(context);
+      }
+      
+      if (controller.errorMessage.value.isNotEmpty) {
+        return _buildErrorState(context, controller.errorMessage.value);
+      }
+      
+      if (controller.events.isEmpty) {
+        return _buildEmptyState(context);
+      }
+      
+      return _buildEventList(context, controller.events);
+    });
+  }
+
+  Widget _buildActiveEventsTab(BuildContext context) {
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return _buildLoadingState(context);
+      }
+      
+      if (controller.errorMessage.value.isNotEmpty) {
+        return _buildErrorState(context, controller.errorMessage.value);
+      }
+      
+      // Filter events: chỉ lấy Ongoing và Upcoming
+      final activeEvents = controller.events.where((event) {
+        final status = event.status.toLowerCase();
+        return status == 'ongoing' || status == 'upcoming';
+      }).toList();
+      
+      if (activeEvents.isEmpty) {
+        return _buildEmptyActiveState(context);
+      }
+      
+      return _buildEventList(context, activeEvents);
+    });
+  }
+
+  Widget _buildEmptyActiveState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.event_busy,
+            size: UtilsReponsive.height(80, context),
+            color: Colors.grey[400],
+          ),
+          SizedBox(height: UtilsReponsive.height(16, context)),
+          TextConstant.titleH3(
+            context,
+            text: "Chưa có sự kiện đang hoạt động",
+            color: Colors.grey[600]!,
+          ),
+          SizedBox(height: UtilsReponsive.height(8, context)),
+          // TextConstant.subTile2(
+          //   context,
+          //   text: "Hiện tại không có sự kiện nào đang diễn ra hoặc sắp diễn ra",
+          //   color: Colors.grey[500]!,
+          // ),
+        ],
+      ),
     );
   }
 

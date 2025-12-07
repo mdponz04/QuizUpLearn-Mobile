@@ -295,7 +295,13 @@ class HomeView extends GetView<HomeController> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => Get.toNamed('/quiz-detail', arguments: quizSetModel.id),
+          onTap: () async {
+            final result = await Get.toNamed('/quiz-detail', arguments: quizSetModel.id);
+            // If quiz was updated, refresh the list
+            if (result == true) {
+              controller.loadMyQuizSets();
+            }
+          },
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
@@ -466,33 +472,39 @@ class HomeView extends GetView<HomeController> {
                     
                     // Chi tiết Button
                     GestureDetector(
-                      onTap: () => Get.toNamed('/quiz-detail', arguments: quizSetModel.id),
+                      onTap: () async {
+                        final result = await Get.toNamed('/quiz-detail', arguments: quizSetModel.id);
+                        // If quiz was updated, refresh the list
+                        if (result == true) {
+                          controller.loadMyQuizSets();
+                        }
+                      },
                       child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: UtilsReponsive.width(12, context),
-                          vertical: UtilsReponsive.height(6, context),
-                        ),
-                        decoration: BoxDecoration(
-                          color: ColorsManager.primary,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            TextConstant.subTile3(
-                              context,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: UtilsReponsive.width(12, context),
+                        vertical: UtilsReponsive.height(6, context),
+                      ),
+                      decoration: BoxDecoration(
+                        color: ColorsManager.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextConstant.subTile3(
+                            context,
                               text: "Chi tiết",
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              size: 12,
-                            ),
-                            SizedBox(width: UtilsReponsive.width(4, context)),
-                            Icon(
-                              Icons.arrow_forward,
-                              color: Colors.white,
-                              size: UtilsReponsive.height(12, context),
-                            ),
-                          ],
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            size: 12,
+                          ),
+                          SizedBox(width: UtilsReponsive.width(4, context)),
+                          Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                            size: UtilsReponsive.height(12, context),
+                          ),
+                        ],
                         ),
                       ),
                     ),
