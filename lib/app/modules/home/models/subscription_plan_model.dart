@@ -58,15 +58,21 @@ class SubscriptionPlanModel {
   }
 
   String get formattedPrice {
-    if (price == 0) return "Free";
+    if (price == 0) return "Miễn phí";
     return "${(price / 1000).toStringAsFixed(0)}k VNĐ";
   }
 
   String get formattedDuration {
-    if (durationDays >= 999999) return "Lifetime";
-    if (durationDays >= 365) return "${(durationDays / 365).toStringAsFixed(0)} year(s)";
-    if (durationDays >= 30) return "${(durationDays / 30).toStringAsFixed(0)} month(s)";
-    return "$durationDays day(s)";
+    if (durationDays >= 999999) return "Vĩnh viễn";
+    if (durationDays >= 365) {
+      final years = (durationDays / 365).toStringAsFixed(0);
+      return "$years ${years == '1' ? 'năm' : 'năm'}";
+    }
+    if (durationDays >= 30) {
+      final months = (durationDays / 30).toStringAsFixed(0);
+      return "$months ${months == '1' ? 'tháng' : 'tháng'}";
+    }
+    return "$durationDays ${durationDays == 1 ? 'ngày' : 'ngày'}";
   }
 }
 

@@ -1,5 +1,5 @@
+import 'dart:convert';
 import 'dart:developer';
-import 'package:quizkahoot/app/model/login_response.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BaseCommon {
@@ -114,7 +114,7 @@ class BaseCommon {
   /// Save user information
   Future<bool> saveUserInfo(Map<String, dynamic> userInfo) async {
     await _ensureInitialized();
-    final userInfoJson = userInfo.toString();
+    final userInfoJson = jsonEncode(userInfo);
     final result = await _prefs!.setString(_userInfoKey, userInfoJson);
     log('User info saved: ${result ? 'success' : 'failed'}');
     return result;
@@ -126,10 +126,9 @@ class BaseCommon {
     final userInfoString = _prefs!.getString(_userInfoKey);
     if (userInfoString != null) {
       try {
-        // Parse the string representation back to Map
-        // Note: This is a simple implementation, you might want to use JSON encoding/decoding
+        final userInfo = jsonDecode(userInfoString) as Map<String, dynamic>;
         log('User info retrieved: exists');
-        return {}; // Return empty map for now, implement proper parsing as needed
+        return userInfo;
       } catch (e) {
         log('Error parsing user info: $e');
         return null;

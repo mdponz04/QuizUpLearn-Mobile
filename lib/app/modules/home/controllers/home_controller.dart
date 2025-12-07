@@ -52,6 +52,7 @@ class HomeController extends GetxController {
   var userSubscription = Rxn<UserSubscriptionModel>();
   var isLoadingSubscription = false.obs;
   var activeSubscriptionPlan = Rxn<SubscriptionPlanModel>();
+  var showPlansCarousel = false.obs; // Quản lý việc hiển thị danh sách plans
 
   // AI Quiz Dialog state
   var selectedPart = 'Part 1 – Photographs'.obs;
@@ -186,6 +187,10 @@ class HomeController extends GetxController {
       loadMyQuizSets();
       checkUserSubscription();
     }
+  }
+
+  void togglePlansCarousel() {
+    showPlansCarousel.value = !showPlansCarousel.value;
   }
 
   Future<void> loadMyQuizSets() async {
@@ -711,11 +716,10 @@ class HomeController extends GetxController {
         if (response.data!.isActive) {
           log('User has active subscription, loading plan details');
           await _loadActiveSubscriptionPlan(response.data!.subscriptionPlanId);
-          return;
         }
       }
       
-      // If no subscription or expired, load plans
+      // Always load plans to show both active subscription and available plans
       await loadSubscriptionPlans();
     } catch (e) {
       log('Error checking user subscription: $e');

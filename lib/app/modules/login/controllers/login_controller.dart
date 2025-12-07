@@ -140,6 +140,10 @@ class LoginController extends GetxController {
   Future<void> _saveAuthData(LoginReponse loginResponse) async {
     try {
       final authData = loginResponse.data;
+      // Tạo username từ email (lấy phần trước @)
+      final email = authData.account.email;
+      final username = email.split('@').first;
+      
       await BaseCommon.instance.saveAuthData(
         accessToken: authData.accessToken,
         refreshToken: authData.refreshToken,
@@ -147,7 +151,8 @@ class LoginController extends GetxController {
         refreshTokenExpiry: authData.refreshExpiresAt,
         userInfo: {
           'id': authData.account.id,
-          'email': authData.account.email,
+          'email': email,
+          'username': username,
           'userId': authData.account.userId,
           'roleId': authData.account.roleId,
           'isEmailVerified': authData.account.isEmailVerified,

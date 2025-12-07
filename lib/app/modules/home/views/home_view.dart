@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:quizkahoot/app/resource/color_manager.dart';
 import 'package:quizkahoot/app/resource/reponsive_utils.dart';
 import 'package:quizkahoot/app/resource/text_style.dart';
+import 'package:quizkahoot/app/service/basecommon.dart';
 
 import '../controllers/home_controller.dart';
 import '../../tab-home/views/tab_home_view.dart';
@@ -174,7 +175,7 @@ class HomeView extends GetView<HomeController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Subscription Info or Plans Carousel
+            // Active Subscription Info (if exists)
             Obx(() {
               if (controller.isLoadingSubscription.value) {
                 return _buildSubscriptionLoadingState(context);
@@ -182,7 +183,40 @@ class HomeView extends GetView<HomeController> {
               
               if (controller.userSubscription.value != null && 
                   controller.userSubscription.value!.isActive) {
-                return _buildActiveSubscriptionInfo(context);
+                return Column(
+                  children: [
+                    _buildActiveSubscriptionInfo(context),
+                  ],
+                );
+              }
+              
+              return SizedBox.shrink();
+            }),
+            
+            // Subscription Plans Carousel
+            Obx(() {
+              final hasActiveSubscription = controller.userSubscription.value != null && 
+                  controller.userSubscription.value!.isActive;
+              
+              // Nếu có active subscription, chỉ hiển thị khi showPlansCarousel = true
+              if (hasActiveSubscription && !controller.showPlansCarousel.value) {
+                return _buildViewPlansButton(context);
+              }
+              
+              if (controller.isLoadingPlans.value) {
+                return Container(
+                  height: UtilsReponsive.height(200, context),
+                  padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: ColorsManager.primary,
+                    ),
+                  ),
+                );
+              }
+              
+              if (controller.subscriptionPlans.isEmpty) {
+                return SizedBox.shrink();
               }
               
               return _buildSubscriptionPlansCarousel(context);
@@ -906,98 +940,114 @@ class HomeView extends GetView<HomeController> {
       ),
       body: Padding(
         padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
-        child: Column(
-          children: [
-            // Profile section
-            Container(
-              padding: EdgeInsets.all(UtilsReponsive.width(20, context)),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+        child: FutureBuilder<Map<String, dynamic>?>(
+          future: BaseCommon.instance.getUserInfo(),
+          builder: (context, snapshot) {
+            String username = "User Name";
+            String email = "user@example.com";
+            
+            if (snapshot.hasData && snapshot.data != null) {
+              final userInfo = snapshot.data!;
+              username = userInfo['username']?.toString() ?? 
+                        userInfo['email']?.toString().split('@').first ?? 
+                        "User Name";
+              email = userInfo['email']?.toString() ?? "user@example.com";
+            }
+            
+            return Column(
+              children: [
+                // Profile section
+                Container(
+                  padding: EdgeInsets.all(UtilsReponsive.width(20, context)),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: UtilsReponsive.height(30, context),
-                    backgroundColor: ColorsManager.primary,
-                    child: Icon(
-                      Icons.person,
-                      color: Colors.white,
-                      size: UtilsReponsive.height(30, context),
-                    ),
-                  ),
-                  SizedBox(width: UtilsReponsive.width(16, context)),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextConstant.titleH3(
-                          context,
-                          text: "User Name",
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: UtilsReponsive.height(30, context),
+                        backgroundColor: ColorsManager.primary,
+                        child: Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: UtilsReponsive.height(30, context),
                         ),
-                        SizedBox(height: UtilsReponsive.height(4, context)),
-                        TextConstant.subTile2(
-                          context,
-                          text: "user@example.com",
-                          color: Colors.grey[600]!,
+                      ),
+                      SizedBox(width: UtilsReponsive.width(16, context)),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextConstant.titleH3(
+                              context,
+                              text: username,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            SizedBox(height: UtilsReponsive.height(4, context)),
+                            TextConstant.subTile2(
+                              context,
+                              text: email,
+                              color: Colors.grey[600]!,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                      Icon(
+                        Icons.edit_outlined,
+                        color: ColorsManager.primary,
+                      ),
+                    ],
                   ),
-                  Icon(
-                    Icons.edit_outlined,
-                    color: ColorsManager.primary,
-                  ),
-                ],
-              ),
-            ),
+                ),
 
-            SizedBox(height: UtilsReponsive.height(24, context)),
+                SizedBox(height: UtilsReponsive.height(24, context)),
 
-            // Menu items
-            _buildMenuItem(
-              context,
-              "My Progress",
-              Icons.trending_up_outlined,
-              () {},
-            ),
-            _buildMenuItem(
-              context,
-              "Achievements",
-              Icons.emoji_events_outlined,
-              () {},
-            ),
-            _buildMenuItem(
-              context,
-              "Study Plan",
-              Icons.calendar_today_outlined,
-              () {},
-            ),
-            _buildMenuItem(
-              context,
-              "Help & Support",
-              Icons.help_outline,
-              () {},
-            ),
-            _buildMenuItem(
-              context,
-              "Logout",
-              Icons.logout,
-              () {
-                Get.offAllNamed('/on-boarding');
-              },
-              isLogout: true,
-            ),
-          ],
+                // Menu items
+                _buildMenuItem(
+                  context,
+                  "My Progress",
+                  Icons.trending_up_outlined,
+                  () {},
+                ),
+                _buildMenuItem(
+                  context,
+                  "Achievements",
+                  Icons.emoji_events_outlined,
+                  () {},
+                ),
+                _buildMenuItem(
+                  context,
+                  "Study Plan",
+                  Icons.calendar_today_outlined,
+                  () {},
+                ),
+                _buildMenuItem(
+                  context,
+                  "Help & Support",
+                  Icons.help_outline,
+                  () {},
+                ),
+                _buildMenuItem(
+                  context,
+                  "Logout",
+                  Icons.logout,
+                  () {
+                    Get.offAllNamed('/on-boarding');
+                  },
+                  isLogout: true,
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -1209,62 +1259,96 @@ class HomeView extends GetView<HomeController> {
     
     if (difference.inDays > 365) {
       final years = (difference.inDays / 365).floor();
-      return "$years year${years > 1 ? 's' : ''}";
+      return "$years ${years > 1 ? 'năm' : 'năm'}";
     } else if (difference.inDays > 30) {
       final months = (difference.inDays / 30).floor();
-      return "$months month${months > 1 ? 's' : ''}";
+      return "$months ${months > 1 ? 'tháng' : 'tháng'}";
     } else if (difference.inDays > 0) {
-      return "${difference.inDays} day${difference.inDays > 1 ? 's' : ''}";
+      return "${difference.inDays} ${difference.inDays > 1 ? 'ngày' : 'ngày'}";
     } else {
-      return "Expired";
+      return "Đã hết hạn";
     }
   }
 
-  Widget _buildSubscriptionPlansCarousel(BuildContext context) {
-    return Obx(() {
-      if (controller.isLoadingPlans.value) {
-        return Container(
-          height: UtilsReponsive.height(200, context),
-          padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
-          child: Center(
-            child: CircularProgressIndicator(
-              color: ColorsManager.primary,
-            ),
-          ),
-        );
-      }
-
-      if (controller.subscriptionPlans.isEmpty) {
-        return SizedBox.shrink();
-      }
-
-      return Padding(
-        padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextConstant.titleH3(
-              context,
-              text: "Subscription Plans",
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-            ),
-            SizedBox(height: UtilsReponsive.height(12, context)),
-            SizedBox(
-              height: UtilsReponsive.height(250, context),
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: controller.subscriptionPlans.length,
-                itemBuilder: (context, index) {
-                  final plan = controller.subscriptionPlans[index];
-                  return _buildSubscriptionPlanCard(context, plan, index);
-                },
-              ),
-            ),
-          ],
+  Widget _buildViewPlansButton(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: UtilsReponsive.width(16, context)),
+      child: OutlinedButton.icon(
+        onPressed: () => controller.togglePlansCarousel(),
+        icon: Icon(
+          Icons.arrow_forward_ios,
+          size: UtilsReponsive.height(12, context),
+          color: ColorsManager.primary,
         ),
-      );
-    });
+        label: TextConstant.subTile3(
+          context,
+          text: "Xem các gói",
+          color: ColorsManager.primary,
+          fontWeight: FontWeight.w600,
+          size: 12,
+        ),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: ColorsManager.primary, width: 1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: UtilsReponsive.width(16, context),
+            vertical: UtilsReponsive.height(8, context),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubscriptionPlansCarousel(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextConstant.titleH3(
+                context,
+                text: "Các gói đăng ký",
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+              Obx(() {
+                final hasActiveSubscription = controller.userSubscription.value != null && 
+                    controller.userSubscription.value!.isActive;
+                if (hasActiveSubscription) {
+                  return IconButton(
+                    onPressed: () => controller.togglePlansCarousel(),
+                    icon: Icon(
+                      Icons.close,
+                      color: Colors.grey[600],
+                      size: UtilsReponsive.height(20, context),
+                    ),
+                    tooltip: 'Đóng',
+                  );
+                }
+                return SizedBox.shrink();
+              }),
+            ],
+          ),
+          SizedBox(height: UtilsReponsive.height(12, context)),
+          SizedBox(
+            height: UtilsReponsive.height(220, context),
+            child: Obx(() => ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: controller.subscriptionPlans.length,
+              itemBuilder: (context, index) {
+                final plan = controller.subscriptionPlans[index];
+                return _buildSubscriptionPlanCard(context, plan, index);
+              },
+            )),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildSubscriptionPlanCard(
@@ -1276,10 +1360,10 @@ class HomeView extends GetView<HomeController> {
     final cardColor = isPro ? ColorsManager.primary : Colors.grey[600]!;
     
     return Container(
-      width: UtilsReponsive.width(280, context),
+      width: UtilsReponsive.width(240, context),
       margin: EdgeInsets.only(
         right: index < controller.subscriptionPlans.length - 1
-            ? UtilsReponsive.width(16, context)
+            ? UtilsReponsive.width(12, context)
             : 0,
       ),
       decoration: BoxDecoration(
@@ -1296,17 +1380,17 @@ class HomeView extends GetView<HomeController> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: cardColor.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+        padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -1319,19 +1403,19 @@ class HomeView extends GetView<HomeController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextConstant.titleH2(
+                      TextConstant.titleH3(
                         context,
                         text: plan.name,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        size: 24,
+                        size: 18,
                       ),
-                      SizedBox(height: UtilsReponsive.height(4, context)),
-                      TextConstant.subTile1(
+                      SizedBox(height: UtilsReponsive.height(2, context)),
+                      TextConstant.subTile2(
                         context,
                         text: plan.formattedPrice,
                         color: Colors.white.withOpacity(0.9),
-                        size: 16,
+                        size: 14,
                       ),
                     ],
                   ),
@@ -1339,25 +1423,25 @@ class HomeView extends GetView<HomeController> {
                 if (isPro)
                   Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: UtilsReponsive.width(8, context),
-                      vertical: UtilsReponsive.height(4, context),
+                      horizontal: UtilsReponsive.width(6, context),
+                      vertical: UtilsReponsive.height(2, context),
                     ),
                     decoration: BoxDecoration(
                       color: Colors.amber,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: TextConstant.subTile4(
                       context,
-                      text: "POPULAR",
+                      text: "PHỔ BIẾN",
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
-                      size: 10,
+                      size: 8,
                     ),
                   ),
               ],
             ),
 
-            SizedBox(height: UtilsReponsive.height(12, context)),
+            SizedBox(height: UtilsReponsive.height(8, context)),
 
             // Features
             Column(
@@ -1366,29 +1450,29 @@ class HomeView extends GetView<HomeController> {
               children: [
                 _buildSubscriptionFeatureItem(
                   context,
-                  "Duration: ${plan.formattedDuration}",
+                  "Thời hạn: ${plan.formattedDuration}",
                   Icons.calendar_today,
                 ),
-                SizedBox(height: UtilsReponsive.height(6, context)),
+                SizedBox(height: UtilsReponsive.height(4, context)),
                 _buildSubscriptionFeatureItem(
                   context,
                   plan.canAccessPremiumContent
-                      ? "Premium Content"
-                      : "Basic Content",
+                      ? "Nội dung Premium"
+                      : "Nội dung Cơ bản",
                   plan.canAccessPremiumContent
                       ? Icons.star
                       : Icons.star_border,
                 ),
-                SizedBox(height: UtilsReponsive.height(6, context)),
+                SizedBox(height: UtilsReponsive.height(4, context)),
                 _buildSubscriptionFeatureItem(
                   context,
-                  "AI Features: ${plan.aiGenerateQuizSetMaxTimes} times",
+                  "AI: ${plan.aiGenerateQuizSetMaxTimes} lần",
                   Icons.auto_awesome,
                 ),
               ],
             ),
 
-            SizedBox(height: UtilsReponsive.height(12, context)),
+            SizedBox(height: UtilsReponsive.height(8, context)),
 
             // Subscribe Button
             SizedBox(
@@ -1401,26 +1485,27 @@ class HomeView extends GetView<HomeController> {
                   backgroundColor: Colors.white,
                   foregroundColor: cardColor,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   padding: EdgeInsets.symmetric(
-                    vertical: UtilsReponsive.height(12, context),
+                    vertical: UtilsReponsive.height(8, context),
                   ),
                 ),
                 child: controller.isPurchasing.value
                     ? SizedBox(
-                        width: UtilsReponsive.width(20, context),
-                        height: UtilsReponsive.width(20, context),
+                        width: UtilsReponsive.width(16, context),
+                        height: UtilsReponsive.width(16, context),
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(cardColor),
                         ),
                       )
-                    : TextConstant.subTile2(
+                    : TextConstant.subTile3(
                         context,
-                        text: plan.price == 0 ? "Get Started" : "Subscribe",
+                        text: plan.price == 0 ? "Bắt đầu" : "Đăng ký",
                         color: cardColor,
                         fontWeight: FontWeight.bold,
+                        size: 12,
                       ),
               )),
             ),
@@ -1440,15 +1525,15 @@ class HomeView extends GetView<HomeController> {
         Icon(
           icon,
           color: Colors.white,
-          size: UtilsReponsive.height(16, context),
+          size: UtilsReponsive.height(14, context),
         ),
-        SizedBox(width: UtilsReponsive.width(8, context)),
+        SizedBox(width: UtilsReponsive.width(6, context)),
         Expanded(
           child: TextConstant.subTile3(
             context,
             text: text,
             color: Colors.white.withOpacity(0.9),
-            size: 12,
+            size: 11,
           ),
         ),
       ],
