@@ -562,9 +562,67 @@ class DashboardDetailView extends GetView<DashboardDetailController> {
               color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
+            SizedBox(width: UtilsReponsive.width(8, context)),
+            
           ],
         ),
-        
+        Row(
+          children: [
+            Obx(() => Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: UtilsReponsive.width(8, context),
+                vertical: UtilsReponsive.height(4, context),
+              ),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.red.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: TextConstant.subTile2(
+                context,
+                text: "Bạn có ${controller.mistakeQuizzesCount.value} lỗi",
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+                size: 12,
+              ),
+            )),
+            SizedBox(width: UtilsReponsive.width(8, context)),
+            Obx(() {
+              if (controller.mistakeQuizzesCount.value > 0) {
+                return ElevatedButton.icon(
+                  onPressed: () => _showConfirmDialog(context),
+                  icon: Icon(
+                    Icons.build,
+                    size: UtilsReponsive.height(16, context),
+                    color: Colors.white,
+                  ),
+                  label: TextConstant.subTile2(
+                    context,
+                    text: "Khắc phục ngay",
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    size: 12,
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorsManager.primary,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: UtilsReponsive.width(12, context),
+                      vertical: UtilsReponsive.height(2, context),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                );
+              }
+              return SizedBox.shrink();
+            }),
+          ],
+        )
+        ,
         SizedBox(height: UtilsReponsive.height(16, context)),
         
         Obx(() {
@@ -755,6 +813,70 @@ class DashboardDetailView extends GetView<DashboardDetailController> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showConfirmDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.help_outline,
+                color: ColorsManager.primary,
+                size: UtilsReponsive.height(24, context),
+              ),
+              SizedBox(width: UtilsReponsive.width(8, context)),
+              TextConstant.titleH3(
+                context,
+                text: "Xác nhận",
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ],
+          ),
+          content: TextConstant.subTile2(
+            context,
+            text: "Bạn có muốn bắt đầu làm bài khắc phục để cải thiện điểm yếu không?",
+            color: Colors.grey[700]!,
+            textAlign: TextAlign.center,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: TextConstant.subTile2(
+                context,
+                text: "Hủy",
+                color: Colors.grey[600]!,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                controller.startMistakeQuiz();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorsManager.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: TextConstant.subTile2(
+                context,
+                text: "Xác nhận",
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

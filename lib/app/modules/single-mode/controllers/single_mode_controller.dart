@@ -5,6 +5,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quizkahoot/app/data/dio_interceptor.dart';
+import 'package:quizkahoot/app/modules/home/data/dashboard_api.dart';
+import 'package:quizkahoot/app/modules/home/data/dashboard_service.dart';
 import 'package:quizkahoot/app/modules/single-mode/data/single_mode_api.dart';
 import 'package:quizkahoot/app/modules/single-mode/data/single_mode_service.dart';
 import 'package:quizkahoot/app/modules/single-mode/models/start_quiz_request.dart';
@@ -16,6 +18,7 @@ const baseUrl = 'https://qul-api.onrender.com/api';
 
 class SingleModeController extends GetxController {
   late SingleModeService singleModeService;
+  DashboardService? dashboardService;
   
   // Quiz state
   var isLoading = false.obs;
@@ -43,6 +46,9 @@ class SingleModeController extends GetxController {
   
   // Flag to identify if this is a placement test
   var isPlacementTest = false.obs;
+  
+  // Flag to identify if this is a mistake quiz (khắc phục)
+  var isMistakeQuiz = false.obs;
 
   @override
   void onInit() {
@@ -78,6 +84,11 @@ class SingleModeController extends GetxController {
     Dio dio = Dio();
     dio.interceptors.add(DioIntercepTorCustom());
     singleModeService = SingleModeService(singleModeApi: SingleModeApi(dio, baseUrl: baseUrl));
+    
+    // Initialize dashboard service for mistake quiz
+    final dashboardDio = Dio();
+    dashboardDio.interceptors.add(DioIntercepTorCustom());
+    dashboardService = DashboardService(dashboardApi: DashboardApi(dashboardDio, baseUrl: baseUrl));
   }
 
   Future<void> _getUserId() async {
@@ -132,6 +143,10 @@ class SingleModeController extends GetxController {
   }
 
   void _initializeQuiz() {
+    initializeQuiz();
+  }
+  
+  void initializeQuiz() {
     if (quizData.value == null || quizData.value!.data == null) return;
     
     currentQuestionIndex.value = 0;
@@ -150,6 +165,11 @@ class SingleModeController extends GetxController {
   // Reset placement test flag when needed
   void resetPlacementTestFlag() {
     isPlacementTest.value = false;
+  }
+  
+  // Reset mistake quiz flag when needed
+  void resetMistakeQuizFlag() {
+    isMistakeQuiz.value = false;
   }
 
   void _loadCurrentQuestion() {
@@ -314,10 +334,18 @@ class SingleModeController extends GetxController {
         answers: answers,
       );
       
-      // Use different endpoint for placement test
-      final response = isPlacementTest.value
-          ? await singleModeService.submitPlacementTest(request)
-          : await singleModeService.submitAllAnswers(request);
+      // Use different endpoint based on quiz type
+      dynamic response;
+      if (isMistakeQuiz.value && dashboardService != null) {
+        // Use mistake quiz submit endpoint
+        response = await dashboardService!.submitMistakeQuiz(request);
+      } else if (isPlacementTest.value) {
+        // Use placement test submit endpoint
+        response = await singleModeService.submitPlacementTest(request);
+      } else {
+        // Use normal submit endpoint
+        response = await singleModeService.submitAllAnswers(request);
+      }
       
       if (response.isSuccess && response.data != null && response.data!.data != null) {
         isQuizCompleted.value = true;
