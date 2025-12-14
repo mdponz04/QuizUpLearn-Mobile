@@ -2,6 +2,8 @@
 
 part of 'quiz_set_api.dart';
 
+// dart format off
+
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -105,16 +107,23 @@ class _QuizSetApi implements QuizSetApi {
   }
 
   @override
-  Future<QuizSetDetailResponse> getQuizSetById(String id) async {
+  Future<QuizSetDetailResponse> getQuizSetById(
+    String id,
+    bool includeDeleted,
+    Map<String, dynamic> body,
+  ) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'includeDeleted': includeDeleted,
+    };
     final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
+    final _data = <String, dynamic>{};
+    _data.addAll(body);
     final _options = _setStreamType<QuizSetDetailResponse>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
+      Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/quizset/${id}',
+            '/quizquizset/quizset/${id}/search',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -189,3 +198,5 @@ class _QuizSetApi implements QuizSetApi {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
+
+// dart format on

@@ -86,7 +86,7 @@ class TextConstant {
     return Text(
       text,
       textAlign: textAlign,
-      style: GoogleFonts.montserratAlternates(
+      style: GoogleFonts.roboto(
           fontSize: UtilsReponsive.height(size, context),
           fontWeight: fontWeight,
           color: color),

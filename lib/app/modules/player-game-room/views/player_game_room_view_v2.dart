@@ -1111,6 +1111,12 @@ class PlayerGameRoomViewV2 extends StatelessWidget {
 
     final isBossDefeated = controller.bossDefeated.value;
     final isForceEnded = result['forceEnded'] ?? false;
+    
+    // Extract onBossDefeated data
+    final totalDamageDealt = result['totalDamageDealt'] ?? result['TotalDamageDealt'] ?? 0;
+    final damageRankings = result['damageRankings'] ?? result['DamageRankings'] ?? [];
+    final mvpPlayer = result['mvpPlayer'] ?? result['MvpPlayer'];
+    final timeToDefeat = result['timeToDefeat'] ?? result['TimeToDefeat'];
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
@@ -1170,11 +1176,290 @@ class PlayerGameRoomViewV2 extends StatelessWidget {
                           : "Boss còn ${controller.bossCurrentHP.value} HP",
                   color: Colors.grey[700]!,
                 ),
+                // Time to defeat (if available)
+                if (isBossDefeated && timeToDefeat != null) ...[
+                  SizedBox(height: UtilsReponsive.height(12, context)),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: UtilsReponsive.width(16, context),
+                      vertical: UtilsReponsive.height(8, context),
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.timer, color: Colors.white, size: 18),
+                        SizedBox(width: UtilsReponsive.width(8, context)),
+                        TextConstant.subTile2(
+                          context,
+                          text: "Thời gian: ${timeToDefeat.toStringAsFixed(1)}s",
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                // Total damage dealt (if available)
+                if (isBossDefeated && totalDamageDealt > 0) ...[
+                  SizedBox(height: UtilsReponsive.height(8, context)),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: UtilsReponsive.width(16, context),
+                      vertical: UtilsReponsive.height(8, context),
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.local_fire_department, color: Colors.white, size: 18),
+                        SizedBox(width: UtilsReponsive.width(8, context)),
+                        TextConstant.subTile2(
+                          context,
+                          text: "Tổng sát thương: $totalDamageDealt",
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
 
           SizedBox(height: UtilsReponsive.height(20, context)),
+
+          // MVP Player (if available)
+          if (isBossDefeated && mvpPlayer != null) ...[
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(UtilsReponsive.width(20, context)),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.amber.withOpacity(0.2), Colors.orange.withOpacity(0.2)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.amber, width: 2),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.emoji_events, color: Colors.amber[700], size: 32),
+                      SizedBox(width: UtilsReponsive.width(8, context)),
+                      TextConstant.titleH2(
+                        context,
+                        text: "MVP",
+                        color: Colors.amber[700]!,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: UtilsReponsive.height(16, context)),
+                  TextConstant.titleH3(
+                    context,
+                    text: mvpPlayer['playerName'] ?? mvpPlayer['PlayerName'] ?? 'Unknown',
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  SizedBox(height: UtilsReponsive.height(12, context)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildStatItem(
+                        context,
+                        label: "Sát thương",
+                        value: "${mvpPlayer['totalDamage'] ?? mvpPlayer['TotalDamage'] ?? 0}",
+                      ),
+                      _buildStatItem(
+                        context,
+                        label: "Câu đúng",
+                        value: "${mvpPlayer['correctAnswers'] ?? mvpPlayer['CorrectAnswers'] ?? 0}/${mvpPlayer['totalAnswered'] ?? mvpPlayer['TotalAnswered'] ?? 0}",
+                      ),
+                      _buildStatItem(
+                        context,
+                        label: "Tỷ lệ",
+                        value: "${mvpPlayer['damagePercent'] ?? mvpPlayer['DamagePercent'] ?? 0}%",
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: UtilsReponsive.height(20, context)),
+          ],
+
+          // Damage Rankings (if available)
+          if (isBossDefeated && damageRankings is List && damageRankings.isNotEmpty) ...[
+            TextConstant.titleH2(
+              context,
+              text: "Bảng xếp hạng sát thương",
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+            SizedBox(height: UtilsReponsive.height(12, context)),
+            ...damageRankings.asMap().entries.map((entry) {
+              final index = entry.key;
+              final ranking = entry.value as Map<String, dynamic>;
+              final playerName = ranking['playerName'] ?? ranking['PlayerName'] ?? 'Unknown';
+              final totalDamage = ranking['totalDamage'] ?? ranking['TotalDamage'] ?? 0;
+              final correctAnswers = ranking['correctAnswers'] ?? ranking['CorrectAnswers'] ?? 0;
+              final totalAnswered = ranking['totalAnswered'] ?? ranking['TotalAnswered'] ?? 0;
+              final rank = ranking['rank'] ?? ranking['Rank'] ?? (index + 1);
+              final damagePercent = ranking['damagePercent'] ?? ranking['DamagePercent'] ?? 0;
+              final isMe = playerName == controller.playerName;
+              final isTopThree = rank <= 3;
+
+              return Container(
+                margin: EdgeInsets.only(bottom: UtilsReponsive.height(12, context)),
+                padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+                decoration: BoxDecoration(
+                  color: isTopThree
+                      ? (rank == 1
+                          ? Colors.amber.withOpacity(0.1)
+                          : rank == 2
+                              ? Colors.grey[300]!.withOpacity(0.5)
+                              : Colors.orange.withOpacity(0.1))
+                      : isMe
+                          ? ColorsManager.primary.withOpacity(0.1)
+                          : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isTopThree
+                        ? (rank == 1
+                            ? Colors.amber
+                            : rank == 2
+                                ? Colors.grey[400]!
+                                : Colors.orange)
+                        : isMe
+                            ? ColorsManager.primary
+                            : Colors.grey[300]!,
+                    width: isTopThree || isMe ? 2 : 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Rank badge
+                    Container(
+                      width: UtilsReponsive.width(40, context),
+                      height: UtilsReponsive.width(40, context),
+                      decoration: BoxDecoration(
+                        color: isTopThree
+                            ? (rank == 1
+                                ? Colors.amber
+                                : rank == 2
+                                    ? Colors.grey[400]!
+                                    : Colors.orange)
+                            : Colors.grey[300]!,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          rank == 1 ? '🥇' : rank == 2 ? '🥈' : rank == 3 ? '🥉' : '$rank',
+                          style: TextStyle(
+                            color: isTopThree ? Colors.white : Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: rank <= 3
+                                ? UtilsReponsive.width(20, context)
+                                : UtilsReponsive.width(16, context),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: UtilsReponsive.width(12, context)),
+                    // Player info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextConstant.subTile1(
+                                  context,
+                                  text: isMe ? "$playerName (Bạn)" : playerName,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              if (isMe)
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: UtilsReponsive.width(8, context),
+                                    vertical: UtilsReponsive.height(4, context),
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: ColorsManager.primary,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: TextConstant.subTile4(
+                                    context,
+                                    text: "Bạn",
+                                    color: Colors.white,
+                                    size: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          SizedBox(height: UtilsReponsive.height(4, context)),
+                          Row(
+                            children: [
+                              Icon(Icons.local_fire_department,
+                                  size: 14, color: Colors.red),
+                              SizedBox(width: UtilsReponsive.width(4, context)),
+                              TextConstant.subTile3(
+                                context,
+                                text: "$totalDamage sát thương",
+                                color: Colors.grey[700]!,
+                                size: 12,
+                              ),
+                              SizedBox(width: UtilsReponsive.width(12, context)),
+                              Icon(Icons.check_circle, size: 14, color: Colors.green),
+                              SizedBox(width: UtilsReponsive.width(4, context)),
+                              TextConstant.subTile3(
+                                context,
+                                text: "$correctAnswers/$totalAnswered",
+                                color: Colors.grey[700]!,
+                                size: 12,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Damage percent
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: UtilsReponsive.width(12, context),
+                        vertical: UtilsReponsive.height(6, context),
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: TextConstant.subTile2(
+                        context,
+                        text: "$damagePercent%",
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                        size: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+            SizedBox(height: UtilsReponsive.height(20, context)),
+          ],
 
           // My stats
           Container(

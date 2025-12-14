@@ -11,6 +11,8 @@ import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/on_boarding/bindings/on_boarding_binding.dart';
 import '../modules/on_boarding/views/on_boarding_view.dart';
+import '../modules/splash/bindings/splash_binding.dart';
+import '../modules/splash/views/splash_view.dart';
 import '../modules/play-event/bindings/play_event_binding.dart';
 import '../modules/play-event/views/play_event_view.dart';
 import '../modules/play-multi/bindings/play_multi_binding.dart';
@@ -52,9 +54,14 @@ part 'app_routes.dart';
 class AppPages {
   AppPages._();
 
-  static const INITIAL = Routes.ON_BOARDING;
+  static const INITIAL = Routes.SPLASH;
 
   static final routes = [
+    GetPage(
+      name: _Paths.SPLASH,
+      page: () => const SplashView(),
+      binding: SplashBinding(),
+    ),
     GetPage(
       name: _Paths.HOME,
       page: () => const HomeView(),

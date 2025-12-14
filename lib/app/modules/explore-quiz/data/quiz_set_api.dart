@@ -18,8 +18,12 @@ abstract class QuizSetApi {
   @POST('/quizset/creator/search')
   Future<QuizSetResponse> getQuizSetsByCreator(@Query('creatorId') String userId, @Body() Map<String, dynamic> body);
   
-  @GET('/quizset/{id}')
-  Future<QuizSetDetailResponse> getQuizSetById(@Path('id') String id);
+  @POST('/quizquizset/quizset/{id}/search')
+  Future<QuizSetDetailResponse> getQuizSetById(
+    @Path('id') String id,
+    @Query('includeDeleted') bool includeDeleted,
+    @Body() Map<String, dynamic> body,
+  );
   
   @PUT('/quizset/{id}')
   Future<QuizSetDetailResponse> updateQuizSet(

@@ -79,9 +79,9 @@ class QuizSetService {
     }
   }
 
-  Future<BaseResponse<QuizSetModel>> getQuizSetDetail(String quizSetId) async {
+  Future<BaseResponse<QuizSetModel>> getQuizSetDetail(String quizSetId, {bool includeDeleted = false}) async {
     try {
-      final response = await quizSetApi.getQuizSetById(quizSetId);
+      final response = await quizSetApi.getQuizSetById(quizSetId, includeDeleted, {});
       log("Quiz set detail response: ${response.toString()}");
       
       if (response.success && response.data != null) {

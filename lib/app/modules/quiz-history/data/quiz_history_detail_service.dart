@@ -49,7 +49,7 @@ class QuizHistoryDetailService {
 
   Future<BaseResponse<QuizSetModel>> getQuizSetById(String quizSetId) async {
     try {
-      final response = await quizSetApi.getQuizSetById(quizSetId);
+      final response = await quizSetApi.getQuizSetById(quizSetId, false, {});
       log("Get quiz set by id response: ${response.toString()}");
 
       if (response.success && response.data != null) {

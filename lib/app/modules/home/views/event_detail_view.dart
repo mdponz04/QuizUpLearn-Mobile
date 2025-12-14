@@ -53,12 +53,22 @@ class EventDetailView extends GetView<EventDetailController> {
           return const SizedBox.shrink();
         }
         final data = controller.leaderboardData.value!;
-        // Chỉ hiển thị nút nếu event đang ongoing/upcoming và chưa join
-        if ((data.eventStatus.toLowerCase() == 'ongoing' || 
-            data.eventStatus.toLowerCase() == 'upcoming') &&
-            !controller.isJoined.value) {
+        final isEventActive = data.eventStatus.toLowerCase() == 'ongoing' || 
+                             data.eventStatus.toLowerCase() == 'upcoming' ||
+                             data.eventStatus.toLowerCase() == 'active';
+        
+        // Nếu chưa join và event đang active -> hiển thị nút đăng ký
+        if (isEventActive && !controller.isJoined.value) {
           return _buildJoinButtonBottomBar(context, data);
-        } else if (controller.isJoined.value) {
+        } 
+        // Nếu đã join và event đang ongoing/active -> hiển thị nút tham gia
+        else if (controller.isJoined.value && 
+                 (data.eventStatus.toLowerCase() == 'ongoing' ||
+                  data.eventStatus.toLowerCase() == 'active')) {
+          return _buildJoinGameButtonBottomBar(context, data);
+        } 
+        // Nếu đã join nhưng event chưa bắt đầu hoặc đã kết thúc -> hiển thị trạng thái
+        else if (controller.isJoined.value) {
           return _buildJoinedStatusBottomBar(context);
         }
         return const SizedBox.shrink();
@@ -570,8 +580,10 @@ class EventDetailView extends GetView<EventDetailController> {
       case 'upcoming':
         return 'Sắp diễn ra';
       case 'ongoing':
+      case 'active':
         return 'Đang diễn ra';
       case 'ended':
+      case 'completed':
         return 'Đã kết thúc';
       default:
         return status;
@@ -716,6 +728,226 @@ class EventDetailView extends GetView<EventDetailController> {
         ),
       ),
     );
+  }
+
+  Widget _buildJoinGameButtonBottomBar(BuildContext context, EventLeaderboardData data) {
+    return Container(
+      padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () => _handleJoinGame(context, data),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ColorsManager.primary,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(
+                vertical: UtilsReponsive.height(14, context),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 2,
+            ),
+            icon: Icon(
+              Icons.play_arrow,
+              size: UtilsReponsive.height(20, context),
+            ),
+            label: TextConstant.subTile2(
+              context,
+              text: "Tham gia",
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleJoinGame(BuildContext context, EventLeaderboardData data) {
+    // Hiển thị dialog nhập PIN giống như luồng multiplayer (quản trò) ở home
+    _showEnterPinDialog(context);
+  }
+
+  void _showEnterPinDialog(BuildContext context) {
+    final pinController = TextEditingController();
+    final playerNameController = TextEditingController();
+    
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
+          constraints: BoxConstraints(
+            maxWidth: UtilsReponsive.width(400, context),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Icon(
+                      Icons.videogame_asset,
+                      color: ColorsManager.primary,
+                      size: UtilsReponsive.height(28, context),
+                    ),
+                    SizedBox(width: UtilsReponsive.width(8, context)),
+                    Expanded(
+                      child: TextConstant.titleH2(
+                        context,
+                        text: "Tham gia Game",
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Get.back(),
+                      icon: Icon(
+                        Icons.close,
+                        color: Colors.grey[600],
+                        size: UtilsReponsive.height(20, context),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: UtilsReponsive.height(24, context)),
+                
+                // Game PIN Field
+                TextConstant.subTile1(
+                  context,
+                  text: "Mã PIN",
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+                SizedBox(height: UtilsReponsive.height(8, context)),
+                TextField(
+                  controller: pinController,
+                  decoration: InputDecoration(
+                    hintText: "Nhập mã PIN",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(Icons.key, color: ColorsManager.primary),
+                  ),
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                ),
+                SizedBox(height: UtilsReponsive.height(16, context)),
+                
+                // Player Name Field
+                TextConstant.subTile1(
+                  context,
+                  text: "Tên người chơi",
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+                SizedBox(height: UtilsReponsive.height(8, context)),
+                TextField(
+                  controller: playerNameController,
+                  decoration: InputDecoration(
+                    hintText: "Nhập tên người chơi",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(Icons.person, color: ColorsManager.primary),
+                  ),
+                ),
+                SizedBox(height: UtilsReponsive.height(24, context)),
+                
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.grey[300]!),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            vertical: UtilsReponsive.height(12, context),
+                          ),
+                        ),
+                        child: TextConstant.subTile2(
+                          context,
+                          text: "Hủy",
+                          color: Colors.grey[600]!,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: UtilsReponsive.width(12, context)),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final pin = pinController.text.trim();
+                          final playerName = playerNameController.text.trim();
+                          if (pin.isNotEmpty && playerName.isNotEmpty) {
+                            Get.back();
+                            _joinGameWithPin(pin, playerName);
+                          } else {
+                            Get.snackbar(
+                              'Lỗi',
+                              'Vui lòng nhập đầy đủ thông tin',
+                              backgroundColor: Colors.red,
+                              colorText: Colors.white,
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ColorsManager.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            vertical: UtilsReponsive.height(12, context),
+                          ),
+                        ),
+                        child: TextConstant.subTile2(
+                          context,
+                          text: "Tham gia",
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _joinGameWithPin(String pin, String playerName) {
+    // Navigate đến player-game-room với gamePin và playerName
+    // Giống như luồng multiplayer (quản trò) ở home
+    Get.toNamed('/player-game-room', arguments: {
+      'gamePin': pin,
+      'playerName': playerName,
+      'mode': 'pin',
+      'baseUrl': 'https://qul-api.onrender.com',
+    });
   }
 }
 

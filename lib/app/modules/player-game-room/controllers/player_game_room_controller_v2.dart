@@ -310,10 +310,11 @@ class PlayerGameRoomControllerV2 extends GetxController {
       onGameEnded: (data) {
         gamePhase.value = 'finalResult';
         finalResult.value = data;
+        log('✅ onGameEnded received V2: ${data.toString()}');
       },
       onGameCancelled: (data) {
-        errorMessage.value = 'Game đã bị hủy';
-        gamePhase.value = 'error';
+        // errorMessage.value = 'Game đã bị hủy';
+        // gamePhase.value = 'error';
       },
       // Boss Fight events
       onBossFightModeEnabled: (data) {
@@ -351,6 +352,7 @@ class PlayerGameRoomControllerV2 extends GetxController {
         bossCurrentHP.value = 0;
         gamePhase.value = 'finalResult';
         finalResult.value = data;
+        log('✅ onBossDefeated received V2: ${data.toString()}');
       },
       onBossFightTimeUp: (data) {
         gamePhase.value = 'finalResult';
