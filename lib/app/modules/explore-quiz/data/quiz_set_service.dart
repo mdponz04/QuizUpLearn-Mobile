@@ -84,12 +84,21 @@ class QuizSetService {
       final response = await quizSetApi.getQuizSetById(quizSetId, includeDeleted, {});
       log("Quiz set detail response: ${response.toString()}");
       
-      if (response.success && response.data != null) {
-        return BaseResponse(
-          isSuccess: true,
-          message: 'Success',
-          data: response.data,
-        );
+      if (response.success) {
+        // Extract QuizSetModel from the new response format
+        final quizSetModel = response.getQuizSetModel();
+        
+        if (quizSetModel != null) {
+          return BaseResponse(
+            isSuccess: true,
+            message: 'Success',
+            data: quizSetModel,
+          );
+        } else {
+          return BaseResponse.error(
+            'No quiz set data found in response',
+          );
+        }
       } else {
         return BaseResponse.error(
           response.message?.toString() ?? 'Failed to fetch quiz set detail',
@@ -114,7 +123,7 @@ class QuizSetService {
         return BaseResponse(
           isSuccess: true,
           message: response.message?.toString() ?? 'Success',
-          data: response.data,
+          data: response.getQuizSetModel(),
         );
       } else {
         return BaseResponse.error(

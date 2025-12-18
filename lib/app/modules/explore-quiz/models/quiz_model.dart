@@ -13,8 +13,8 @@ class QuizModel {
   final int orderIndex;
   final bool isActive;
   final DateTime createdAt;
-  final DateTime updatedAt;
-  final DateTime deletedAt;
+  final DateTime? updatedAt;
+  final DateTime? deletedAt;
   final List<AnswerOptionModel> answerOptions;
 
   QuizModel({
@@ -30,8 +30,8 @@ class QuizModel {
     required this.orderIndex,
     required this.isActive,
     required this.createdAt,
-    required this.updatedAt,
-    required this.deletedAt,
+    this.updatedAt,
+    this.deletedAt,
     required this.answerOptions,
   });
 
@@ -53,10 +53,10 @@ class QuizModel {
           : DateTime.now(),
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'].toString())
-          : DateTime.now(),
+          : null,
       deletedAt: json['deletedAt'] != null
           ? DateTime.parse(json['deletedAt'].toString())
-          : DateTime.now(),
+          : null,
       answerOptions: (json['answerOptions'] as List?)
           ?.map((item) => AnswerOptionModel.fromJson(item))
           .toList() ?? [],
@@ -77,8 +77,8 @@ class QuizModel {
       'orderIndex': orderIndex,
       'isActive': isActive,
       'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
-      'deletedAt': deletedAt.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+      'deletedAt': deletedAt?.toIso8601String(),
       'answerOptions': answerOptions.map((item) => item.toJson()).toList(),
     };
   }

@@ -52,12 +52,21 @@ class QuizHistoryDetailService {
       final response = await quizSetApi.getQuizSetById(quizSetId, false, {});
       log("Get quiz set by id response: ${response.toString()}");
 
-      if (response.success && response.data != null) {
-        return BaseResponse(
-          isSuccess: true,
-          message: response.message?.toString() ?? 'Quiz set loaded successfully',
-          data: response.data!,
-        );
+      if (response.success) {
+        // Extract QuizSetModel from the new response format
+        final quizSetModel = response.getQuizSetModel();
+        
+        if (quizSetModel != null) {
+          return BaseResponse(
+            isSuccess: true,
+            message: response.message?.toString() ?? 'Quiz set loaded successfully',
+            data: quizSetModel,
+          );
+        } else {
+          return BaseResponse.error(
+            'No quiz set data found in response',
+          );
+        }
       } else {
         return BaseResponse.error(
           response.message?.toString() ?? 'Failed to load quiz set',

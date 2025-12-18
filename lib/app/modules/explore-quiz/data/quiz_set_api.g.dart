@@ -2,8 +2,6 @@
 
 part of 'quiz_set_api.dart';
 
-// dart format off
-
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -198,5 +196,3 @@ class _QuizSetApi implements QuizSetApi {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
-
-// dart format on

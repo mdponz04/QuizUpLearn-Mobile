@@ -6,6 +6,8 @@ import 'package:get/get.dart';
 import 'package:quizkahoot/app/data/dio_interceptor.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_api.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_service.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/data/user_quiz_set_favorite_api.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/data/user_quiz_set_favorite_service.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_set_model.dart';
 import 'package:quizkahoot/app/modules/single-mode/controllers/single_mode_controller.dart';
 import 'package:quizkahoot/app/modules/home/data/game_api.dart';
@@ -24,14 +26,17 @@ class ExploreQuizController extends GetxController {
   final quizSetService = QuizSetService(quizSetApi: QuizSetApi(Dio(), baseUrl: baseUrl));
   late GameService gameService;
   late OneVsOneRoomService oneVsOneRoomService;
+  late UserQuizSetFavoriteService favoriteService;
   
   // Observable variables
   var isLoading = false.obs;
+  var isLoadingFavorites = false.obs;
   var isLoadingGame = false.obs;
   var quizSets = <QuizSetModel>[].obs;
   var filteredQuizSets = <QuizSetModel>[].obs;
   var selectedFilter = 'All'.obs;
   var searchQuery = ''.obs;
+  final favoriteQuizSetIds = <String>{}.obs; // Set of favorite quiz set IDs
   
   // Filter options
   final List<String> filterOptions = [
@@ -46,15 +51,25 @@ class ExploreQuizController extends GetxController {
   void onInit() {
     super.onInit();
     _initializeDio();
+    _initializeFavoriteService();
     _initializeGameService();
     _initializeOneVsOneRoomService();
     loadQuizSets();
+    loadFavorites();
   }
 
   void _initializeDio() {
     Dio dio = Dio();
     dio.interceptors.add(DioIntercepTorCustom());
     quizSetService.quizSetApi = QuizSetApi(dio, baseUrl: baseUrl);
+  }
+
+  void _initializeFavoriteService() {
+    Dio dio = Dio();
+    dio.interceptors.add(DioIntercepTorCustom());
+    favoriteService = UserQuizSetFavoriteService(
+      userQuizSetFavoriteApi: UserQuizSetFavoriteApi(dio, baseUrl: baseUrl),
+    );
   }
 
   void _initializeGameService() {
@@ -377,8 +392,41 @@ class ExploreQuizController extends GetxController {
   }
 
 
+  Future<void> loadFavorites() async {
+    try {
+      final userId = BaseCommon.instance.userId;
+      if (userId.isEmpty) {
+        log("User ID is empty, cannot load favorites");
+        return;
+      }
+
+      isLoadingFavorites.value = true;
+      final response = await favoriteService.getUserFavorites(userId);
+      isLoadingFavorites.value = false;
+
+      if (response.isSuccess && response.data != null) {
+        // Extract quiz set IDs from favorites
+        favoriteQuizSetIds.clear();
+        favoriteQuizSetIds.addAll(
+          response.data!.map((favorite) => favorite.quizSetId),
+        );
+        log("Loaded ${favoriteQuizSetIds.length} favorite quiz sets");
+      } else {
+        log("Failed to load favorites: ${response.message}");
+      }
+    } catch (e) {
+      isLoadingFavorites.value = false;
+      log("Error loading favorites: $e");
+    }
+  }
+
+  bool isFavorite(String quizSetId) {
+    return favoriteQuizSetIds.contains(quizSetId);
+  }
+
   Future<void> refreshQuizSets() async {
     await loadQuizSets();
+    await loadFavorites();
   }
 
   void clearSearch() {

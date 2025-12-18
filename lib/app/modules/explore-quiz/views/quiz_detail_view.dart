@@ -4,9 +4,30 @@ import 'package:quizkahoot/app/resource/color_manager.dart';
 import 'package:quizkahoot/app/resource/reponsive_utils.dart';
 import 'package:quizkahoot/app/resource/text_style.dart';
 import '../controllers/quiz_detail_controller.dart';
+import '../models/quiz_set_comment_model.dart';
 
-class QuizDetailView extends GetView<QuizDetailController> {
+class QuizDetailView extends StatefulWidget {
   const QuizDetailView({super.key});
+
+  @override
+  State<QuizDetailView> createState() => _QuizDetailViewState();
+}
+
+class _QuizDetailViewState extends State<QuizDetailView> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final QuizDetailController controller = Get.find<QuizDetailController>();
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,11 +45,24 @@ class QuizDetailView extends GetView<QuizDetailController> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: ColorsManager.primary),
           onPressed: () {
-            // Return true if quiz was updated, so parent can refresh
-            Get.back(result: controller.hasUpdated.value);
+            // Return true if quiz was updated or favorite was changed, so parent can refresh
+            final shouldRefresh = controller.hasUpdated.value || controller.isFavoriteChanged.value;
+            Get.back(result: shouldRefresh);
           },
         ),
         actions: [
+          // Favorite button
+          Obx(() => IconButton(
+            icon: Icon(
+              controller.isFavorite.value ? Icons.favorite : Icons.favorite_border,
+              color: controller.isFavorite.value ? Colors.red : ColorsManager.primary,
+            ),
+            onPressed: controller.isTogglingFavorite.value
+                ? null
+                : () => controller.toggleFavorite(),
+            tooltip: controller.isFavorite.value ? 'Bỏ yêu thích' : 'Thêm yêu thích',
+          )),
+          // Edit button (only for owner)
           Obx(() {
             if (controller.isOwner) {
               return IconButton(
@@ -40,6 +74,24 @@ class QuizDetailView extends GetView<QuizDetailController> {
             return const SizedBox.shrink();
           }),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: ColorsManager.primary,
+          unselectedLabelColor: Colors.grey[600],
+          indicatorColor: ColorsManager.primary,
+          labelStyle: TextStyle(
+            fontSize: UtilsReponsive.height(14, context),
+            fontWeight: FontWeight.bold,
+          ),
+          unselectedLabelStyle: TextStyle(
+            fontSize: UtilsReponsive.height(14, context),
+            fontWeight: FontWeight.normal,
+          ),
+          tabs: const [
+            Tab(text: 'Thông tin'),
+            Tab(text: 'Đánh giá'),
+          ],
+        ),
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -54,7 +106,13 @@ class QuizDetailView extends GetView<QuizDetailController> {
           return _buildEmptyState(context);
         }
         
-        return _buildDetailList(context);
+        return TabBarView(
+          controller: _tabController,
+          children: [
+            _buildDetailList(context),
+            _buildCommentsTab(context),
+          ],
+        );
       }),
       bottomNavigationBar: Obx(() {
         if (controller.quizSet.value == null) {
@@ -466,6 +524,340 @@ class QuizDetailView extends GetView<QuizDetailController> {
         ),
       ),
     );
+  }
+
+  Widget _buildCommentsTab(BuildContext context) {
+    return Column(
+      children: [
+        // Comment input section
+        _buildCommentInputSection(context),
+        // Comments list
+        Expanded(
+          child: Obx(() {
+            if (controller.isLoadingComments.value) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      color: ColorsManager.primary,
+                    ),
+                    SizedBox(height: UtilsReponsive.height(16, context)),
+                    TextConstant.subTile1(
+                      context,
+                      text: "Đang tải đánh giá...",
+                      color: Colors.grey[600]!,
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            if (controller.commentsErrorMessage.value.isNotEmpty) {
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: UtilsReponsive.height(64, context),
+                        color: Colors.red,
+                      ),
+                      SizedBox(height: UtilsReponsive.height(16, context)),
+                      TextConstant.titleH3(
+                        context,
+                        text: "Lỗi",
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      SizedBox(height: UtilsReponsive.height(8, context)),
+                      TextConstant.subTile2(
+                        context,
+                        text: controller.commentsErrorMessage.value,
+                        color: Colors.grey[600]!,
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: UtilsReponsive.height(24, context)),
+                      ElevatedButton(
+                        onPressed: () {
+                          final quizSetId = Get.arguments as String?;
+                          if (quizSetId != null) {
+                            controller.loadComments(quizSetId);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ColorsManager.primary,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: UtilsReponsive.width(24, context),
+                            vertical: UtilsReponsive.height(12, context),
+                          ),
+                        ),
+                        child: TextConstant.subTile1(
+                          context,
+                          text: "Thử lại",
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            if (controller.comments.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.comment_outlined,
+                        size: UtilsReponsive.height(64, context),
+                        color: Colors.grey[400],
+                      ),
+                      SizedBox(height: UtilsReponsive.height(16, context)),
+                      TextConstant.titleH3(
+                        context,
+                        text: "Chưa có đánh giá",
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      SizedBox(height: UtilsReponsive.height(8, context)),
+                      TextConstant.subTile2(
+                        context,
+                        text: "Hãy là người đầu tiên đánh giá quiz này!",
+                        color: Colors.grey[600]!,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return ListView.builder(
+              padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+              itemCount: controller.comments.length,
+              itemBuilder: (context, index) {
+                final comment = controller.comments[index];
+                return _buildCommentCard(context, comment);
+              },
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCommentInputSection(BuildContext context) {
+    final commentController = TextEditingController();
+
+    return Container(
+      padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextConstant.subTile1(
+            context,
+            text: "Viết đánh giá",
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+          SizedBox(height: UtilsReponsive.height(12, context)),
+          TextField(
+            controller: commentController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: "Nhập đánh giá của bạn...",
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: ColorsManager.primary, width: 2),
+              ),
+              contentPadding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+            ),
+          ),
+          SizedBox(height: UtilsReponsive.height(12, context)),
+          Obx(() => SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: controller.isCreatingComment.value
+                  ? null
+                  : () {
+                      final content = commentController.text.trim();
+                      if (content.isNotEmpty) {
+                        controller.createComment(content);
+                        commentController.clear();
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorsManager.primary,
+                padding: EdgeInsets.symmetric(
+                  vertical: UtilsReponsive.height(12, context),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              child: controller.isCreatingComment.value
+                  ? SizedBox(
+                      height: UtilsReponsive.height(20, context),
+                      width: UtilsReponsive.height(20, context),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.send,
+                          color: Colors.white,
+                          size: UtilsReponsive.height(18, context),
+                        ),
+                        SizedBox(width: UtilsReponsive.width(8, context)),
+                        TextConstant.subTile1(
+                          context,
+                          text: "Gửi đánh giá",
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ],
+                    ),
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCommentCard(BuildContext context, QuizSetCommentModel comment) {
+    return Container(
+      margin: EdgeInsets.only(bottom: UtilsReponsive.height(16, context)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey[300]!,
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // User info
+            Row(
+              children: [
+                // Avatar
+                CircleAvatar(
+                  radius: UtilsReponsive.width(20, context),
+                  backgroundColor: ColorsManager.primary.withOpacity(0.1),
+                  backgroundImage: comment.user.avatarUrl.isNotEmpty
+                      ? NetworkImage(comment.user.avatarUrl)
+                      : null,
+                  child: comment.user.avatarUrl.isEmpty
+                      ? Text(
+                          comment.user.username.isNotEmpty
+                              ? comment.user.username[0].toUpperCase()
+                              : 'U',
+                          style: TextStyle(
+                            color: ColorsManager.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: UtilsReponsive.formatFontSize(16, context),
+                          ),
+                        )
+                      : null,
+                ),
+                SizedBox(width: UtilsReponsive.width(12, context)),
+                // Username and date
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextConstant.subTile1(
+                        context,
+                        text: comment.user.username.isNotEmpty
+                            ? comment.user.username
+                            : 'Người dùng',
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      SizedBox(height: UtilsReponsive.height(2, context)),
+                      TextConstant.subTile3(
+                        context,
+                        text: _formatDate(comment.createdAt),
+                        color: Colors.grey[600]!,
+                        size: 11,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: UtilsReponsive.height(12, context)),
+            // Comment content
+            TextConstant.subTile2(
+              context,
+              text: comment.content,
+              color: Colors.black,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays == 0) {
+      if (difference.inHours == 0) {
+        if (difference.inMinutes == 0) {
+          return 'Vừa xong';
+        }
+        return '${difference.inMinutes} phút trước';
+      }
+      return '${difference.inHours} giờ trước';
+    } else if (difference.inDays == 1) {
+      return 'Hôm qua';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} ngày trước';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
   }
 
   Widget _buildBottomNavigationBar(BuildContext context) {

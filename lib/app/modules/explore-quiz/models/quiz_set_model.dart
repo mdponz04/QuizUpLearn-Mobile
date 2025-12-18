@@ -47,11 +47,16 @@ class QuizSetModel {
   });
 
   factory QuizSetModel.fromJson(Map<String, dynamic> json) {
+    // Handle quizSetType -> quizType mapping (for new API response format)
+    int quizTypeValue = json['quizType'] ?? 0;
+    // Note: quizSetType is a string field in the API but we use quizType (int) in the model
+    // If quizType is 0 and quizSetType exists, we could map it, but for now we keep quizType as is
+    
     return QuizSetModel(
       id: json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
-      quizType: json['quizType'] ?? 0,
+      quizType: quizTypeValue,
       toeicPart: json['toeicPart']?.toString() ?? '',
       skillType: json['skillType']?.toString() ?? '',
       difficultyLevel: json['difficultyLevel']?.toString() ?? '',

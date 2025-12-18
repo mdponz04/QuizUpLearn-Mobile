@@ -6,8 +6,15 @@ import 'package:get/get.dart';
 import 'package:quizkahoot/app/data/dio_interceptor.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_api.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_service.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_comment_api.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_comment_service.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/data/user_quiz_set_favorite_api.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/data/user_quiz_set_favorite_service.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/models/create_user_quiz_set_favorite_request.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_set_model.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_model.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_set_comment_model.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/models/create_quiz_set_comment_request.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/update_quiz_set_request.dart';
 import 'package:quizkahoot/app/modules/single-mode/controllers/single_mode_controller.dart';
 import 'package:quizkahoot/app/modules/home/data/game_api.dart';
@@ -25,16 +32,25 @@ const baseUrl = 'https://qul-api.onrender.com/api';
 
 class QuizDetailController extends GetxController {
   late QuizSetService quizSetService;
+  late QuizSetCommentService quizSetCommentService;
+  late UserQuizSetFavoriteService favoriteService;
   late GameService gameService;
   late OneVsOneRoomService oneVsOneRoomService;
   
   // Observable variables
   var isLoading = false.obs;
+  var isLoadingComments = false.obs;
+  var isCreatingComment = false.obs;
+  var isTogglingFavorite = false.obs;
   var isLoadingGame = false.obs;
   var isUpdating = false.obs;
   var quizSet = Rxn<QuizSetModel>();
+  var comments = <QuizSetCommentModel>[].obs;
   var errorMessage = ''.obs;
+  var commentsErrorMessage = ''.obs;
   var hasUpdated = false.obs; // Track if quiz was updated
+  var isFavorite = false.obs; // Track if current quiz is favorite
+  var isFavoriteChanged = false.obs; // Track if favorite was changed
   
   // Check if current user owns this quiz set
   bool get isOwner {
@@ -47,6 +63,8 @@ class QuizDetailController extends GetxController {
   void onInit() {
     super.onInit();
     _initializeDio();
+    _initializeCommentService();
+    _initializeFavoriteService();
     _initializeGameService();
     _initializeOneVsOneRoomService();
     
@@ -57,6 +75,8 @@ class QuizDetailController extends GetxController {
     final quizSetId = Get.arguments as String?;
     if (quizSetId != null) {
       loadQuizSetDetail(quizSetId);
+      loadComments(quizSetId);
+      checkFavorite(quizSetId);
     }
   }
 
@@ -64,6 +84,22 @@ class QuizDetailController extends GetxController {
     Dio dio = Dio();
     dio.interceptors.add(DioIntercepTorCustom());
     quizSetService = QuizSetService(quizSetApi: QuizSetApi(dio, baseUrl: baseUrl));
+  }
+
+  void _initializeCommentService() {
+    Dio dio = Dio();
+    dio.interceptors.add(DioIntercepTorCustom());
+    quizSetCommentService = QuizSetCommentService(
+      quizSetCommentApi: QuizSetCommentApi(dio, baseUrl: baseUrl),
+    );
+  }
+
+  void _initializeFavoriteService() {
+    Dio dio = Dio();
+    dio.interceptors.add(DioIntercepTorCustom());
+    favoriteService = UserQuizSetFavoriteService(
+      userQuizSetFavoriteApi: UserQuizSetFavoriteApi(dio, baseUrl: baseUrl),
+    );
   }
 
   void _initializeGameService() {
@@ -123,6 +159,91 @@ class QuizDetailController extends GetxController {
       // Create a copy of quiz with answer options that don't show isCorrect
       return quiz;
     }).toList();
+  }
+
+  Future<void> loadComments(String quizSetId) async {
+    try {
+      isLoadingComments.value = true;
+      commentsErrorMessage.value = '';
+      
+      final response = await quizSetCommentService.getQuizSetComments(quizSetId);
+      
+      if (response.isSuccess && response.data != null) {
+        comments.value = response.data!;
+      } else {
+        commentsErrorMessage.value = response.message;
+      }
+    } catch (e) {
+      log("Error loading comments: $e");
+      commentsErrorMessage.value = 'Failed to load comments. Please try again.';
+    } finally {
+      isLoadingComments.value = false;
+    }
+  }
+
+  Future<void> createComment(String content) async {
+    if (quizSet.value == null) return;
+    
+    final userId = BaseCommon.instance.userId;
+    if (userId.isEmpty) {
+      Get.snackbar(
+        'Lỗi',
+        'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    if (content.trim().isEmpty) {
+      Get.snackbar(
+        'Lỗi',
+        'Vui lòng nhập nội dung đánh giá',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    try {
+      isCreatingComment.value = true;
+      
+      final request = CreateQuizSetCommentRequest(
+        userId: userId,
+        quizSetId: quizSet.value!.id,
+        content: content.trim(),
+      );
+
+      final response = await quizSetCommentService.createComment(request);
+      isCreatingComment.value = false;
+
+      if (response.isSuccess) {
+        Get.snackbar(
+          'Thành công',
+          'Đã gửi đánh giá thành công',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        // Reload comments
+        await loadComments(quizSet.value!.id);
+      } else {
+        Get.snackbar(
+          'Lỗi',
+          response.message,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      isCreatingComment.value = false;
+      log('Error creating comment: $e');
+      Get.snackbar(
+        'Lỗi',
+        'Đã xảy ra lỗi khi gửi đánh giá',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 
   void startQuiz() {
@@ -680,6 +801,93 @@ class QuizDetailController extends GetxController {
         ),
       ),
     );
+  }
+
+  Future<void> checkFavorite(String quizSetId) async {
+    try {
+      final userId = BaseCommon.instance.userId;
+      if (userId.isEmpty) {
+        isFavorite.value = false;
+        return;
+      }
+
+      final response = await favoriteService.getUserFavorites(userId);
+      
+      if (response.isSuccess && response.data != null) {
+        final favoriteIds = response.data!
+            .map((favorite) => favorite.quizSetId)
+            .toSet();
+        isFavorite.value = favoriteIds.contains(quizSetId);
+      } else {
+        isFavorite.value = false;
+      }
+    } catch (e) {
+      log("Error checking favorite: $e");
+      isFavorite.value = false;
+    }
+  }
+
+  Future<void> toggleFavorite() async {
+    if (quizSet.value == null) return;
+    
+    final userId = BaseCommon.instance.userId;
+    if (userId.isEmpty) {
+      Get.snackbar(
+        'Lỗi',
+        'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    try {
+      isTogglingFavorite.value = true;
+      
+      final request = CreateUserQuizSetFavoriteRequest(
+        userId: userId,
+        quizSetId: quizSet.value!.id,
+      );
+
+      final response = await favoriteService.createFavorite(request);
+      isTogglingFavorite.value = false;
+
+      if (response.isSuccess) {
+        // Toggle favorite state
+        final previousState = isFavorite.value;
+        isFavorite.value = !isFavorite.value;
+        
+        // Mark as changed if state actually changed
+        if (previousState != isFavorite.value) {
+          isFavoriteChanged.value = true;
+        }
+        
+        Get.snackbar(
+          'Thành công',
+          isFavorite.value 
+              ? 'Đã thêm vào yêu thích' 
+              : 'Đã xóa khỏi yêu thích',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        Get.snackbar(
+          'Lỗi',
+          response.message,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      isTogglingFavorite.value = false;
+      log('Error toggling favorite: $e');
+      Get.snackbar(
+        'Lỗi',
+        'Đã xảy ra lỗi khi cập nhật yêu thích',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 }
 

@@ -171,7 +171,13 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => Get.toNamed('/quiz-detail', arguments: quizSet.id),
+          onTap: () async {
+            final result = await Get.toNamed('/quiz-detail', arguments: quizSet.id);
+            // If favorite was changed, reload favorites
+            if (result == true) {
+              controller.loadFavorites();
+            }
+          },
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
@@ -226,6 +232,18 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Favorite Icon
+                        Obx(() => controller.isFavorite(quizSet.id)
+                            ? Container(
+                                margin: EdgeInsets.only(right: UtilsReponsive.width(4, context)),
+                                child: Icon(
+                                  Icons.favorite,
+                                  color: Colors.red,
+                                  size: UtilsReponsive.height(18, context),
+                                ),
+                              )
+                            : const SizedBox.shrink()),
+                        
                         // Premium Badge
                         if (quizSet.isPremiumOnly)
                           Container(
@@ -337,7 +355,13 @@ class ExploreQuizView extends GetView<ExploreQuizController> {
                     
                     // Chi tiết Button
                     GestureDetector(
-                      onTap: () => Get.toNamed('/quiz-detail', arguments: quizSet.id),
+                      onTap: () async {
+                        final result = await Get.toNamed('/quiz-detail', arguments: quizSet.id);
+                        // If favorite was changed, reload favorites
+                        if (result == true) {
+                          controller.loadFavorites();
+                        }
+                      },
                       child: Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: UtilsReponsive.width(12, context),

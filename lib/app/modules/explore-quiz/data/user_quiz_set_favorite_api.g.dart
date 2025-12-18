@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'one_vs_one_room_api.dart';
+part of 'user_quiz_set_favorite_api.dart';
 
 // **************************************************************************
 // RetrofitGenerator
@@ -8,8 +8,8 @@ part of 'one_vs_one_room_api.dart';
 
 // ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers,unused_element,unnecessary_string_interpolations,unused_element_parameter
 
-class _OneVsOneRoomApi implements OneVsOneRoomApi {
-  _OneVsOneRoomApi(this._dio, {this.baseUrl, this.errorLogger});
+class _UserQuizSetFavoriteApi implements UserQuizSetFavoriteApi {
+  _UserQuizSetFavoriteApi(this._dio, {this.baseUrl, this.errorLogger});
 
   final Dio _dio;
 
@@ -18,28 +18,63 @@ class _OneVsOneRoomApi implements OneVsOneRoomApi {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<CreateOneVsOneRoomResponse> createRoom(
-    CreateOneVsOneRoomRequest request,
+  Future<UserQuizSetFavoriteResponse> getUserFavorites(
+    String userId,
+    bool includeDeleted,
+    Map<String, dynamic> body,
   ) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'userId': userId,
+      r'includeDeleted': includeDeleted,
+    };
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
-    _data.addAll(request.toJson());
-    final _options = _setStreamType<CreateOneVsOneRoomResponse>(
+    _data.addAll(body);
+    final _options = _setStreamType<UserQuizSetFavoriteResponse>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/onevsone/create',
+            '/userquizsetfavorite/user/search',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late CreateOneVsOneRoomResponse _value;
+    late UserQuizSetFavoriteResponse _value;
     try {
-      _value = CreateOneVsOneRoomResponse.fromJson(_result.data!);
+      _value = UserQuizSetFavoriteResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<CreateUserQuizSetFavoriteResponse> createFavorite(
+    Map<String, dynamic> body,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(body);
+    final _options = _setStreamType<CreateUserQuizSetFavoriteResponse>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/userquizsetfavorite',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late CreateUserQuizSetFavoriteResponse _value;
+    try {
+      _value = CreateUserQuizSetFavoriteResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
