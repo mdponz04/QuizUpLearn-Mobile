@@ -313,6 +313,8 @@ class PlayerGameRoomControllerV2 extends GetxController {
         log('✅ onGameEnded received V2: ${data.toString()}');
       },
       onGameCancelled: (data) {
+        log('✅ onGameCancelled received V2: ${data.toString()}');
+
         // errorMessage.value = 'Game đã bị hủy';
         // gamePhase.value = 'error';
       },

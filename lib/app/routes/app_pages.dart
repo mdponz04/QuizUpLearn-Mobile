@@ -25,6 +25,8 @@ import '../modules/tab-home/bindings/tab_home_binding.dart';
 import '../modules/tab-home/views/tab_home_view.dart';
 import '../modules/explore-quiz/bindings/explore_quiz_binding.dart';
 import '../modules/explore-quiz/views/explore_quiz_view.dart';
+import '../modules/explore-quiz/bindings/favorite_quiz_binding.dart';
+import '../modules/explore-quiz/views/favorite_quiz_view.dart';
 import '../modules/placement-tests/bindings/placement_tests_binding.dart';
 import '../modules/placement-tests/views/placement_tests_view.dart';
 import '../modules/single-mode/bindings/single_mode_binding.dart';
@@ -157,6 +159,11 @@ class AppPages {
       name: _Paths.QUIZ_DETAIL,
       page: () => const QuizDetailView(),
       binding: QuizDetailBinding(),
+    ),
+    GetPage(
+      name: _Paths.FAVORITE_QUIZZES,
+      page: () => const FavoriteQuizView(),
+      binding: FavoriteQuizBinding(),
     ),
     GetPage(
       name: _Paths.DASHBOARD_DETAIL,

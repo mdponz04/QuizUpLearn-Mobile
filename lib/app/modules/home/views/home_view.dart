@@ -243,9 +243,9 @@ class HomeView extends GetView<HomeController> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAIGenerateDialog(context),
-        backgroundColor: ColorsManager.primary,
-        child: const Icon(Icons.add, color: Colors.white),
+        onPressed: () => Get.toNamed('/favorite-quizzes'),
+        backgroundColor: Colors.red,
+        child: const Icon(Icons.favorite, color: Colors.white),
       ),
     );
   }
