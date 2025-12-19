@@ -188,11 +188,9 @@ class FavoriteQuizView extends GetView<FavoriteQuizController> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () async {
-            final result = await Get.toNamed('/quiz-detail', arguments: quizSet.id);
-            // If favorite was changed, reload favorites
-            if (result == true) {
-              controller.loadFavorites();
-            }
+            await Get.toNamed('/quiz-detail', arguments: quizSet.id);
+            // Always reload favorites when back from detail
+            controller.loadFavorites();
           },
           borderRadius: BorderRadius.circular(16),
           child: Padding(
@@ -321,11 +319,9 @@ class FavoriteQuizView extends GetView<FavoriteQuizController> {
                     // Chi tiết Button
                     GestureDetector(
                       onTap: () async {
-                        final result = await Get.toNamed('/quiz-detail', arguments: quizSet.id);
-                        // If favorite was changed, reload favorites
-                        if (result == true) {
-                          controller.loadFavorites();
-                        }
+                        await Get.toNamed('/quiz-detail', arguments: quizSet.id);
+                        // Always reload favorites when back from detail
+                        controller.loadFavorites();
                       },
                       child: Container(
                         padding: EdgeInsets.symmetric(

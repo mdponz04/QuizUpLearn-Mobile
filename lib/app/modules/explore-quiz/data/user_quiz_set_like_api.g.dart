@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'user_quiz_set_favorite_api.dart';
+part of 'user_quiz_set_like_api.dart';
 
 // **************************************************************************
 // RetrofitGenerator
@@ -8,8 +8,8 @@ part of 'user_quiz_set_favorite_api.dart';
 
 // ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers,unused_element,unnecessary_string_interpolations,unused_element_parameter
 
-class _UserQuizSetFavoriteApi implements UserQuizSetFavoriteApi {
-  _UserQuizSetFavoriteApi(this._dio, {this.baseUrl, this.errorLogger});
+class _UserQuizSetLikeApi implements UserQuizSetLikeApi {
+  _UserQuizSetLikeApi(this._dio, {this.baseUrl, this.errorLogger});
 
   final Dio _dio;
 
@@ -18,7 +18,7 @@ class _UserQuizSetFavoriteApi implements UserQuizSetFavoriteApi {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<UserQuizSetFavoriteResponse> getUserFavorites(
+  Future<UserQuizSetLikeResponse> getUserLikes(
     String userId,
     bool includeDeleted,
     Map<String, dynamic> body,
@@ -31,20 +31,20 @@ class _UserQuizSetFavoriteApi implements UserQuizSetFavoriteApi {
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(body);
-    final _options = _setStreamType<UserQuizSetFavoriteResponse>(
+    final _options = _setStreamType<UserQuizSetLikeResponse>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/userquizsetfavorite/user/search',
+            '/userquizsetlike/user/search',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late UserQuizSetFavoriteResponse _value;
+    late UserQuizSetLikeResponse _value;
     try {
-      _value = UserQuizSetFavoriteResponse.fromJson(_result.data!);
+      _value = UserQuizSetLikeResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -53,28 +53,52 @@ class _UserQuizSetFavoriteApi implements UserQuizSetFavoriteApi {
   }
 
   @override
-  Future<ToggleFavoriteResponse> toggleFavorite(
-    String quizSetId,
-    String userId,
-  ) async {
+  Future<ToggleLikeResponse> toggleLike(String quizSetId, String userId) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'userId': userId};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<ToggleFavoriteResponse>(
+    final _options = _setStreamType<ToggleLikeResponse>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/userquizsetfavorite/toggle-favorite/quiz-set-id/${quizSetId}',
+            '/userquizsetlike/toggle-like/quiz-set-id/${quizSetId}',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late ToggleFavoriteResponse _value;
+    late ToggleLikeResponse _value;
     try {
-      _value = ToggleFavoriteResponse.fromJson(_result.data!);
+      _value = ToggleLikeResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<CountLikeResponse> getLikeCount(String quizSetId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<CountLikeResponse>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/userquizsetlike/count/quizset/${quizSetId}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late CountLikeResponse _value;
+    try {
+      _value = CountLikeResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;

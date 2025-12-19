@@ -11,6 +11,8 @@ import '../../tab-home/controllers/tab_home_controller.dart';
 import '../../explore-quiz/models/quiz_set_model.dart';
 import '../../home/models/subscription_plan_model.dart';
 import '../widgets/event_tab_widget.dart';
+import '../../explore-quiz/views/favorite_quiz_view.dart';
+import '../../explore-quiz/controllers/favorite_quiz_controller.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -133,121 +135,12 @@ class HomeView extends GetView<HomeController> {
 
 
   Widget _buildMyQuizTab(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: TextConstant.titleH2(
-          context,
-          text: "Quiz của tôi",
-          color: ColorsManager.primary,
-          fontWeight: FontWeight.bold,
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: () => Get.toNamed('/quiz-history'),
-            icon: Icon(
-              Icons.history,
-              color: ColorsManager.primary,
-            ),
-            tooltip: 'History',
-          ),
-          // IconButton(
-          //   onPressed: () => controller.viewTournament(),
-          //   icon: Icon(
-          //     Icons.emoji_events,
-          //     color: ColorsManager.primary,
-          //   ),
-          //   tooltip: 'Tournament',
-          // ),
-          IconButton(
-            onPressed: () => _showAIGenerateDialog(context),
-            icon: Icon(
-              Icons.auto_awesome,
-              color: ColorsManager.primary,
-            ),
-            tooltip: 'AI Generate Quiz',
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Active Subscription Info (if exists)
-            Obx(() {
-              if (controller.isLoadingSubscription.value) {
-                return _buildSubscriptionLoadingState(context);
-              }
-              
-              if (controller.userSubscription.value != null && 
-                  controller.userSubscription.value!.isActive) {
-                return Column(
-                  children: [
-                    _buildActiveSubscriptionInfo(context),
-                  ],
-                );
-              }
-              
-              return SizedBox.shrink();
-            }),
-            
-            // Subscription Plans Carousel
-            Obx(() {
-              final hasActiveSubscription = controller.userSubscription.value != null && 
-                  controller.userSubscription.value!.isActive;
-              
-              // Nếu có active subscription, chỉ hiển thị khi showPlansCarousel = true
-              if (hasActiveSubscription && !controller.showPlansCarousel.value) {
-                return _buildViewPlansButton(context);
-              }
-              
-              if (controller.isLoadingPlans.value) {
-                return Container(
-                  height: UtilsReponsive.height(200, context),
-                  padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: ColorsManager.primary,
-                    ),
-                  ),
-                );
-              }
-              
-              if (controller.subscriptionPlans.isEmpty) {
-                return SizedBox.shrink();
-              }
-              
-              return _buildSubscriptionPlansCarousel(context);
-            }),
-            
-            SizedBox(height: UtilsReponsive.height(24, context)),
-            
-            // My Quiz List
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: UtilsReponsive.width(16, context)),
-              child: Obx(() {
-                if (controller.isLoadingMyQuiz.value) {
-                  return _buildMyQuizLoadingState(context);
-                }
-                
-                if (controller.myQuizSets.isEmpty) {
-                  return _buildMyQuizEmptyState(context);
-                }
-                
-                return _buildMyQuizList(context);
-              }),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Get.toNamed('/favorite-quizzes'),
-        backgroundColor: Colors.red,
-        child: const Icon(Icons.favorite, color: Colors.white),
-      ),
-    );
+    // Initialize FavoriteQuizController if not already initialized
+    if (!Get.isRegistered<FavoriteQuizController>()) {
+      Get.put(FavoriteQuizController());
+    }
+    // Use FavoriteQuizView instead of my-quiz list
+    return const FavoriteQuizView();
   }
 
   Widget _buildMyQuizLoadingState(BuildContext context) {

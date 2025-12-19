@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/user_quiz_set_favorite_response.dart';
-import 'package:quizkahoot/app/modules/explore-quiz/models/create_user_quiz_set_favorite_response.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/models/toggle_favorite_response.dart';
 import 'package:retrofit/retrofit.dart';
 
 part 'user_quiz_set_favorite_api.g.dart';
@@ -16,9 +16,10 @@ abstract class UserQuizSetFavoriteApi {
     @Body() Map<String, dynamic> body,
   );
 
-  @POST('/userquizsetfavorite')
-  Future<CreateUserQuizSetFavoriteResponse> createFavorite(
-    @Body() Map<String, dynamic> body,
+  @POST('/userquizsetfavorite/toggle-favorite/quiz-set-id/{quizSetId}')
+  Future<ToggleFavoriteResponse> toggleFavorite(
+    @Path('quizSetId') String quizSetId,
+    @Query('userId') String userId,
   );
 }
 

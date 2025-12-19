@@ -173,18 +173,16 @@ class HomeController extends GetxController {
       duration: const Duration(milliseconds: 300),
       curve: Curves.ease,
     );
-    // Load My Quiz and check subscription when switching to My Quiz tab
+    // Check subscription when switching to My Quiz tab (no longer load my quiz)
     if (index == 1) {
-      loadMyQuizSets();
       checkUserSubscription();
     }
   }
 
   void onPageChanged(int index) {
     currentIndex.value = index;
-    // Load My Quiz and check subscription when switching to My Quiz tab
+    // Check subscription when switching to My Quiz tab (no longer load my quiz)
     if (index == 1) {
-      loadMyQuizSets();
       checkUserSubscription();
     }
   }

@@ -10,7 +10,8 @@ import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_comment_api.da
 import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_comment_service.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/user_quiz_set_favorite_api.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/user_quiz_set_favorite_service.dart';
-import 'package:quizkahoot/app/modules/explore-quiz/models/create_user_quiz_set_favorite_request.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/data/user_quiz_set_like_api.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/data/user_quiz_set_like_service.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_set_model.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_model.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_set_comment_model.dart';
@@ -34,6 +35,7 @@ class QuizDetailController extends GetxController {
   late QuizSetService quizSetService;
   late QuizSetCommentService quizSetCommentService;
   late UserQuizSetFavoriteService favoriteService;
+  late UserQuizSetLikeService likeService;
   late GameService gameService;
   late OneVsOneRoomService oneVsOneRoomService;
   
@@ -42,6 +44,7 @@ class QuizDetailController extends GetxController {
   var isLoadingComments = false.obs;
   var isCreatingComment = false.obs;
   var isTogglingFavorite = false.obs;
+  var isTogglingLike = false.obs;
   var isLoadingGame = false.obs;
   var isUpdating = false.obs;
   var quizSet = Rxn<QuizSetModel>();
@@ -51,6 +54,9 @@ class QuizDetailController extends GetxController {
   var hasUpdated = false.obs; // Track if quiz was updated
   var isFavorite = false.obs; // Track if current quiz is favorite
   var isFavoriteChanged = false.obs; // Track if favorite was changed
+  var isLiked = false.obs; // Track if current quiz is liked
+  var likeCount = 0.obs; // Track like count
+  var isLoadingLikeCount = false.obs; // Track loading state for like count
   
   // Check if current user owns this quiz set
   bool get isOwner {
@@ -65,6 +71,7 @@ class QuizDetailController extends GetxController {
     _initializeDio();
     _initializeCommentService();
     _initializeFavoriteService();
+    _initializeLikeService();
     _initializeGameService();
     _initializeOneVsOneRoomService();
     
@@ -77,6 +84,8 @@ class QuizDetailController extends GetxController {
       loadQuizSetDetail(quizSetId);
       loadComments(quizSetId);
       checkFavorite(quizSetId);
+      checkLike(quizSetId);
+      loadLikeCount(quizSetId);
     }
   }
 
@@ -99,6 +108,14 @@ class QuizDetailController extends GetxController {
     dio.interceptors.add(DioIntercepTorCustom());
     favoriteService = UserQuizSetFavoriteService(
       userQuizSetFavoriteApi: UserQuizSetFavoriteApi(dio, baseUrl: baseUrl),
+    );
+  }
+
+  void _initializeLikeService() {
+    Dio dio = Dio();
+    dio.interceptors.add(DioIntercepTorCustom());
+    likeService = UserQuizSetLikeService(
+      userQuizSetLikeApi: UserQuizSetLikeApi(dio, baseUrl: baseUrl),
     );
   }
 
@@ -827,6 +844,30 @@ class QuizDetailController extends GetxController {
     }
   }
 
+  Future<void> checkLike(String quizSetId) async {
+    try {
+      final userId = BaseCommon.instance.userId;
+      if (userId.isEmpty) {
+        isLiked.value = false;
+        return;
+      }
+
+      final response = await likeService.getUserLikes(userId);
+      
+      if (response.isSuccess && response.data != null) {
+        final likeIds = response.data!
+            .map((like) => like.quizSetId)
+            .toSet();
+        isLiked.value = likeIds.contains(quizSetId);
+      } else {
+        isLiked.value = false;
+      }
+    } catch (e) {
+      log("Error checking like: $e");
+      isLiked.value = false;
+    }
+  }
+
   Future<void> toggleFavorite() async {
     if (quizSet.value == null) return;
     
@@ -843,24 +884,17 @@ class QuizDetailController extends GetxController {
 
     try {
       isTogglingFavorite.value = true;
-      
-      final request = CreateUserQuizSetFavoriteRequest(
-        userId: userId,
-        quizSetId: quizSet.value!.id,
-      );
 
-      final response = await favoriteService.createFavorite(request);
+      final response = await favoriteService.toggleFavorite(
+        quizSet.value!.id,
+        userId,
+      );
       isTogglingFavorite.value = false;
 
       if (response.isSuccess) {
-        // Toggle favorite state
-        final previousState = isFavorite.value;
+        // Toggle state (đảo ngược state hiện tại) vì BE đang lỗi và luôn trả về true
         isFavorite.value = !isFavorite.value;
-        
-        // Mark as changed if state actually changed
-        if (previousState != isFavorite.value) {
-          isFavoriteChanged.value = true;
-        }
+        isFavoriteChanged.value = true;
         
         Get.snackbar(
           'Thành công',
@@ -887,6 +921,92 @@ class QuizDetailController extends GetxController {
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
+    }
+  }
+
+  Future<void> toggleLike() async {
+    if (quizSet.value == null) return;
+    
+    final userId = BaseCommon.instance.userId;
+    if (userId.isEmpty) {
+      Get.snackbar(
+        'Lỗi',
+        'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    try {
+      isTogglingLike.value = true;
+
+      final response = await likeService.toggleLike(
+        quizSet.value!.id,
+        userId,
+      );
+      isTogglingLike.value = false;
+
+      if (response.isSuccess) {
+        // Toggle state (đảo ngược state hiện tại) vì BE đang lỗi và luôn trả về true
+        final wasLiked = isLiked.value;
+        isLiked.value = !isLiked.value;
+        
+        // Update like count based on toggle
+        if (wasLiked) {
+          // Unliked, decrease count
+          if (likeCount.value > 0) {
+            likeCount.value--;
+          }
+        } else {
+          // Liked, increase count
+          likeCount.value++;
+        }
+        
+        Get.snackbar(
+          'Thành công',
+          isLiked.value 
+              ? 'Đã thích quiz' 
+              : 'Đã bỏ thích quiz',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        Get.snackbar(
+          'Lỗi',
+          response.message,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      isTogglingLike.value = false;
+      log('Error toggling like: $e');
+      Get.snackbar(
+        'Lỗi',
+        'Đã xảy ra lỗi khi cập nhật like',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> loadLikeCount(String quizSetId) async {
+    try {
+      isLoadingLikeCount.value = true;
+      final response = await likeService.getLikeCount(quizSetId);
+      isLoadingLikeCount.value = false;
+
+      if (response.isSuccess && response.data != null) {
+        likeCount.value = response.data!;
+      } else {
+        log("Failed to load like count: ${response.message}");
+        likeCount.value = 0;
+      }
+    } catch (e) {
+      isLoadingLikeCount.value = false;
+      log('Error loading like count: $e');
+      likeCount.value = 0;
     }
   }
 }

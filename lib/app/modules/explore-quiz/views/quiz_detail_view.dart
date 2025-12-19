@@ -298,70 +298,46 @@ class _QuizDetailViewState extends State<QuizDetailView> with SingleTickerProvid
             ],
           ),
           SizedBox(height: UtilsReponsive.height(16, context)),
-          Row(
+          // Like Count and Like Button
+          Obx(() => Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildStatItem(
+              // Like Count
+              TextConstant.subTile2(
                 context,
-                Icons.quiz,
-                "${quizSet.totalQuestions} câu hỏi",
-                Colors.blue,
+                text: '${controller.likeCount.value} lượt thích',
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
               ),
-              SizedBox(width: UtilsReponsive.width(12, context)),
-              _buildStatItem(
-                context,
-                Icons.timer,
-                quizSet.formattedTimeLimit,
-                Colors.orange,
-              ),
-              SizedBox(width: UtilsReponsive.width(12, context)),
-              _buildStatItem(
-                context,
-                Icons.trending_up,
-                quizSet.difficultyColor,
-                quizSet.difficultyColorValue,
+              SizedBox(width: UtilsReponsive.width(16, context)),
+              // Like Icon Button
+              IconButton(
+                onPressed: controller.isTogglingLike.value ? null : controller.toggleLike,
+                icon: controller.isTogglingLike.value
+                    ? SizedBox(
+                        width: UtilsReponsive.height(20, context),
+                        height: UtilsReponsive.height(20, context),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(ColorsManager.primary),
+                        ),
+                      )
+                    : Icon(
+                        controller.isLiked.value ? Icons.thumb_up : Icons.thumb_up_outlined,
+                        color: controller.isLiked.value 
+                            ? ColorsManager.primary 
+                            : Colors.grey[600],
+                        size: UtilsReponsive.height(28, context),
+                      ),
+                tooltip: controller.isLiked.value ? 'Bỏ thích' : 'Thích',
               ),
             ],
-          ),
+          )),
         ],
       ),
     );
   }
 
-  Widget _buildStatItem(
-    BuildContext context,
-    IconData icon,
-    String text,
-    Color color,
-  ) {
-    return Expanded(
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: UtilsReponsive.width(8, context),
-          vertical: UtilsReponsive.height(8, context),
-        ),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: UtilsReponsive.height(16, context)),
-            SizedBox(width: UtilsReponsive.width(4, context)),
-            Flexible(
-              child: TextConstant.subTile3(
-                context,
-                text: text,
-                color: color,
-                fontWeight: FontWeight.w600,
-                size: 11,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildQuestionCard(
     BuildContext context,

@@ -4,7 +4,6 @@ import 'package:dio/dio.dart';
 import 'package:quizkahoot/app/data/base_response.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/user_quiz_set_favorite_api.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/user_quiz_set_favorite_model.dart';
-import 'package:quizkahoot/app/modules/explore-quiz/models/create_user_quiz_set_favorite_request.dart';
 
 class UserQuizSetFavoriteService {
   UserQuizSetFavoriteService({required this.userQuizSetFavoriteApi});
@@ -40,25 +39,25 @@ class UserQuizSetFavoriteService {
     }
   }
 
-  Future<BaseResponse<void>> createFavorite(CreateUserQuizSetFavoriteRequest request) async {
+  Future<BaseResponse<bool>> toggleFavorite(String quizSetId, String userId) async {
     try {
-      final response = await userQuizSetFavoriteApi.createFavorite(request.toJson());
-      log("Create favorite response: ${response.toString()}");
+      final response = await userQuizSetFavoriteApi.toggleFavorite(quizSetId, userId);
+      log("Toggle favorite response: ${response.toString()}");
       
-      if (response.success) {
+      if (response.success && response.data != null) {
         return BaseResponse(
           isSuccess: true,
-          message: response.message?.toString() ?? 'Favorite added successfully',
-          data: null,
+          message: response.message?.toString() ?? 'Success',
+          data: response.data!,
         );
       } else {
         return BaseResponse.error(
-          response.message?.toString() ?? 'Failed to add favorite',
+          response.message?.toString() ?? 'Failed to toggle favorite',
         );
       }
     } on DioException catch (e) {
       return BaseResponse.error(
-        e.response?.data['message']?.toString() ?? 'An error occurred while adding favorite',
+        e.response?.data['message']?.toString() ?? 'An error occurred while toggling favorite',
       );
     }
   }
