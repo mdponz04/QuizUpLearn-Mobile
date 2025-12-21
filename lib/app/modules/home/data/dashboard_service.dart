@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:dio/dio.dart';
@@ -62,14 +63,15 @@ class DashboardService {
 
   Future<BaseResponse<int>> getMistakeQuizzesCount() async {
     try {
-      final response = await dashboardApi.getMistakeQuizzes(1, 100);
-      log("Mistake quizzes response: ${response.toString()}");
+      final response = await dashboardApi.getMistakeQuizzes(1, 1); // Only need pagination info, so pageSize = 1
+      log("Mistake quizzes response 2: ${jsonEncode(response)}");
       
-      final count = response.count;
+      // Use totalCount from pagination instead of count from data
+      final totalCount = response.totalCount;
       return BaseResponse(
         isSuccess: true,
         message: 'Success',
-        data: count,
+        data: totalCount,
       );
     } on DioException catch (e) {
       log("Error getting mistake quizzes count: ${e.toString()}");

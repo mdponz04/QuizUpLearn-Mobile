@@ -2,6 +2,8 @@
 
 part of 'subscription_plan_api.dart';
 
+// dart format off
+
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -98,3 +100,5 @@ class _SubscriptionPlanApi implements SubscriptionPlanApi {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
+
+// dart format on

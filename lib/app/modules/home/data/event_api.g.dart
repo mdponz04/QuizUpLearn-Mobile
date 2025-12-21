@@ -2,6 +2,8 @@
 
 part of 'event_api.dart';
 
+// dart format off
+
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -152,3 +154,5 @@ class _EventApi implements EventApi {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
+
+// dart format on

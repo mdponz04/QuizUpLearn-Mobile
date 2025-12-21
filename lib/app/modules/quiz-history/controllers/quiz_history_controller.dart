@@ -38,7 +38,7 @@ class QuizHistoryController extends GetxController {
       
       final userId = BaseCommon.instance.userId;
       if (userId.isEmpty) {
-        errorMessage.value = 'User ID not found. Please login again.';
+        errorMessage.value = 'Không tìm thấy ID người dùng. Vui lòng đăng nhập lại.';
         isLoading.value = false;
         return;
       }
@@ -51,7 +51,7 @@ class QuizHistoryController extends GetxController {
       } else {
         errorMessage.value = response.message;
         Get.snackbar(
-          'Error',
+          'Lỗi',
           response.message,
           backgroundColor: Get.theme.colorScheme.error,
           colorText: Get.theme.colorScheme.onError,
@@ -59,10 +59,10 @@ class QuizHistoryController extends GetxController {
       }
     } catch (e) {
       log("Error loading history: $e");
-      errorMessage.value = 'Failed to load history. Please try again.';
+      errorMessage.value = 'Không thể tải lịch sử. Vui lòng thử lại.';
       Get.snackbar(
-        'Error',
-        'Failed to load history. Please try again.',
+        'Lỗi',
+        'Không thể tải lịch sử. Vui lòng thử lại.',
         backgroundColor: Get.theme.colorScheme.error,
         colorText: Get.theme.colorScheme.onError,
       );
@@ -82,11 +82,11 @@ class QuizHistoryController extends GetxController {
   String getAttemptTypeText(String attemptType) {
     switch (attemptType.toLowerCase()) {
       case 'single':
-        return 'Single Mode';
+        return 'Chế độ đơn';
       case 'multi':
-        return 'Multiplayer';
+        return 'Nhiều người chơi';
       case 'room':
-        return 'Room Game';
+        return 'Trò chơi phòng';
       default:
         return attemptType;
     }

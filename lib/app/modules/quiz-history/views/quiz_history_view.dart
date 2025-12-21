@@ -14,7 +14,7 @@ class QuizHistoryView extends GetView<QuizHistoryController> {
       appBar: AppBar(
         title: TextConstant.titleH2(
           context,
-          text: "History",
+          text: "Lịch sử",
           color: ColorsManager.primary,
           fontWeight: FontWeight.bold,
         ),
@@ -64,7 +64,7 @@ class QuizHistoryView extends GetView<QuizHistoryController> {
           SizedBox(height: UtilsReponsive.height(16, context)),
           TextConstant.subTile1(
             context,
-            text: "Loading history...",
+            text: "Đang tải lịch sử...",
             color: Colors.grey[600]!,
           ),
         ],
@@ -87,7 +87,7 @@ class QuizHistoryView extends GetView<QuizHistoryController> {
             SizedBox(height: UtilsReponsive.height(16, context)),
             TextConstant.titleH3(
               context,
-              text: "Error",
+              text: "Lỗi",
               color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
@@ -110,7 +110,7 @@ class QuizHistoryView extends GetView<QuizHistoryController> {
               ),
               child: TextConstant.subTile1(
                 context,
-                text: "Retry",
+                text: "Thử lại",
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
@@ -136,14 +136,14 @@ class QuizHistoryView extends GetView<QuizHistoryController> {
             SizedBox(height: UtilsReponsive.height(16, context)),
             TextConstant.titleH3(
               context,
-              text: "No History",
+              text: "Chưa có lịch sử",
               color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
             SizedBox(height: UtilsReponsive.height(8, context)),
             TextConstant.subTile2(
               context,
-              text: "You haven't completed any quizzes yet.",
+              text: "Bạn chưa hoàn thành bài quiz nào.",
               color: Colors.grey[600]!,
               textAlign: TextAlign.center,
             ),
@@ -182,6 +182,7 @@ class QuizHistoryView extends GetView<QuizHistoryController> {
           parameters: {
             'attemptId': history.id,
             'quizSetId': history.quizSetId,
+            'attemptType': history.attemptType,
           },
         );
       },
@@ -263,7 +264,7 @@ class QuizHistoryView extends GetView<QuizHistoryController> {
                 Expanded(
                   child: _buildStatItem(
                     context,
-                    "Score",
+                    "Điểm",
                     history.score.toString(),
                     Icons.star,
                     Colors.amber,
@@ -273,7 +274,7 @@ class QuizHistoryView extends GetView<QuizHistoryController> {
                 Expanded(
                   child: _buildStatItem(
                     context,
-                    "Correct",
+                    "Đúng",
                     "${history.correctAnswers}/${history.totalQuestions}",
                     Icons.check_circle,
                     Colors.green,
@@ -283,7 +284,7 @@ class QuizHistoryView extends GetView<QuizHistoryController> {
                 Expanded(
                   child: _buildStatItem(
                     context,
-                    "Wrong",
+                    "Sai",
                     history.wrongAnswers.toString(),
                     Icons.cancel,
                     Colors.red,
@@ -304,7 +305,7 @@ class QuizHistoryView extends GetView<QuizHistoryController> {
                   SizedBox(width: UtilsReponsive.width(4, context)),
                   TextConstant.subTile3(
                     context,
-                    text: "Time: ${_formatTime(history.timeSpent!)}",
+                    text: "Thời gian: ${_formatTime(history.timeSpent!)}",
                     color: Colors.grey[600]!,
                     size: 11,
                   ),

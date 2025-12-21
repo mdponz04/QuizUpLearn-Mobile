@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'quiz_set_comment_api.dart';
+part of 'quiz_report_api.dart';
 
 // dart format off
 
@@ -10,8 +10,8 @@ part of 'quiz_set_comment_api.dart';
 
 // ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers,unused_element,unnecessary_string_interpolations,unused_element_parameter
 
-class _QuizSetCommentApi implements QuizSetCommentApi {
-  _QuizSetCommentApi(this._dio, {this.baseUrl, this.errorLogger});
+class _QuizReportApi implements QuizReportApi {
+  _QuizReportApi(this._dio, {this.baseUrl, this.errorLogger});
 
   final Dio _dio;
 
@@ -20,66 +20,24 @@ class _QuizSetCommentApi implements QuizSetCommentApi {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<QuizSetCommentResponse> getQuizSetComments(
-    String id,
-    bool includeDeleted,
-    Map<String, dynamic> body,
-  ) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{
-      r'includeDeleted': includeDeleted,
-    };
-    final _headers = <String, dynamic>{};
-    final _data = <String, dynamic>{};
-    _data.addAll(body);
-    final _options = _setStreamType<QuizSetCommentResponse>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/quizsetcomment/quizset/${id}/search',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late QuizSetCommentResponse _value;
-    try {
-      _value = QuizSetCommentResponse.fromJson(_result.data!);
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
-      rethrow;
-    }
-    return _value;
-  }
-
-  @override
-  Future<CreateQuizSetCommentResponse> createComment(
-    Map<String, dynamic> body,
-  ) async {
+  Future<dynamic> reportQuiz(Map<String, dynamic> body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(body);
-    final _options = _setStreamType<CreateQuizSetCommentResponse>(
+    final _options = _setStreamType<dynamic>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/quizsetcomment',
+            '/quizreport',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late CreateQuizSetCommentResponse _value;
-    try {
-      _value = CreateQuizSetCommentResponse.fromJson(_result.data!);
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
-      rethrow;
-    }
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
     return _value;
   }
 

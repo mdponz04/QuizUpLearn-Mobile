@@ -2,6 +2,8 @@
 
 part of 'tournament_api.dart';
 
+// dart format off
+
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -189,3 +191,5 @@ class _TournamentApi implements TournamentApi {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
+
+// dart format on

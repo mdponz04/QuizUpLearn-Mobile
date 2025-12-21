@@ -22,6 +22,7 @@ class QuizHistoryDetailController extends GetxController {
   // Data
   var quizSet = Rxn<QuizSetModel>();
   var attemptDetails = <QuizAttemptDetailModel>[].obs;
+  var attemptType = ''.obs; // Store attemptType
   
   // Combined data for display
   var quizWithAnswers = <QuizWithAnswer>[].obs;
@@ -34,11 +35,13 @@ class QuizHistoryDetailController extends GetxController {
     // Get parameters from route
     final attemptId = Get.parameters['attemptId'];
     final quizSetId = Get.parameters['quizSetId'];
+    final attemptTypeParam = Get.parameters['attemptType'];
     
     if (attemptId != null && quizSetId != null) {
+      attemptType.value = attemptTypeParam ?? '';
       loadDetail(attemptId, quizSetId);
     } else {
-      errorMessage.value = 'Missing required parameters';
+      errorMessage.value = 'Thiếu tham số bắt buộc';
     }
   }
 
@@ -87,10 +90,10 @@ class QuizHistoryDetailController extends GetxController {
       log('Loaded ${attemptDetails.length} attempt details and ${quizSet.value?.quizzes.length ?? 0} quizzes');
     } catch (e) {
       log("Error loading detail: $e");
-      errorMessage.value = 'Failed to load detail. Please try again.';
+      errorMessage.value = 'Không thể tải chi tiết. Vui lòng thử lại.';
       Get.snackbar(
-        'Error',
-        'Failed to load detail. Please try again.',
+        'Lỗi',
+        'Không thể tải chi tiết. Vui lòng thử lại.',
         backgroundColor: Get.theme.colorScheme.error,
         colorText: Get.theme.colorScheme.onError,
       );

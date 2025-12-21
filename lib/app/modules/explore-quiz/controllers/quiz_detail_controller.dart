@@ -12,6 +12,8 @@ import 'package:quizkahoot/app/modules/explore-quiz/data/user_quiz_set_favorite_
 import 'package:quizkahoot/app/modules/explore-quiz/data/user_quiz_set_favorite_service.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/user_quiz_set_like_api.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/user_quiz_set_like_service.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_report_api.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_report_service.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_set_model.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_model.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_set_comment_model.dart';
@@ -38,6 +40,7 @@ class QuizDetailController extends GetxController {
   late UserQuizSetLikeService likeService;
   late GameService gameService;
   late OneVsOneRoomService oneVsOneRoomService;
+  late QuizReportService quizReportService;
   
   // Observable variables
   var isLoading = false.obs;
@@ -47,6 +50,7 @@ class QuizDetailController extends GetxController {
   var isTogglingLike = false.obs;
   var isLoadingGame = false.obs;
   var isUpdating = false.obs;
+  var isSubmittingReport = false.obs;
   var quizSet = Rxn<QuizSetModel>();
   var comments = <QuizSetCommentModel>[].obs;
   var errorMessage = ''.obs;
@@ -74,6 +78,7 @@ class QuizDetailController extends GetxController {
     _initializeLikeService();
     _initializeGameService();
     _initializeOneVsOneRoomService();
+    _initializeQuizReportService();
     
     // Reset update flag when initializing
     hasUpdated.value = false;
@@ -130,6 +135,14 @@ class QuizDetailController extends GetxController {
     dio.interceptors.add(DioIntercepTorCustom());
     oneVsOneRoomService = OneVsOneRoomService(
       oneVsOneRoomApi: OneVsOneRoomApi(dio, baseUrl: baseUrl),
+    );
+  }
+
+  void _initializeQuizReportService() {
+    Dio dio = Dio();
+    dio.interceptors.add(DioIntercepTorCustom());
+    quizReportService = QuizReportService(
+      quizReportApi: QuizReportApi(dio, baseUrl: baseUrl),
     );
   }
 
@@ -1008,6 +1021,214 @@ class QuizDetailController extends GetxController {
       log('Error loading like count: $e');
       likeCount.value = 0;
     }
+  }
+
+  Future<void> reportQuiz(String description) async {
+    if (quizSet.value == null) return;
+    
+    final userId = BaseCommon.instance.userId;
+    if (userId.isEmpty) {
+      Get.snackbar(
+        'Lỗi',
+        'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    if (description.trim().isEmpty) {
+      Get.snackbar(
+        'Lỗi',
+        'Vui lòng nhập mô tả báo cáo',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    try {
+      isSubmittingReport.value = true;
+      
+      // Use quizSetId as quizId (based on API requirement)
+      final response = await quizReportService.reportQuiz(
+        userId: userId,
+        quizId: quizSet.value!.id,
+        description: description.trim(),
+      );
+      
+      isSubmittingReport.value = false;
+
+      if (response.isSuccess) {
+        Get.snackbar(
+          'Thành công',
+          'Đã gửi báo cáo thành công',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        Get.snackbar(
+          'Lỗi',
+          response.message,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      isSubmittingReport.value = false;
+      log('Error reporting quiz: $e');
+      Get.snackbar(
+        'Lỗi',
+        'Đã xảy ra lỗi khi gửi báo cáo',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  void showReportDialog(BuildContext context) {
+    final descriptionController = TextEditingController();
+    
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
+          constraints: BoxConstraints(
+            maxWidth: UtilsReponsive.width(400, context),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Icon(
+                    Icons.report_problem,
+                    color: Colors.red,
+                    size: UtilsReponsive.height(28, context),
+                  ),
+                  SizedBox(width: UtilsReponsive.width(8, context)),
+                  Expanded(
+                    child: TextConstant.titleH2(
+                      context,
+                      text: "Báo cáo Quiz",
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Get.back(),
+                    icon: Icon(
+                      Icons.close,
+                      color: Colors.grey[600],
+                      size: UtilsReponsive.height(20, context),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: UtilsReponsive.height(16, context)),
+              
+              // Description Field
+              TextConstant.subTile1(
+                context,
+                text: "Mô tả vấn đề",
+                color: Colors.black,
+                fontWeight: FontWeight.w600,
+              ),
+              SizedBox(height: UtilsReponsive.height(8, context)),
+              TextField(
+                controller: descriptionController,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: "Nhập mô tả về vấn đề bạn gặp phải...",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+                ),
+              ),
+              SizedBox(height: UtilsReponsive.height(24, context)),
+              
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.grey[300]!),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          vertical: UtilsReponsive.height(12, context),
+                        ),
+                      ),
+                      child: TextConstant.subTile2(
+                        context,
+                        text: "Hủy",
+                        color: Colors.grey[600]!,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: UtilsReponsive.width(12, context)),
+                  Expanded(
+                    flex: 2,
+                    child: Obx(() => ElevatedButton(
+                      onPressed: isSubmittingReport.value
+                          ? null
+                          : () {
+                              final description = descriptionController.text.trim();
+                              if (description.isEmpty) {
+                                Get.snackbar(
+                                  'Lỗi',
+                                  'Vui lòng nhập mô tả báo cáo',
+                                  backgroundColor: Colors.red,
+                                  colorText: Colors.white,
+                                );
+                                return;
+                              }
+                              reportQuiz(description);
+                              Get.back();
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          vertical: UtilsReponsive.height(12, context),
+                        ),
+                      ),
+                      child: isSubmittingReport.value
+                          ? SizedBox(
+                              height: UtilsReponsive.height(20, context),
+                              width: UtilsReponsive.height(20, context),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : TextConstant.subTile2(
+                              context,
+                              text: "Gửi báo cáo",
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                    )),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

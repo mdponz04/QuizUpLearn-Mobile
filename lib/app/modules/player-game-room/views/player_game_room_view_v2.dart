@@ -1287,7 +1287,7 @@ class PlayerGameRoomViewV2 extends StatelessWidget {
                       _buildStatItem(
                         context,
                         label: "Tỷ lệ",
-                        value: "${mvpPlayer['damagePercent'] ?? mvpPlayer['DamagePercent'] ?? 0}%",
+                        value: "${((mvpPlayer['damagePercent'] ?? mvpPlayer['DamagePercent'] ?? 0) as num).toDouble().toStringAsFixed(2)}%",
                       ),
                     ],
                   ),
@@ -1448,7 +1448,7 @@ class PlayerGameRoomViewV2 extends StatelessWidget {
                       ),
                       child: TextConstant.subTile2(
                         context,
-                        text: "$damagePercent%",
+                        text: "${(damagePercent as num).toDouble().toStringAsFixed(2)}%",
                         color: Colors.red,
                         fontWeight: FontWeight.bold,
                         size: 12,

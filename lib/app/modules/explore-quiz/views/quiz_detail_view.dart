@@ -51,6 +51,12 @@ class _QuizDetailViewState extends State<QuizDetailView> with SingleTickerProvid
           },
         ),
         actions: [
+          // Report button
+          IconButton(
+            icon: Icon(Icons.report_problem, color: Colors.red),
+            onPressed: () => controller.showReportDialog(context),
+            tooltip: 'Báo cáo',
+          ),
           // Favorite button
           Obx(() => IconButton(
             icon: Icon(

@@ -2,6 +2,8 @@
 
 part of 'ai_quiz_api.dart';
 
+// dart format off
+
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -75,3 +77,5 @@ class _AIQuizApi implements AIQuizApi {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
+
+// dart format on

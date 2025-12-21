@@ -2,6 +2,8 @@
 
 part of 'user_quiz_set_like_api.dart';
 
+// dart format off
+
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -133,3 +135,5 @@ class _UserQuizSetLikeApi implements UserQuizSetLikeApi {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
+
+// dart format on
