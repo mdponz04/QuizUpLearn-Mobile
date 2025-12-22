@@ -121,6 +121,22 @@ class TabHomeView extends StatelessWidget {
                 ),
               ],
             ),
+
+            SizedBox(height: UtilsReponsive.height(16, context)),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _buildActionCard(
+                    context,
+                    "Lịch sử",
+                    'assets/images/progress.png',
+                    Colors.blue,
+                    tabController.viewQuizHistory,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

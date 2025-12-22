@@ -40,6 +40,7 @@ class SingleModeController extends GetxController {
   final AudioPlayer _audioPlayer = AudioPlayer();
   var isAudioPlaying = false.obs;
   var isAudioLoading = false.obs;
+  var hasAudioPlayed = false.obs; // Track if audio has been played for current question (for placement test)
   
   // User info
   String? userId;
@@ -70,6 +71,10 @@ class SingleModeController extends GetxController {
     // Listen to completion
     _audioPlayer.onPlayerComplete.listen((_) {
       isAudioPlaying.value = false;
+      // Mark audio as played when it completes (for placement test)
+      if (isPlacementTest.value) {
+        hasAudioPlayed.value = true;
+      }
     });
   }
 
@@ -187,6 +192,9 @@ class SingleModeController extends GetxController {
     currentQuestion.value = question;
     selectedAnswer.value = userAnswers[question.id ?? ''] ?? '';
     
+    // Reset audio played flag for new question (for placement test)
+    hasAudioPlayed.value = false;
+    
     // Record question start time
     if (question.id != null) {
       questionStartTimes[question.id!] = DateTime.now();
@@ -205,9 +213,21 @@ class SingleModeController extends GetxController {
       return;
     }
     
+    // For placement test: check if audio has already been played
+    if (isPlacementTest.value && hasAudioPlayed.value) {
+      Get.snackbar(
+        'Thông báo',
+        'Bạn chỉ được phát audio một lần cho câu hỏi này',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+    
     try {
       isAudioLoading.value = true;
       await _audioPlayer.play(UrlSource(audioUrl));
+      // Don't mark as played here - wait until audio completes
     } catch (e) {
       log('Error playing audio: $e');
       isAudioLoading.value = false;
@@ -241,6 +261,17 @@ class SingleModeController extends GetxController {
   }
   
   Future<void> toggleAudio() async {
+    // For placement test: if audio has already completed playing, don't allow toggle
+    if (isPlacementTest.value && hasAudioPlayed.value && !isAudioPlaying.value) {
+      Get.snackbar(
+        'Thông báo',
+        'Bạn chỉ được phát audio một lần cho câu hỏi này',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+    
     if (isAudioPlaying.value) {
       await pauseAudio();
     } else {

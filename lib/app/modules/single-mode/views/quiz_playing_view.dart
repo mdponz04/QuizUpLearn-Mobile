@@ -257,56 +257,72 @@ class QuizPlayingView extends GetView<SingleModeController> {
   }
 
   Widget _buildAudioPlayer(BuildContext context) {
-    return Obx(() => Container(
-      padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
-      decoration: BoxDecoration(
-        color: ColorsManager.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: controller.toggleAudio,
-            child: Container(
-              padding: EdgeInsets.all(UtilsReponsive.width(4, context)),
-              child: controller.isAudioLoading.value
-                  ? SizedBox(
-                      width: UtilsReponsive.height(24, context),
-                      height: UtilsReponsive.height(24, context),
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: ColorsManager.primary,
+    return Obx(() {
+      // For placement test: check if audio has been played and is not currently playing
+      final isPlacementTest = controller.isPlacementTest.value;
+      final hasAudioPlayed = controller.hasAudioPlayed.value;
+      final isAudioPlaying = controller.isAudioPlaying.value;
+      final isDisabled = isPlacementTest && hasAudioPlayed && !isAudioPlaying;
+      
+      return Container(
+        padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+        decoration: BoxDecoration(
+          color: isDisabled 
+              ? Colors.grey.withOpacity(0.1)
+              : ColorsManager.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: isDisabled ? null : controller.toggleAudio,
+              child: Container(
+                padding: EdgeInsets.all(UtilsReponsive.width(4, context)),
+                child: controller.isAudioLoading.value
+                    ? SizedBox(
+                        width: UtilsReponsive.height(24, context),
+                        height: UtilsReponsive.height(24, context),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: ColorsManager.primary,
+                        ),
+                      )
+                    : Icon(
+                        isAudioPlaying
+                            ? Icons.pause_circle_filled
+                            : Icons.play_circle_filled,
+                        color: isDisabled 
+                            ? Colors.grey[400]
+                            : ColorsManager.primary,
+                        size: UtilsReponsive.height(32, context),
                       ),
-                    )
-                  : Icon(
-                      controller.isAudioPlaying.value
-                          ? Icons.pause_circle_filled
-                          : Icons.play_circle_filled,
-                      color: ColorsManager.primary,
-                      size: UtilsReponsive.height(32, context),
-                    ),
+              ),
             ),
-          ),
-          SizedBox(width: UtilsReponsive.width(12, context)),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextConstant.subTile3(
-                  context,
-                  text: controller.isAudioPlaying.value
-                      ? "Playing audio..."
-                      : "Tap to play audio",
-                  color: ColorsManager.primary,
-                  fontWeight: FontWeight.w600,
-                  size: 12,
-                ),
-              ],
+            SizedBox(width: UtilsReponsive.width(12, context)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextConstant.subTile3(
+                    context,
+                    text: isAudioPlaying
+                        ? "Đang phát audio..."
+                        : isDisabled
+                            ? "Đã phát audio (chỉ được phát 1 lần)"
+                            : "Nhấn để phát audio",
+                    color: isDisabled 
+                        ? Colors.grey[600]!
+                        : ColorsManager.primary,
+                    fontWeight: FontWeight.w600,
+                    size: 12,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-    ));
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildImage(BuildContext context) {
@@ -376,11 +392,18 @@ class QuizPlayingView extends GetView<SingleModeController> {
           size: 16,
         ),
         SizedBox(height: UtilsReponsive.height(16, context)),
-        Obx(() => Column(
-          children: controller.currentQuestion.value?.answerOptions
-              ?.map((option) => _buildAnswerOption(context, option))
-              .toList() ?? [],
-        )),
+        Obx(() {
+          final options = controller.currentQuestion.value?.answerOptions ?? [];
+          // Sort options by orderIndex to ensure correct order
+          final sortedOptions = List<AnswerOption>.from(options)
+            ..sort((a, b) => (a.orderIndex ?? 0).compareTo(b.orderIndex ?? 0));
+          
+          return Column(
+            children: sortedOptions
+                .map((option) => _buildAnswerOption(context, option))
+                .toList(),
+          );
+        }),
       ],
     );
   }

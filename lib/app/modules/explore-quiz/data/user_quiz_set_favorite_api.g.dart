@@ -2,6 +2,8 @@
 
 part of 'user_quiz_set_favorite_api.dart';
 
+// dart format off
+
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -109,3 +111,5 @@ class _UserQuizSetFavoriteApi implements UserQuizSetFavoriteApi {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
+
+// dart format on

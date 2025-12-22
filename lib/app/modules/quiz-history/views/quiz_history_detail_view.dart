@@ -14,7 +14,7 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
       appBar: AppBar(
         title: TextConstant.titleH2(
           context,
-          text: "Quiz Details",
+          text: "Chi tiết Quiz",
           color: ColorsManager.primary,
           fontWeight: FontWeight.bold,
         ),
@@ -55,7 +55,7 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
           SizedBox(height: UtilsReponsive.height(16, context)),
           TextConstant.subTile1(
             context,
-            text: "Loading quiz details...",
+            text: "Đang tải chi tiết quiz...",
             color: Colors.grey[600]!,
           ),
         ],
@@ -78,7 +78,7 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
             SizedBox(height: UtilsReponsive.height(16, context)),
             TextConstant.titleH3(
               context,
-              text: "Error",
+              text: "Lỗi",
               color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
@@ -107,7 +107,7 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
               ),
               child: TextConstant.subTile1(
                 context,
-                text: "Retry",
+                text: "Thử lại",
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
@@ -133,14 +133,14 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
             SizedBox(height: UtilsReponsive.height(16, context)),
             TextConstant.titleH3(
               context,
-              text: "No Questions",
+              text: "Không có câu hỏi",
               color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
             SizedBox(height: UtilsReponsive.height(8, context)),
             TextConstant.subTile2(
               context,
-              text: "No questions found for this quiz.",
+              text: "Không tìm thấy câu hỏi cho quiz này.",
               color: Colors.grey[600]!,
               textAlign: TextAlign.center,
             ),
@@ -204,7 +204,7 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
         children: [
           TextConstant.titleH2(
             context,
-            text: "Summary",
+            text: "Tóm tắt",
             color: ColorsManager.primary,
             fontWeight: FontWeight.bold,
           ),
@@ -214,7 +214,7 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
               Expanded(
                 child: _buildSummaryItem(
                   context,
-                  "Total",
+                  "Tổng",
                   totalQuestions.toString(),
                   Icons.quiz,
                   ColorsManager.primary,
@@ -224,7 +224,7 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
               Expanded(
                 child: _buildSummaryItem(
                   context,
-                  "Correct",
+                  "Đúng",
                   correctAnswers.toString(),
                   Icons.check_circle,
                   Colors.green,
@@ -234,7 +234,7 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
               Expanded(
                 child: _buildSummaryItem(
                   context,
-                  "Wrong",
+                  "Sai",
                   wrongAnswers.toString(),
                   Icons.cancel,
                   Colors.red,
@@ -264,7 +264,7 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
                 SizedBox(width: UtilsReponsive.width(8, context)),
                 TextConstant.titleH3(
                   context,
-                  text: "Accuracy: ${(accuracy * 100).toStringAsFixed(1)}%",
+                  text: "Độ chính xác: ${(accuracy * 100).toStringAsFixed(1)}%",
                   color: accuracyColor,
                   fontWeight: FontWeight.bold,
                 ),
@@ -361,7 +361,7 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
                   ),
                   child: TextConstant.subTile3(
                     context,
-                    text: "Question $questionNumber",
+                    text: "Câu hỏi $questionNumber",
                     color: ColorsManager.primary,
                     fontWeight: FontWeight.bold,
                     size: 12,
@@ -395,7 +395,7 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
                         SizedBox(width: UtilsReponsive.width(4, context)),
                         TextConstant.subTile3(
                           context,
-                          text: isCorrect ? "Correct" : "Wrong",
+                          text: isCorrect ? "Đúng" : "Sai",
                           color: isCorrect ? Colors.green : Colors.red,
                           fontWeight: FontWeight.bold,
                           size: 12,
@@ -440,7 +440,7 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
             // Answer Options
             TextConstant.subTile2(
               context,
-              text: "Answer Options:",
+              text: "Các lựa chọn:",
               color: Colors.grey[700]!,
               fontWeight: FontWeight.bold,
             ),
@@ -451,6 +451,10 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
               // Logic đúng: Kiểm tra option có isCorrect = true (thay vì so sánh với quiz.correctAnswer)
               final isCorrectAnswer = option.isCorrect == true;
               final isUserCorrectAnswer = isUserAnswer && isCorrectAnswer;
+              
+              // Kiểm tra nếu là placement test và câu hỏi sai thì không hiển thị đáp án đúng
+              final isPlacement = controller.attemptType.value.toLowerCase() == 'placement';
+              final shouldHideCorrectAnswer = isPlacement && !isCorrect;
               
               Color backgroundColor = Colors.white;
               Color borderColor = Colors.grey[300]!;
@@ -466,15 +470,15 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
                 textColor = Colors.green;
                 icon = Icons.check_circle;
                 iconColor = Colors.green;
-                label = "Your Answer (Correct)";
-              } else if (isCorrectAnswer) {
-                // Đáp án đúng nhưng user không chọn
+                label = "Câu trả lời của bạn (Đúng)";
+              } else if (isCorrectAnswer && !shouldHideCorrectAnswer) {
+                // Đáp án đúng nhưng user không chọn (chỉ hiển thị nếu không phải placement sai)
                 backgroundColor = Colors.green.withOpacity(0.1);
                 borderColor = Colors.green;
                 textColor = Colors.green;
                 icon = Icons.check_circle;
                 iconColor = Colors.green;
-                label = "Correct Answer";
+                label = "Đáp án đúng";
               } else if (isUserAnswer) {
                 // User chọn sai
                 backgroundColor = Colors.red.withOpacity(0.15);
@@ -482,7 +486,7 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
                 textColor = Colors.red;
                 icon = Icons.cancel;
                 iconColor = Colors.red;
-                label = "Your Answer (Wrong)";
+                label = "Câu trả lời của bạn (Sai)";
               }
               
               return Container(
@@ -526,7 +530,7 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
                         Expanded(
                           child: TextConstant.subTile2(
                             context,
-                            text: option.optionText.isEmpty ? "No answer" : option.optionText,
+                            text: option.optionText.isEmpty ? "Không có đáp án" : option.optionText,
                             color: textColor,
                             fontWeight: isCorrectAnswer || isUserAnswer ? FontWeight.w600 : FontWeight.normal,
                           ),
