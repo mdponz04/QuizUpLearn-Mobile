@@ -10,6 +10,7 @@ import 'package:quizkahoot/app/modules/home/data/subscription_purchase_service.d
 import 'package:quizkahoot/app/modules/home/data/dashboard_api.dart';
 import 'package:quizkahoot/app/modules/home/data/dashboard_service.dart';
 import 'package:quizkahoot/app/modules/home/models/subscription_plan_model.dart';
+import 'package:quizkahoot/app/modules/home/models/user_subscription_model.dart';
 import 'package:quizkahoot/app/modules/home/models/dashboard_models.dart';
 import 'package:quizkahoot/app/resource/color_manager.dart';
 import 'package:quizkahoot/app/resource/reponsive_utils.dart';
@@ -35,6 +36,8 @@ class TabHomeController extends GetxController {
   var subscriptionPlans = <SubscriptionPlanModel>[].obs;
   var isLoadingPlans = false.obs;
   var isPurchasing = false.obs;
+  var userSubscription = Rxn<UserSubscriptionModel>();
+  var isLoadingSubscription = false.obs;
 
   // Dashboard
   late DashboardService dashboardService;
@@ -548,6 +551,7 @@ class TabHomeController extends GetxController {
     _initializeSubscriptionPlanService();
     _initializeDashboardService();
     loadSubscriptionPlans();
+    loadUserSubscription();
     loadDashboard();
   }
 
@@ -676,6 +680,50 @@ class TabHomeController extends GetxController {
     } finally {
       isLoadingPlans.value = false;
     }
+  }
+
+  Future<void> loadUserSubscription() async {
+    final userId = BaseCommon.instance.userId;
+    if (userId.isEmpty) {
+      return;
+    }
+
+    isLoadingSubscription.value = true;
+    try {
+      final response = await subscriptionPlanService.getUserSubscription();
+      if (response.isSuccess && response.data != null) {
+        userSubscription.value = response.data!;
+      }
+    } catch (e) {
+      log('Error loading user subscription: $e');
+    } finally {
+      isLoadingSubscription.value = false;
+    }
+  }
+
+  // Check if user has active subscription for a specific plan
+  bool hasActiveSubscriptionForPlan(String planId) {
+    if (userSubscription.value == null) return false;
+    return userSubscription.value!.isActive && 
+           userSubscription.value!.subscriptionPlanId == planId;
+  }
+
+  // Get remaining days for active subscription
+  int? getRemainingDays() {
+    if (userSubscription.value == null || !userSubscription.value!.isActive) {
+      return null;
+    }
+    final now = DateTime.now();
+    final difference = userSubscription.value!.endDate.difference(now);
+    return difference.inDays;
+  }
+
+  // Get button text based on subscription status
+  String getButtonText(SubscriptionPlanModel plan) {
+    if (hasActiveSubscriptionForPlan(plan.id)) {
+      return "Gia hạn";
+    }
+    return "Đăng ký";
   }
 
   @override

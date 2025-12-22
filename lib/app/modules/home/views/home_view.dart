@@ -8,8 +8,11 @@ import 'package:quizkahoot/app/service/basecommon.dart';
 import '../controllers/home_controller.dart';
 import '../../tab-home/views/tab_home_view.dart';
 import '../../tab-home/controllers/tab_home_controller.dart';
+import '../../tab-home/controllers/dashboard_detail_controller.dart';
 import '../../explore-quiz/models/quiz_set_model.dart';
 import '../../home/models/subscription_plan_model.dart';
+import '../../home/models/dashboard_models.dart';
+import '../../home/models/user_weak_point_model.dart';
 import '../widgets/event_tab_widget.dart';
 import '../../explore-quiz/views/favorite_quiz_view.dart';
 import '../../explore-quiz/controllers/favorite_quiz_controller.dart';
@@ -808,6 +811,10 @@ class HomeView extends GetView<HomeController> {
 
 
   Widget _buildAccountTab(BuildContext context) {
+    // Initialize DashboardDetailController
+    Get.lazyPut<DashboardDetailController>(() => DashboardDetailController());
+    final dashboardController = Get.find<DashboardDetailController>();
+    
     return Scaffold(
       appBar: AppBar(
         title: TextConstant.titleH2(
@@ -820,20 +827,52 @@ class HomeView extends GetView<HomeController> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          IconButton(
-            onPressed: () {
-              // Settings action
-            },
+          PopupMenuButton<String>(
             icon: Icon(
               Icons.settings_outlined,
               color: ColorsManager.primary,
             ),
+            onSelected: (value) {
+              if (value == 'logout') {
+                Get.offAllNamed('/on-boarding');
+              } else if (value == 'settings') {
+                // Settings action
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              PopupMenuItem<String>(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    Icon(Icons.settings, color: ColorsManager.primary),
+                    SizedBox(width: UtilsReponsive.width(8, context)),
+                    TextConstant.subTile1(
+                      context,
+                      text: 'Cài đặt',
+                      color: Colors.black,
           ),
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
-        child: FutureBuilder<Map<String, dynamic>?>(
+              ),
+              PopupMenuItem<String>(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: Colors.red),
+                    SizedBox(width: UtilsReponsive.width(8, context)),
+                    TextConstant.subTile1(
+                      context,
+                      text: 'Đăng xuất',
+                      color: Colors.red,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: FutureBuilder<Map<String, dynamic>?>(
           future: BaseCommon.instance.getUserInfo(),
           builder: (context, snapshot) {
             String username = "User Name";
@@ -847,7 +886,10 @@ class HomeView extends GetView<HomeController> {
               email = userInfo['email']?.toString() ?? "user@example.com";
             }
             
-            return Column(
+          return SingleChildScrollView(
+            padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Profile section
                 Container(
@@ -904,79 +946,781 @@ class HomeView extends GetView<HomeController> {
 
                 SizedBox(height: UtilsReponsive.height(24, context)),
 
-                // Menu items
-                _buildMenuItem(
+                // Dashboard Stats Section
+                Obx(() {
+                  if (dashboardController.isLoading.value) {
+                    return Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
+                        child: CircularProgressIndicator(
+                          color: ColorsManager.primary,
+                        ),
+                      ),
+                    );
+                  }
+                  
+                  if (dashboardController.errorMessage.value.isNotEmpty) {
+                    return Container(
+                      padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.red),
+                          SizedBox(width: UtilsReponsive.width(8, context)),
+                          Expanded(
+                            child: TextConstant.subTile2(
                   context,
-                  "My Progress",
-                  Icons.trending_up_outlined,
-                  () {},
+                              text: dashboardController.errorMessage.value,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  
+                  if (dashboardController.dashboardData.value == null) {
+                    return SizedBox.shrink();
+                  }
+                  
+                  final data = dashboardController.dashboardData.value!;
+                  final stats = data.stats;
+                  final progress = data.progress;
+                  
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Stats Section
+                      _buildStatsSection(context, stats, dashboardController),
+                      
+                      SizedBox(height: UtilsReponsive.height(24, context)),
+                      
+                      // Progress Section
+                      _buildProgressSection(context, progress),
+                      
+                      SizedBox(height: UtilsReponsive.height(24, context)),
+                      
+                      // Weak Points Section
+                      _buildWeakPointsSection(context, dashboardController),
+                      
+                      SizedBox(height: UtilsReponsive.height(24, context)),
+                    ],
+                  );
+                }),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Dashboard Stats Section
+  Widget _buildStatsSection(BuildContext context, DashboardStats stats, DashboardDetailController controller) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            ColorsManager.primary,
+            ColorsManager.primary.withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: ColorsManager.primary.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(UtilsReponsive.width(20, context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.dashboard,
+                  color: Colors.white,
+                  size: UtilsReponsive.height(24, context),
                 ),
-                _buildMenuItem(
+                SizedBox(width: UtilsReponsive.width(8, context)),
+                TextConstant.titleH2(
                   context,
-                  "Achievements",
-                  Icons.emoji_events_outlined,
-                  () {},
-                ),
-                _buildMenuItem(
-                  context,
-                  "Study Plan",
-                  Icons.calendar_today_outlined,
-                  () {},
-                ),
-                _buildMenuItem(
-                  context,
-                  "Help & Support",
-                  Icons.help_outline,
-                  () {},
-                ),
-                _buildMenuItem(
-                  context,
-                  "Logout",
-                  Icons.logout,
-                  () {
-                    Get.offAllNamed('/on-boarding');
-                  },
-                  isLogout: true,
+                  text: "Thống kê tổng quan",
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
               ],
-            );
-          },
+            ),
+            
+            SizedBox(height: UtilsReponsive.height(20, context)),
+            
+            // Stats Grid
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                  context,
+                    Icons.quiz,
+                    "Tổng Quiz",
+                    "${stats.totalQuizzes}",
+                    Colors.white,
+                  ),
+                ),
+                SizedBox(width: UtilsReponsive.width(12, context)),
+                Expanded(
+                  child: _buildStatCard(
+                  context,
+                    Icons.trending_up,
+                    "Độ chính xác",
+                    "${stats.accuracyRate.toStringAsFixed(1)}%",
+                    Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            
+            SizedBox(height: UtilsReponsive.height(12, context)),
+            
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                  context,
+                    Icons.local_fire_department,
+                    "Chuỗi ngày",
+                    "${stats.currentStreak}",
+                    Colors.white,
+                  ),
+                ),
+                SizedBox(width: UtilsReponsive.width(12, context)),
+                Expanded(
+                  child: _buildStatCard(
+                    context,
+                    Icons.emoji_events,
+                    "Hạng",
+                    "#${stats.currentRank}",
+                    Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            
+            SizedBox(height: UtilsReponsive.height(16, context)),
+            
+            // Answer Stats
+            Container(
+              padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildAnswerStat(
+                    context,
+                    Icons.check_circle,
+                    "Đúng",
+                    "${stats.totalCorrectAnswers}",
+                    Colors.green[300]!,
+                  ),
+                  Container(
+                    width: 1,
+                    height: UtilsReponsive.height(30, context),
+                    color: Colors.white.withOpacity(0.3),
+                  ),
+                  _buildAnswerStat(
+                    context,
+                    Icons.cancel,
+                    "Sai",
+                    "${stats.totalWrongAnswers}",
+                    Colors.red[300]!,
+                  ),
+                  Container(
+                    width: 1,
+                    height: UtilsReponsive.height(30, context),
+                    color: Colors.white.withOpacity(0.3),
+                  ),
+                  _buildAnswerStat(
+                    context,
+                    Icons.help_outline,
+                    "Tổng câu",
+                    "${stats.totalQuestions}",
+                    Colors.white,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildMenuItem(
+  Widget _buildStatCard(
     BuildContext context,
-    String title,
     IconData icon,
-    VoidCallback onTap, {
-    bool isLogout = false,
-  }) {
+    String label,
+    String value,
+    Color color,
+  ) {
     return Container(
-      margin: EdgeInsets.only(bottom: UtilsReponsive.height(8, context)),
-      child: ListTile(
-        onTap: onTap,
-        leading: Icon(
-          icon,
-          color: isLogout ? Colors.red : ColorsManager.primary,
-        ),
-        title: TextConstant.subTile1(
+      padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: UtilsReponsive.height(24, context)),
+          SizedBox(height: UtilsReponsive.height(8, context)),
+          TextConstant.titleH3(
+            context,
+            text: value,
+            color: color,
+            fontWeight: FontWeight.bold,
+            size: 18,
+          ),
+          SizedBox(height: UtilsReponsive.height(4, context)),
+          TextConstant.subTile3(
+            context,
+            text: label,
+            color: color.withOpacity(0.9),
+            size: 11,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnswerStat(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+    Color color,
+  ) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: UtilsReponsive.height(20, context)),
+        SizedBox(height: UtilsReponsive.height(4, context)),
+        TextConstant.subTile2(
           context,
-          text: title,
-          color: isLogout ? Colors.red : Colors.black,
-          fontWeight: FontWeight.w500,
+          text: value,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          size: 14,
         ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
+        SizedBox(height: UtilsReponsive.height(2, context)),
+        TextConstant.subTile4(
+          context,
+          text: label,
+          color: Colors.white.withOpacity(0.9),
+          size: 10,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProgressSection(BuildContext context, DashboardProgress progress) {
+    return Container(
+      padding: EdgeInsets.all(UtilsReponsive.width(20, context)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.timeline,
+                color: ColorsManager.primary,
+                size: UtilsReponsive.height(24, context),
+              ),
+              SizedBox(width: UtilsReponsive.width(8, context)),
+              TextConstant.titleH2(
+          context,
+                text: "Tiến độ tuần",
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ],
+          ),
+          
+          SizedBox(height: UtilsReponsive.height(20, context)),
+          
+          // Weekly Progress Chart
+          SizedBox(
+            height: UtilsReponsive.height(200, context),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: progress.weeklyProgress.map((day) {
+                final percentage = day.scorePercentage;
+                final maxHeight = UtilsReponsive.height(180, context);
+                final barHeight = (percentage / 100) * maxHeight;
+                
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: UtilsReponsive.width(4, context),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Container(
+                          height: barHeight > 0 ? barHeight : UtilsReponsive.height(4, context),
+                          decoration: BoxDecoration(
+                            color: ColorsManager.primary,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        SizedBox(height: UtilsReponsive.height(8, context)),
+                        TextConstant.subTile4(
+                          context,
+                          text: day.day,
+                          color: Colors.grey[600]!,
+                          size: 10,
+                        ),
+                        SizedBox(height: UtilsReponsive.height(4, context)),
+                        TextConstant.subTile4(
+                          context,
+                          text: "${percentage.toStringAsFixed(0)}%",
+                          color: ColorsManager.primary,
+                          fontWeight: FontWeight.bold,
+                          size: 9,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          
+          SizedBox(height: UtilsReponsive.height(20, context)),
+          
+          // Overall Stats
+          Container(
+            padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+            decoration: BoxDecoration(
+              color: ColorsManager.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildProgressStat(
+                  context,
+                  "Độ chính xác",
+                  "${progress.overallAccuracy.toStringAsFixed(1)}%",
+                  ColorsManager.primary,
+                ),
+                Container(
+                  width: 1,
+                  height: UtilsReponsive.height(30, context),
+                  color: Colors.grey[300]!,
+                ),
+                _buildProgressStat(
+                  context,
+                  "Đúng",
+                  "${progress.totalCorrectAnswers}",
+                  Colors.green,
+                ),
+                Container(
+                  width: 1,
+                  height: UtilsReponsive.height(30, context),
+                  color: Colors.grey[300]!,
+                ),
+                _buildProgressStat(
+                  context,
+                  "Sai",
+                  "${progress.totalWrongAnswers}",
+                  Colors.red,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressStat(
+    BuildContext context,
+    String label,
+    String value,
+    Color color,
+  ) {
+    return Column(
+      children: [
+        TextConstant.subTile2(
+          context,
+          text: value,
+          color: color,
+          fontWeight: FontWeight.bold,
+          size: 16,
+        ),
+        SizedBox(height: UtilsReponsive.height(4, context)),
+        TextConstant.subTile4(
+          context,
+          text: label,
+          color: Colors.grey[600]!,
+          size: 10,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWeakPointsSection(BuildContext context, DashboardDetailController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.orange,
+              size: UtilsReponsive.height(24, context),
+            ),
+            SizedBox(width: UtilsReponsive.width(8, context)),
+            TextConstant.titleH2(
+              context,
+              text: "Điểm yếu",
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+            SizedBox(width: UtilsReponsive.width(8, context)),
+          ],
+        ),
+        Row(
+          children: [
+            Obx(() => Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: UtilsReponsive.width(8, context),
+                vertical: UtilsReponsive.height(4, context),
+              ),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.red.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: TextConstant.subTile2(
+                context,
+                text: "Bạn có ${controller.mistakeQuizzesCount.value} lỗi",
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+                size: 12,
+              ),
+            )),
+            SizedBox(width: UtilsReponsive.width(8, context)),
+            Obx(() {
+              if (controller.mistakeQuizzesCount.value > 0) {
+                return ElevatedButton.icon(
+                  onPressed: () => _showConfirmDialog(context, controller),
+                  icon: Icon(
+                    Icons.build,
           size: UtilsReponsive.height(16, context),
-          color: Colors.grey[400],
+                    color: Colors.white,
+                  ),
+                  label: TextConstant.subTile2(
+                    context,
+                    text: "Khắc phục ngay",
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    size: 12,
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorsManager.primary,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: UtilsReponsive.width(12, context),
+                      vertical: UtilsReponsive.height(2, context),
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        tileColor: Colors.white,
+                  ),
+                );
+              }
+              return SizedBox.shrink();
+            }),
+          ],
+        ),
+        SizedBox(height: UtilsReponsive.height(16, context)),
+        
+        Obx(() {
+          if (controller.isLoadingWeakPoints.value) {
+            return Center(
+              child: Padding(
+                padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
+                child: CircularProgressIndicator(
+                  color: ColorsManager.primary,
+                ),
+              ),
+            );
+          }
+          
+          if (controller.weakPoints.isEmpty) {
+            return Container(
+              padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.check_circle_outline,
+                      size: UtilsReponsive.height(48, context),
+                      color: Colors.grey[400],
+                    ),
+                    SizedBox(height: UtilsReponsive.height(12, context)),
+                    TextConstant.subTile2(
+                      context,
+                      text: "Bạn chưa có điểm yếu nào",
+                      color: Colors.grey[600]!,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: controller.weakPoints.length,
+            itemBuilder: (context, index) {
+              final weakPoint = controller.weakPoints[index];
+              return _buildWeakPointCard(context, weakPoint, index + 1);
+            },
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildWeakPointCard(
+    BuildContext context,
+    UserWeakPointModel weakPoint,
+    int index,
+  ) {
+    return Container(
+      margin: EdgeInsets.only(bottom: UtilsReponsive.height(12, context)),
+      padding: EdgeInsets.all(UtilsReponsive.width(16, context)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.orange.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(UtilsReponsive.width(8, context)),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: TextConstant.subTile3(
+                  context,
+                  text: "#$index",
+                  color: Colors.orange,
+                  fontWeight: FontWeight.bold,
+                  size: 12,
+                ),
+              ),
+              SizedBox(width: UtilsReponsive.width(8, context)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: UtilsReponsive.width(8, context),
+                        vertical: UtilsReponsive.height(4, context),
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: TextConstant.subTile4(
+                        context,
+                        text: weakPoint.toeicPart,
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                        size: 10,
+                      ),
+                    ),
+                    SizedBox(height: UtilsReponsive.height(4, context)),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: UtilsReponsive.width(8, context),
+                        vertical: UtilsReponsive.height(4, context),
+                      ),
+                      decoration: BoxDecoration(
+                        color: weakPoint.difficultyColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: TextConstant.subTile4(
+                        context,
+                        text: weakPoint.difficultyLevel,
+                        color: weakPoint.difficultyColor,
+                        fontWeight: FontWeight.bold,
+                        size: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          
+          SizedBox(height: UtilsReponsive.height(12, context)),
+          
+          // Weak Point
+          TextConstant.titleH3(
+            context,
+            text: weakPoint.weakPoint,
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            size: 15,
+          ),
+          
+          SizedBox(height: UtilsReponsive.height(12, context)),
+          
+          // Advice
+          Container(
+            padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Colors.green.withOpacity(0.2),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.lightbulb_outline,
+                  color: Colors.green,
+                  size: UtilsReponsive.height(20, context),
+                ),
+                SizedBox(width: UtilsReponsive.width(8, context)),
+                Expanded(
+                  child: TextConstant.subTile2(
+                    context,
+                    text: weakPoint.advice,
+                    color: Colors.grey[700]!,
+                    size: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showConfirmDialog(BuildContext context, DashboardDetailController controller) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.help_outline,
+                color: ColorsManager.primary,
+                size: UtilsReponsive.height(24, context),
+              ),
+              SizedBox(width: UtilsReponsive.width(8, context)),
+              TextConstant.titleH3(
+                context,
+                text: "Xác nhận",
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ],
+          ),
+          content: TextConstant.subTile2(
+            context,
+            text: "Bạn có muốn bắt đầu làm bài khắc phục để cải thiện điểm yếu không?",
+            color: Colors.grey[700]!,
+            textAlign: TextAlign.center,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: TextConstant.subTile2(
+                context,
+                text: "Hủy",
+                color: Colors.grey[600]!,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                controller.startMistakeQuiz();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorsManager.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: TextConstant.subTile2(
+                context,
+                text: "Xác nhận",
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1357,20 +2101,37 @@ class HomeView extends GetView<HomeController> {
                       : Icons.star_border,
                 ),
                 SizedBox(height: UtilsReponsive.height(4, context)),
-                _buildSubscriptionFeatureItem(
-                  context,
-                  "AI: ${plan.aiGenerateQuizSetMaxTimes} lần",
-                  Icons.auto_awesome,
-                ),
               ],
             ),
 
             SizedBox(height: UtilsReponsive.height(8, context)),
 
-            // Subscribe Button
+            // Subscribe Button (only show for paid plans)
+            if (plan.price > 0)
+              Obx(() {
+                final hasActive = controller.userSubscription.value != null &&
+                    controller.userSubscription.value!.isActive &&
+                    controller.userSubscription.value!.subscriptionPlanId == plan.id;
+                final buttonText = hasActive ? "Gia hạn" : "Đăng ký";
+                final remainingDays = hasActive && controller.userSubscription.value != null
+                    ? controller.userSubscription.value!.endDate.difference(DateTime.now()).inDays
+                    : null;
+                
+                return Column(
+                  children: [
+                    if (hasActive && remainingDays != null && remainingDays > 0)
+                      Padding(
+                        padding: EdgeInsets.only(bottom: UtilsReponsive.height(4, context)),
+                        child: TextConstant.subTile4(
+                          context,
+                          text: "Còn $remainingDays ngày",
+                          color: Colors.white.withOpacity(0.9),
+                          size: 10,
+                        ),
+                      ),
             SizedBox(
               width: double.infinity,
-              child: Obx(() => ElevatedButton(
+                      child: ElevatedButton(
                 onPressed: controller.isPurchasing.value
                     ? null
                     : () => controller.purchaseSubscription(plan),
@@ -1395,13 +2156,16 @@ class HomeView extends GetView<HomeController> {
                       )
                     : TextConstant.subTile3(
                         context,
-                        text: plan.price == 0 ? "Bắt đầu" : "Đăng ký",
+                                text: buttonText,
                         color: cardColor,
                         fontWeight: FontWeight.bold,
                         size: 12,
                       ),
-              )),
+                      ),
             ),
+                  ],
+                );
+              }),
           ],
         ),
       ),

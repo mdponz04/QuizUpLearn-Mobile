@@ -6,6 +6,8 @@ import 'package:quizkahoot/app/resource/text_style.dart';
 
 import '../controllers/tab_home_controller.dart';
 import '../../home/models/dashboard_models.dart';
+import '../../home/models/subscription_plan_model.dart';
+import '../../home/controllers/home_controller.dart';
 
 class TabHomeView extends StatelessWidget {
   final TabHomeController? controller;
@@ -52,6 +54,11 @@ class TabHomeView extends StatelessWidget {
               }
               return const SizedBox.shrink();
             }),
+            
+            SizedBox(height: UtilsReponsive.height(24, context)),
+            
+            // Subscription Plans Section
+            _buildSubscriptionPlansSection(context),
             
             SizedBox(height: UtilsReponsive.height(24, context)),
             
@@ -501,7 +508,11 @@ class TabHomeView extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => Get.toNamed('/dashboard-detail'),
+                  onTap: () {
+                    // Navigate to account tab (index 3)
+                    final homeController = Get.find<HomeController>();
+                    homeController.changeTabIndex(3);
+                  },
                   child: Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: UtilsReponsive.width(12, context),
@@ -617,6 +628,254 @@ class TabHomeView extends StatelessWidget {
           text: label,
           color: Colors.white.withOpacity(0.9),
           size: 10,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubscriptionPlansSection(BuildContext context) {
+    return Obx(() {
+      if (tabController.isLoadingPlans.value) {
+        return Center(
+          child: Padding(
+            padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
+            child: CircularProgressIndicator(
+              color: ColorsManager.primary,
+            ),
+          ),
+        );
+      }
+
+      if (tabController.subscriptionPlans.isEmpty) {
+        return SizedBox.shrink();
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextConstant.titleH3(
+            context,
+            text: "Các gói đăng ký",
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+          SizedBox(height: UtilsReponsive.height(12, context)),
+          SizedBox(
+            height: UtilsReponsive.height(220, context),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: tabController.subscriptionPlans.length,
+              itemBuilder: (context, index) {
+                final plan = tabController.subscriptionPlans[index];
+                return _buildSubscriptionPlanCard(context, plan, index);
+              },
+            ),
+          ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildSubscriptionPlanCard(
+    BuildContext context,
+    SubscriptionPlanModel plan,
+    int index,
+  ) {
+    final isPro = plan.name.toLowerCase() == 'pro';
+    final cardColor = isPro ? ColorsManager.primary : Colors.grey[600]!;
+    
+    return Container(
+      width: UtilsReponsive.width(240, context),
+      margin: EdgeInsets.only(
+        right: index < tabController.subscriptionPlans.length - 1
+            ? UtilsReponsive.width(12, context)
+            : 0,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isPro
+              ? [
+            ColorsManager.primary,
+            ColorsManager.primary.withOpacity(0.8),
+                ]
+              : [
+                  Colors.grey[600]!,
+                  Colors.grey[700]!,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: cardColor.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextConstant.titleH3(
+                        context,
+                        text: plan.name,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        size: 18,
+                      ),
+                      SizedBox(height: UtilsReponsive.height(2, context)),
+                      TextConstant.subTile2(
+                        context,
+                        text: plan.formattedPrice,
+                        color: Colors.white.withOpacity(0.9),
+                        size: 14,
+                      ),
+                    ],
+                  ),
+                ),
+                if (isPro)
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: UtilsReponsive.width(6, context),
+                      vertical: UtilsReponsive.height(2, context),
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.amber,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: TextConstant.subTile4(
+                      context,
+                      text: "PHỔ BIẾN",
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      size: 8,
+                    ),
+                  ),
+              ],
+            ),
+
+            SizedBox(height: UtilsReponsive.height(8, context)),
+
+            // Features
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildSubscriptionFeatureItem(
+                  context,
+                  "Thời hạn: ${plan.formattedDuration}",
+                  Icons.calendar_today,
+                ),
+                SizedBox(height: UtilsReponsive.height(4, context)),
+                _buildSubscriptionFeatureItem(
+                  context,
+                  plan.canAccessPremiumContent
+                      ? "Nội dung Premium"
+                      : "Nội dung Cơ bản",
+                  plan.canAccessPremiumContent
+                      ? Icons.star
+                      : Icons.star_border,
+                ),
+                SizedBox(height: UtilsReponsive.height(4, context)),
+              ],
+            ),
+
+            SizedBox(height: UtilsReponsive.height(8, context)),
+
+            // Subscribe Button (only show for paid plans)
+            if (plan.price > 0)
+              Obx(() {
+                final buttonText = tabController.getButtonText(plan);
+                final remainingDays = tabController.getRemainingDays();
+                final hasActive = tabController.hasActiveSubscriptionForPlan(plan.id);
+                
+                return Column(
+                  children: [
+                    if (hasActive && remainingDays != null)
+                      Padding(
+                        padding: EdgeInsets.only(bottom: UtilsReponsive.height(4, context)),
+                        child: TextConstant.subTile4(
+                          context,
+                          text: "Còn $remainingDays ngày",
+                          color: Colors.white.withOpacity(0.9),
+                          size: 10,
+                        ),
+                      ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: tabController.isPurchasing.value
+                            ? null
+                            : () => tabController.purchaseSubscription(plan),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: cardColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            vertical: UtilsReponsive.height(8, context),
+                          ),
+                        ),
+                        child: tabController.isPurchasing.value
+                            ? SizedBox(
+                                width: UtilsReponsive.width(16, context),
+                                height: UtilsReponsive.width(16, context),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(cardColor),
+                                ),
+                              )
+                            : TextConstant.subTile3(
+                                context,
+                                text: buttonText,
+                                color: cardColor,
+                                fontWeight: FontWeight.bold,
+                                size: 12,
+                              ),
+                      ),
+                    ),
+                  ],
+                );
+              }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubscriptionFeatureItem(
+    BuildContext context,
+    String text,
+    IconData icon,
+  ) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          color: Colors.white.withOpacity(0.9),
+          size: UtilsReponsive.height(14, context),
+        ),
+        SizedBox(width: UtilsReponsive.width(6, context)),
+        Expanded(
+          child: TextConstant.subTile3(
+            context,
+            text: text,
+            color: Colors.white.withOpacity(0.9),
+            size: 11,
+          ),
         ),
       ],
     );
