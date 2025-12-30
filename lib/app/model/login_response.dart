@@ -75,8 +75,11 @@ class Data {
 class Account {
     String id;
     String email;
+    String username;
+    String? avatarUrl;
     String userId;
     String roleId;
+    String? roleName;
     bool isEmailVerified;
     DateTime lastLoginAt;
     int loginAttempts;
@@ -90,8 +93,11 @@ class Account {
     Account({
         required this.id,
         required this.email,
+        required this.username,
+        this.avatarUrl,
         required this.userId,
         required this.roleId,
+        this.roleName,
         required this.isEmailVerified,
         required this.lastLoginAt,
         required this.loginAttempts,
@@ -106,8 +112,11 @@ class Account {
     factory Account.fromJson(Map<String, dynamic> json) => Account(
         id: json["id"],
         email: json["email"],
+        username: json["username"] ?? json["email"]?.split('@').first ?? '',
+        avatarUrl: json["avatarUrl"],
         userId: json["userId"],
         roleId: json["roleId"],
+        roleName: json["roleName"],
         isEmailVerified: json["isEmailVerified"],
         lastLoginAt: DateTime.parse(json["lastLoginAt"]),
         loginAttempts: json["loginAttempts"],
@@ -122,8 +131,11 @@ class Account {
     Map<String, dynamic> toJson() => {
         "id": id,
         "email": email,
+        "username": username,
+        "avatarUrl": avatarUrl,
         "userId": userId,
         "roleId": roleId,
+        "roleName": roleName,
         "isEmailVerified": isEmailVerified,
         "lastLoginAt": lastLoginAt.toIso8601String(),
         "loginAttempts": loginAttempts,

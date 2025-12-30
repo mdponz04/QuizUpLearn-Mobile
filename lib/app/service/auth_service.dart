@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:quizkahoot/app/data/auth_api.dart';
 import 'package:quizkahoot/app/data/base_response.dart';
-import 'package:quizkahoot/app/data/dio_interceptor.dart';
 import 'package:quizkahoot/app/model/login_request.dart';
 import 'package:quizkahoot/app/model/login_response.dart';
 import 'package:quizkahoot/app/model/register_request.dart';
@@ -40,6 +39,23 @@ class AuthService {
     } on DioException catch (e) {
       return BaseResponse.error(
         e.response?.data['message'] ?? 'An error occurred',
+      );
+    }
+  }
+
+  Future<BaseResponse<LoginReponse>> loginWithGoogle(String idToken) async {
+    try {
+      final response = await authApi.loginWithGoogle({'idToken': idToken});
+      log("Google login response: ${response.toString()}");
+      return BaseResponse(
+        isSuccess: true,
+        message: 'Success',
+        data: response,
+      );
+    } on DioException catch (e) {
+      log("Google login error: ${e.response?.data}");
+      return BaseResponse.error(
+        e.response?.data['message'] ?? e.response?.data['error'] ?? 'An error occurred',
       );
     }
   }

@@ -51,12 +51,6 @@ class _QuizDetailViewState extends State<QuizDetailView> with SingleTickerProvid
           },
         ),
         actions: [
-          // Report button
-          IconButton(
-            icon: Icon(Icons.report_problem, color: Colors.red),
-            onPressed: () => controller.showReportDialog(context),
-            tooltip: 'Báo cáo',
-          ),
           // Favorite button
           Obx(() => IconButton(
             icon: Icon(
@@ -447,61 +441,79 @@ class _QuizDetailViewState extends State<QuizDetailView> with SingleTickerProvid
             SizedBox(height: UtilsReponsive.height(16, context)),
             
             // Answer Options
-            TextConstant.subTile2(
-              context,
-              text: "Answer Options:",
-              color: Colors.grey[700]!,
-              fontWeight: FontWeight.bold,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextConstant.subTile2(
+                  context,
+                  text: "Answer Options:",
+                  color: Colors.grey[700]!,
+                  fontWeight: FontWeight.bold,
+                ),
+                // Report button for this question
+                IconButton(
+                  icon: Icon(Icons.report_problem, color: Colors.red, size: UtilsReponsive.height(20, context)),
+                  onPressed: () => controller.showReportDialog(context, quiz.id),
+                  tooltip: 'Báo cáo câu hỏi',
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints(),
+                ),
+              ],
             ),
             SizedBox(height: UtilsReponsive.height(8, context)),
             
-            ...quiz.answerOptions.map((option) {
-              return Container(
-                margin: EdgeInsets.only(bottom: UtilsReponsive.height(8, context)),
-                padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Colors.grey[300]!,
-                    width: 1,
+            // Sort options by orderIndex to ensure correct order (A, B, C, D)
+            ...(() {
+              final sortedOptions = List.from(quiz.answerOptions)
+                ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+              return sortedOptions.map((option) {
+                return Container(
+                  margin: EdgeInsets.only(bottom: UtilsReponsive.height(8, context)),
+                  padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Colors.grey[300]!,
+                      width: 1,
+                    ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: UtilsReponsive.width(28, context),
-                      height: UtilsReponsive.height(28, context),
-                      decoration: BoxDecoration(
-                        color: ColorsManager.primary.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: ColorsManager.primary,
-                          width: 2,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: UtilsReponsive.width(28, context),
+                        height: UtilsReponsive.height(28, context),
+                        decoration: BoxDecoration(
+                          color: ColorsManager.primary.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: ColorsManager.primary,
+                            width: 2,
+                          ),
+                        ),
+                        child: Center(
+                          child: TextConstant.subTile3(
+                            context,
+                            text: option.optionLabel,
+                            color: ColorsManager.primary,
+                            fontWeight: FontWeight.bold,
+                            size: 13,
+                          ),
                         ),
                       ),
-                      child: Center(
-                        child: TextConstant.subTile3(
+                      SizedBox(width: UtilsReponsive.width(12, context)),
+                      Expanded(
+                        child: TextConstant.subTile2(
                           context,
-                          text: option.optionLabel,
-                          color: ColorsManager.primary,
-                          fontWeight: FontWeight.bold,
-                          size: 13,
+                          text: option.optionText.isEmpty ? "No answer" : option.optionText,
+                          color: Colors.black,
                         ),
                       ),
-                    ),
-                    SizedBox(width: UtilsReponsive.width(12, context)),
-                    Expanded(
-                      child: TextConstant.subTile2(
-                        context,
-                        text: option.optionText.isEmpty ? "No answer" : option.optionText,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
+                    ],
+                  ),
+                );
+              }).toList();
+            })(),
           ],
         ),
       ),

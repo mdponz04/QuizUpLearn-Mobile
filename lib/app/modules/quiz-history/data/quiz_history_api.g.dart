@@ -2,8 +2,6 @@
 
 part of 'quiz_history_api.dart';
 
-// dart format off
-
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -83,5 +81,3 @@ class _QuizHistoryApi implements QuizHistoryApi {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
-
-// dart format on

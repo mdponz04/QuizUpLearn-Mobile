@@ -2,8 +2,6 @@
 
 part of 'game_api.dart';
 
-// dart format off
-
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -74,5 +72,3 @@ class _GameApi implements GameApi {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
-
-// dart format on

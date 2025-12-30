@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "458976031452",
+    "project_id": "quizuplearn",
+    "storage_bucket": "quizuplearn.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:458976031452:android:67f5abf292b469ca6afa19",
+        "android_client_info": {
+          "package_name": "com.example.quizkahoot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "458976031452-fks9l23uo9dk1v8s39mtugcnm95hrhja.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiObM2ZUEPgv9AGk-pUotesGn4SsSmRZA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "458976031452-fks9l23uo9dk1v8s39mtugcnm95hrhja.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -815,6 +815,11 @@ class HomeView extends GetView<HomeController> {
     Get.lazyPut<DashboardDetailController>(() => DashboardDetailController());
     final dashboardController = Get.find<DashboardDetailController>();
     
+    // Load user subscription when entering profile tab
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.checkUserSubscription();
+    });
+    
     return Scaffold(
       appBar: AppBar(
         title: TextConstant.titleH2(
@@ -921,11 +926,67 @@ class HomeView extends GetView<HomeController> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            TextConstant.titleH3(
-                              context,
-                              text: username,
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
+                            Row(
+                              children: [
+                                TextConstant.titleH3(
+                                  context,
+                                  text: username,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                SizedBox(width: UtilsReponsive.width(8, context)),
+                                // Premium icon if user has active subscription with price > 0
+                                Obx(() {
+                                  final subscription = controller.userSubscription.value;
+                                  
+                                  // Check if user has active subscription
+                                  if (subscription == null || !subscription.isActive) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  
+                                  // Check if subscription plan ID exists in list of plans with price > 0
+                                  final hasPremium = controller.subscriptionPlans.any(
+                                    (plan) => plan.id == subscription.subscriptionPlanId && plan.price > 0,
+                                  );
+                                  
+                                  if (hasPremium) {
+                                    return Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: UtilsReponsive.width(6, context),
+                                        vertical: UtilsReponsive.height(2, context),
+                                      ),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.amber,
+                                            Colors.orange,
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.star,
+                                            color: Colors.white,
+                                            size: UtilsReponsive.height(14, context),
+                                          ),
+                                          SizedBox(width: UtilsReponsive.width(4, context)),
+                                          TextConstant.subTile4(
+                                            context,
+                                            text: "PREMIUM",
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            size: 9,
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                }),
+                              ],
                             ),
                             SizedBox(height: UtilsReponsive.height(4, context)),
                             TextConstant.subTile2(

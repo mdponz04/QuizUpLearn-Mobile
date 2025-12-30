@@ -2,8 +2,6 @@
 
 part of 'quiz_report_api.dart';
 
-// dart format off
-
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -68,5 +66,3 @@ class _QuizReportApi implements QuizReportApi {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
-
-// dart format on

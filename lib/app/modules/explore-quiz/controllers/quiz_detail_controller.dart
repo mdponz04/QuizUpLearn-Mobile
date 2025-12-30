@@ -1023,9 +1023,7 @@ class QuizDetailController extends GetxController {
     }
   }
 
-  Future<void> reportQuiz(String description) async {
-    if (quizSet.value == null) return;
-    
+  Future<void> reportQuiz(String quizId, String description) async {
     final userId = BaseCommon.instance.userId;
     if (userId.isEmpty) {
       Get.snackbar(
@@ -1050,10 +1048,10 @@ class QuizDetailController extends GetxController {
     try {
       isSubmittingReport.value = true;
       
-      // Use quizSetId as quizId (based on API requirement)
+      // Report for specific quiz question (not quiz set)
       final response = await quizReportService.reportQuiz(
         userId: userId,
-        quizId: quizSet.value!.id,
+        quizId: quizId,
         description: description.trim(),
       );
       
@@ -1062,7 +1060,7 @@ class QuizDetailController extends GetxController {
       if (response.isSuccess) {
         Get.snackbar(
           'Thành công',
-          'Đã gửi báo cáo thành công',
+          'Đã gửi báo cáo câu hỏi thành công',
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
@@ -1086,7 +1084,7 @@ class QuizDetailController extends GetxController {
     }
   }
 
-  void showReportDialog(BuildContext context) {
+  void showReportDialog(BuildContext context, String quizId) {
     final descriptionController = TextEditingController();
     
     Get.dialog(
@@ -1113,9 +1111,9 @@ class QuizDetailController extends GetxController {
                   ),
                   SizedBox(width: UtilsReponsive.width(8, context)),
                   Expanded(
-                    child: TextConstant.titleH2(
+                    child: TextConstant.subTile1(
                       context,
-                      text: "Báo cáo Quiz",
+                      text: "Báo cáo câu hỏi",
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1133,7 +1131,7 @@ class QuizDetailController extends GetxController {
               SizedBox(height: UtilsReponsive.height(16, context)),
               
               // Description Field
-              TextConstant.subTile1(
+              TextConstant.subTile2(
                 context,
                 text: "Mô tả vấn đề",
                 color: Colors.black,
@@ -1193,7 +1191,7 @@ class QuizDetailController extends GetxController {
                                 );
                                 return;
                               }
-                              reportQuiz(description);
+                              reportQuiz(quizId, description);
                               Get.back();
                             },
                       style: ElevatedButton.styleFrom(

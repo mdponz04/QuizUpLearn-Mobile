@@ -2,8 +2,6 @@
 
 part of 'quiz_set_comment_api.dart';
 
-// dart format off
-
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -110,5 +108,3 @@ class _QuizSetCommentApi implements QuizSetCommentApi {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
-
-// dart format on

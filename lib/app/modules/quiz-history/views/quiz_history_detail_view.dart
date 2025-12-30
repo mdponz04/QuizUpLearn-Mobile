@@ -446,7 +446,11 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
             ),
             SizedBox(height: UtilsReponsive.height(8, context)),
             
-            ...quiz.answerOptions.map((option) {
+            // Sort options by orderIndex to ensure correct order (A, B, C, D)
+            ...(() {
+              final sortedOptions = List.from(quiz.answerOptions)
+                ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+              return sortedOptions.map((option) {
               final isUserAnswer = userAnswerId == option.id;
               // Logic đúng: Kiểm tra option có isCorrect = true (thay vì so sánh với quiz.correctAnswer)
               final isCorrectAnswer = option.isCorrect == true;
@@ -584,7 +588,8 @@ class QuizHistoryDetailView extends GetView<QuizHistoryDetailController> {
                   ],
                 ),
               );
-            }).toList(),
+              }).toList();
+            })(),
           ],
         ),
       ),

@@ -162,10 +162,10 @@ class LoginView extends GetView<LoginController> {
             // Or divider
             _buildOrDivider(context),
 
-            // SizedBox(height: UtilsReponsive.height(16, context)),
+            SizedBox(height: UtilsReponsive.height(16, context)),
 
-            // // Social login buttons
-            // _buildSocialButtons(context),
+            // Social login buttons
+            _buildSocialButtons(context),
 
             SizedBox(height: UtilsReponsive.height(24, context)),
 
@@ -288,34 +288,40 @@ class LoginView extends GetView<LoginController> {
   }
 
   Widget _buildSocialButtons(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Column(
       children: [
         // Google button
-        InkWell(
-          onTap: controller.loginWithGoogle,
-          child: Container(
-            width: UtilsReponsive.width(50, context),
-            height: UtilsReponsive.height(50, context),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
-              borderRadius: BorderRadius.circular(10),
+        Obx(
+          () => InkWell(
+            onTap: controller.isLoading.value ? null : controller.loginWithGoogle,
+            child: Container(
+              width: double.infinity,
+              height: UtilsReponsive.height(48, context),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(10),
+                color: Colors.white,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Google icon
+                  const Icon(
+                    Icons.g_mobiledata,
+                    size: 24,
+                    color: Color(0xFF4285F4), // Google Blue
+                  ),
+                  SizedBox(width: UtilsReponsive.width(8, context)),
+                  TextConstant.subTile1(
+                    context,
+                    text: "Đăng nhập bằng Google",
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w500,
+                    size: 14,
+                  ),
+                ],
+              ),
             ),
-            child: const Icon(Icons.g_mobiledata, size: 24, color: Colors.red),
-          ),
-        ),
-
-        // Facebook button
-        InkWell(
-          onTap: controller.loginWithFacebook,
-          child: Container(
-            width: UtilsReponsive.width(50, context),
-            height: UtilsReponsive.height(50, context),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.facebook, size: 24, color: Colors.blue),
           ),
         ),
       ],

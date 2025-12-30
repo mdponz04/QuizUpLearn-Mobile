@@ -185,6 +185,10 @@ class HomeController extends GetxController {
     if (index == 1) {
       checkUserSubscription();
     }
+    // Check subscription when switching to Account tab (to show premium icon)
+    if (index == 3) {
+      checkUserSubscription();
+    }
   }
 
   void togglePlansCarousel() {

@@ -16,4 +16,7 @@ abstract class AuthApi {
 
   @POST('/auth/register')
   Future<RegisterResponse> register(@Body() Map<String, dynamic> queryParams);
+
+  @POST('/auth/login-with-google')
+  Future<LoginReponse> loginWithGoogle(@Body() Map<String, dynamic> queryParams);
 }
