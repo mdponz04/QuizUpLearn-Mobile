@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:math' hide log;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,6 +13,9 @@ import 'package:quizkahoot/app/modules/home/data/dashboard_service.dart';
 import 'package:quizkahoot/app/modules/home/models/subscription_plan_model.dart';
 import 'package:quizkahoot/app/modules/home/models/user_subscription_model.dart';
 import 'package:quizkahoot/app/modules/home/models/dashboard_models.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_api.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_service.dart';
+import 'package:quizkahoot/app/modules/single-mode/controllers/single_mode_controller.dart';
 import 'package:quizkahoot/app/resource/color_manager.dart';
 import 'package:quizkahoot/app/resource/reponsive_utils.dart';
 import 'package:quizkahoot/app/resource/text_style.dart';
@@ -43,6 +47,20 @@ class TabHomeController extends GetxController {
   late DashboardService dashboardService;
   var dashboardData = Rxn<DashboardData>();
   var isLoadingDashboard = false.obs;
+
+  // Placement Tests
+  QuizSetService? _quizSetService;
+  var isLoadingPlacements = false.obs;
+  
+  QuizSetService get quizSetService {
+    _quizSetService ??= QuizSetService(
+      quizSetApi: QuizSetApi(
+        Dio()..interceptors.add(DioIntercepTorCustom()),
+        baseUrl: baseUrl,
+      ),
+    );
+    return _quizSetService!;
+  }
 
   // Quick action methods
   void startQuiz() {
@@ -518,8 +536,183 @@ class TabHomeController extends GetxController {
   }
 
   void openPlacementTests() {
-    // Navigate to placement tests page
-    Get.toNamed('/placement-tests');
+    // Show confirmation dialog instead of navigating
+    _showPlacementTestConfirmationDialog(Get.context!);
+  }
+
+  void _showPlacementTestConfirmationDialog(BuildContext context) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(UtilsReponsive.width(24, context)),
+          constraints: BoxConstraints(
+            maxWidth: UtilsReponsive.width(400, context),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Icon(
+                    Icons.assignment,
+                    color: Colors.green,
+                    size: UtilsReponsive.height(28, context),
+                  ),
+                  SizedBox(width: UtilsReponsive.width(8, context)),
+                  Expanded(
+                    child: TextConstant.titleH3(
+                      context,
+                      text: "Kiểm tra xếp lớp",
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      size: 18,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Get.back(),
+                    icon: Icon(
+                      Icons.close,
+                      color: Colors.grey[600],
+                      size: UtilsReponsive.height(20, context),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: UtilsReponsive.height(16, context)),
+              
+              // Message
+              TextConstant.subTile1(
+                context,
+                text: "Bạn có muốn bắt đầu làm bài kiểm tra xếp lớp không?",
+                color: Colors.black87,
+              ),
+              SizedBox(height: UtilsReponsive.height(24, context)),
+              
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.grey[300]!),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          vertical: UtilsReponsive.height(12, context),
+                        ),
+                      ),
+                      child: TextConstant.subTile2(
+                        context,
+                        text: "Hủy",
+                        color: Colors.grey[600]!,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: UtilsReponsive.width(12, context)),
+                  Expanded(
+                    child: Obx(() => ElevatedButton(
+                      onPressed: isLoadingPlacements.value ? null : () {
+                        Get.back();
+                        loadPlacementsAndStart();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        disabledBackgroundColor: Colors.grey[300],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          vertical: UtilsReponsive.height(12, context),
+                        ),
+                      ),
+                      child: isLoadingPlacements.value
+                          ? SizedBox(
+                              width: UtilsReponsive.height(20, context),
+                              height: UtilsReponsive.height(20, context),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : TextConstant.subTile2(
+                              context,
+                              text: "Bắt đầu",
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                    )),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> loadPlacementsAndStart() async {
+    try {
+      isLoadingPlacements.value = true;
+      
+      // Load placement tests
+      final requestBody = {
+        "filters": {
+          "quizSetType": "placement"
+        }
+      };
+      
+      final response = await quizSetService.searchQuizSets(requestBody);
+      
+      if (response.isSuccess && response.data != null && response.data!.isNotEmpty) {
+        // Random một quiz set từ danh sách
+        final placements = response.data!;
+        final random = Random();
+        final randomIndex = random.nextInt(placements.length);
+        final selectedQuizSet = placements[randomIndex];
+        
+        // Start quiz với isPlacement = true
+        Get.lazyPut<SingleModeController>(
+          () => SingleModeController(),
+        );
+        final singleModeController = Get.find<SingleModeController>();
+        await singleModeController.startQuiz(selectedQuizSet.id, isPlacement: true);
+      } else {
+        // Response message đã được xử lý trong service (ưu tiên message, sau đó error)
+        final displayMessage = response.message.isNotEmpty
+            ? response.message
+            : (response.data == null || response.data!.isEmpty
+                ? 'Không tìm thấy bài kiểm tra xếp lớp nào'
+                : 'Đã xảy ra lỗi khi tải danh sách bài kiểm tra');
+        
+        Get.snackbar(
+          'Lỗi',
+          displayMessage,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      log('Error loading placements: $e');
+      Get.snackbar(
+        'Lỗi',
+        'Đã xảy ra lỗi khi tải danh sách bài kiểm tra. Vui lòng thử lại.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoadingPlacements.value = false;
+    }
   }
 
   void viewTournament() {
@@ -578,6 +771,7 @@ class TabHomeController extends GetxController {
       dashboardApi: DashboardApi(dio, baseUrl: baseUrl),
     );
   }
+
 
   Future<void> loadDashboard() async {
     try {

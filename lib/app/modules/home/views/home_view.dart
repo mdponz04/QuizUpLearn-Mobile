@@ -997,10 +997,10 @@ class HomeView extends GetView<HomeController> {
                           ],
                         ),
                       ),
-                      Icon(
-                        Icons.edit_outlined,
-                        color: ColorsManager.primary,
-                      ),
+                      // Icon(
+                      //   Icons.edit_outlined,
+                      //   color: ColorsManager.primary,
+                      // ),
                     ],
                   ),
                 ),
@@ -1901,7 +1901,7 @@ class HomeView extends GetView<HomeController> {
                         context,
                         Icons.auto_awesome,
                         "AI còn lại",
-                        "${subscription.aiGenerateQuizSetRemaining} lần",
+                        "${subscription.aiGenerateQuizSetRemaining ?? 0} lần",
                       ),
                     ),
                   ],

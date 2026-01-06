@@ -2,7 +2,7 @@ class UserSubscriptionModel {
   final String id;
   final String userId;
   final String subscriptionPlanId;
-  final int aiGenerateQuizSetRemaining;
+  final int? aiGenerateQuizSetRemaining; // Optional vì API có thể không trả về
   final DateTime endDate;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -12,7 +12,7 @@ class UserSubscriptionModel {
     required this.id,
     required this.userId,
     required this.subscriptionPlanId,
-    required this.aiGenerateQuizSetRemaining,
+    this.aiGenerateQuizSetRemaining,
     required this.endDate,
     required this.createdAt,
     this.updatedAt,
@@ -21,14 +21,18 @@ class UserSubscriptionModel {
 
   factory UserSubscriptionModel.fromJson(Map<String, dynamic> json) {
     return UserSubscriptionModel(
-      id: json['id'] as String,
-      userId: json['userId'] as String,
-      subscriptionPlanId: json['subscriptionPlanId'] as String,
-      aiGenerateQuizSetRemaining: json['aiGenerateQuizSetRemaining'] as int,
-      endDate: DateTime.parse(json['endDate'] as String),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : null,
-      deletedAt: json['deletedAt'] != null ? DateTime.parse(json['deletedAt'] as String) : null,
+      id: json['id']?.toString() ?? '',
+      userId: json['userId']?.toString() ?? '',
+      subscriptionPlanId: json['subscriptionPlanId']?.toString() ?? '',
+      aiGenerateQuizSetRemaining: json['aiGenerateQuizSetRemaining'] != null 
+          ? (json['aiGenerateQuizSetRemaining'] is int 
+              ? json['aiGenerateQuizSetRemaining'] as int
+              : int.tryParse(json['aiGenerateQuizSetRemaining'].toString()) ?? 0)
+          : null,
+      endDate: json['endDate'] != null ? DateTime.parse(json['endDate'].toString()) : DateTime.now(),
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'].toString()) : DateTime.now(),
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'].toString()) : null,
+      deletedAt: json['deletedAt'] != null ? DateTime.parse(json['deletedAt'].toString()) : null,
     );
   }
 

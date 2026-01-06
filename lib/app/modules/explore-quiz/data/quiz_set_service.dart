@@ -68,13 +68,25 @@ class QuizSetService {
           data: response.data,
         );
       } else {
-        return BaseResponse.error(
-          response.message ?? 'Failed to search quiz sets',
-        );
+        // Ưu tiên lấy message, nếu không có thì lấy error
+        final errorMessage = response.message?.toString();
+        final errorText = errorMessage != null && errorMessage.isNotEmpty
+            ? errorMessage
+            : (response.error?.toString() ?? 'Failed to search quiz sets');
+        return BaseResponse.error(errorText);
       }
     } on DioException catch (e) {
+      // Ưu tiên lấy message từ response, nếu không có thì lấy error
+      final errorData = e.response?.data;
+      String? errorMessage;
+      if (errorData is Map) {
+        errorMessage = errorData['message']?.toString();
+        if (errorMessage == null || errorMessage.isEmpty) {
+          errorMessage = errorData['error']?.toString();
+        }
+      }
       return BaseResponse.error(
-        e.response?.data['message'] ?? 'An error occurred while searching quiz sets',
+        errorMessage ?? 'An error occurred while searching quiz sets',
       );
     }
   }

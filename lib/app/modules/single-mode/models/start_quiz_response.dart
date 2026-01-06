@@ -11,8 +11,8 @@ String startQuizResponseToJson(StartQuizResponse data) => json.encode(data.toJso
 class StartQuizResponse {
     bool? success;
     Data? data;
-    dynamic message;
-    dynamic error;
+    String? message;
+    String? error;
     dynamic errorType;
 
     StartQuizResponse({
