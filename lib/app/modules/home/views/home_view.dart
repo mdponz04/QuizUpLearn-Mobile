@@ -138,8 +138,24 @@ class HomeView extends GetView<HomeController> {
 
 
   Widget _buildMyQuizTab(BuildContext context) {
-    // Initialize FavoriteQuizController if not already initialized
-    if (!Get.isRegistered<FavoriteQuizController>()) {
+    // Ensure FavoriteQuizController is initialized
+    // Use Get.findOrPut to ensure controller exists, or create if not
+    try {
+      if (!Get.isRegistered<FavoriteQuizController>()) {
+        Get.put(FavoriteQuizController());
+      } else {
+        // Controller exists, but ensure it's still valid
+        try {
+          final favoriteController = Get.find<FavoriteQuizController>();
+          // Reload favorites to ensure fresh data
+          favoriteController.loadFavorites();
+        } catch (e) {
+          // If find fails, create a new one
+          Get.put(FavoriteQuizController());
+        }
+      }
+    } catch (e) {
+      // If there's any error, create a new controller
       Get.put(FavoriteQuizController());
     }
     // Use FavoriteQuizView instead of my-quiz list

@@ -16,6 +16,7 @@ import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_api.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/data/quiz_set_service.dart';
 import 'package:quizkahoot/app/modules/explore-quiz/models/quiz_set_model.dart';
 import 'package:quizkahoot/app/modules/single-mode/controllers/single_mode_controller.dart';
+import 'package:quizkahoot/app/modules/explore-quiz/controllers/favorite_quiz_controller.dart';
 import 'package:quizkahoot/app/service/basecommon.dart';
 import 'package:quizkahoot/app/resource/reponsive_utils.dart';
 import 'package:quizkahoot/app/resource/text_style.dart';
@@ -25,6 +26,7 @@ import 'package:quizkahoot/app/modules/home/data/subscription_purchase_api.dart'
 import 'package:quizkahoot/app/modules/home/data/subscription_purchase_service.dart';
 import 'package:quizkahoot/app/modules/home/models/subscription_plan_model.dart';
 import 'package:quizkahoot/app/modules/home/models/user_subscription_model.dart';
+import 'package:quizkahoot/app/modules/tab-home/controllers/dashboard_detail_controller.dart';
 import 'package:quizkahoot/app/service/url_handler_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -176,6 +178,11 @@ class HomeController extends GetxController {
     // Check subscription when switching to My Quiz tab (no longer load my quiz)
     if (index == 1) {
       checkUserSubscription();
+      _ensureFavoriteQuizController();
+    }
+    // Load weak points when switching to Account tab (Tài khoản)
+    if (index == 3) {
+      _loadWeakPointsForAccountTab();
     }
   }
 
@@ -184,10 +191,54 @@ class HomeController extends GetxController {
     // Check subscription when switching to My Quiz tab (no longer load my quiz)
     if (index == 1) {
       checkUserSubscription();
+      _ensureFavoriteQuizController();
     }
-    // Check subscription when switching to Account tab (to show premium icon)
+    // Check subscription and load weak points when switching to Account tab (to show premium icon)
     if (index == 3) {
       checkUserSubscription();
+      _loadWeakPointsForAccountTab();
+    }
+  }
+
+  /// Ensure FavoriteQuizController is initialized when switching to My Quiz tab
+  void _ensureFavoriteQuizController() {
+    try {
+      // Check if FavoriteQuizController is already registered
+      if (!Get.isRegistered<FavoriteQuizController>()) {
+        // Initialize FavoriteQuizController if not registered
+        Get.put(FavoriteQuizController());
+        log('FavoriteQuizController initialized');
+      } else {
+        // Controller exists, but reload favorites to ensure fresh data
+        final favoriteController = Get.find<FavoriteQuizController>();
+        favoriteController.loadFavorites();
+        log('FavoriteQuizController found, reloading favorites');
+      }
+    } catch (e) {
+      log('Error ensuring FavoriteQuizController: $e');
+      // If there's an error, try to create a new one
+      try {
+        Get.put(FavoriteQuizController());
+        log('FavoriteQuizController re-initialized after error');
+      } catch (e2) {
+        log('Failed to initialize FavoriteQuizController: $e2');
+      }
+    }
+  }
+
+  /// Load weak points when switching to Account tab
+  void _loadWeakPointsForAccountTab() {
+    try {
+      // Check if DashboardDetailController is already initialized
+      if (Get.isRegistered<DashboardDetailController>()) {
+        final dashboardController = Get.find<DashboardDetailController>();
+        // Reload weak points and mistake quizzes count
+        dashboardController.loadWeakPoints();
+        dashboardController.loadMistakeQuizzes();
+      }
+      // If not registered, it will be lazyPut in _buildAccountTab and loadWeakPoints will be called in onInit
+    } catch (e) {
+      log('Error loading weak points for account tab: $e');
     }
   }
 
