@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:quizkahoot/app/modules/player-game-room/views/player_game_room_view_v2.dart';
+import 'package:quizkahoot/app/modules/player-game-room/views/player_game_room_view_v3.dart';
 
 import '../modules/badge/bindings/badge_binding.dart';
 import '../modules/badge/views/badge_view.dart';
@@ -33,7 +33,6 @@ import '../modules/single-mode/bindings/single_mode_binding.dart';
 import '../modules/single-mode/views/quiz_playing_view.dart';
 import '../modules/single-mode/views/quiz_result_view.dart';
 import '../modules/home/views/game_room_view.dart';
-import '../modules/player-game-room/views/player_game_room_view.dart';
 import '../modules/one-vs-one-room/views/one_vs_one_room_view.dart';
 import '../modules/quiz-history/bindings/quiz_history_binding.dart';
 import '../modules/quiz-history/views/quiz_history_view.dart';
@@ -43,7 +42,6 @@ import '../modules/explore-quiz/bindings/quiz_detail_binding.dart';
 import '../modules/explore-quiz/views/quiz_detail_view.dart';
 import '../modules/tab-home/bindings/dashboard_detail_binding.dart';
 import '../modules/tab-home/views/dashboard_detail_view.dart';
-import '../modules/payment/views/payment_result_view.dart';
 import '../modules/tournament/bindings/tournament_binding.dart';
 import '../modules/tournament/bindings/tournament_detail_binding.dart';
 import '../modules/tournament/views/tournament_view.dart';
@@ -139,7 +137,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.PLAYER_GAME_ROOM,
-      page: () => const PlayerGameRoomViewV2(),
+      page: () => const PlayerGameRoomViewV3(),
     ),
     GetPage(
       name: _Paths.ONE_VS_ONE_ROOM,

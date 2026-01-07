@@ -247,14 +247,14 @@ class LoginController extends GetxController {
         errorMessage = e.toString();
       }
       
-      Get.snackbar(
+    Get.snackbar(
         'Lỗi đăng nhập Google',
         errorMessage,
         backgroundColor: Colors.red,
-        colorText: Colors.white,
+      colorText: Colors.white,
         duration: const Duration(seconds: 5),
         maxWidth: 400,
-      );
+    );
     } finally {
       isLoading.value = false;
     }

@@ -444,11 +444,11 @@ class _QuizDetailViewState extends State<QuizDetailView> with SingleTickerProvid
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TextConstant.subTile2(
-                  context,
-                  text: "Answer Options:",
-                  color: Colors.grey[700]!,
-                  fontWeight: FontWeight.bold,
+            TextConstant.subTile2(
+              context,
+              text: "Answer Options:",
+              color: Colors.grey[700]!,
+              fontWeight: FontWeight.bold,
                 ),
                 // Report button for this question
                 IconButton(
@@ -467,51 +467,51 @@ class _QuizDetailViewState extends State<QuizDetailView> with SingleTickerProvid
               final sortedOptions = List.from(quiz.answerOptions)
                 ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
               return sortedOptions.map((option) {
-                return Container(
-                  margin: EdgeInsets.only(bottom: UtilsReponsive.height(8, context)),
-                  padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Colors.grey[300]!,
-                      width: 1,
-                    ),
+              return Container(
+                margin: EdgeInsets.only(bottom: UtilsReponsive.height(8, context)),
+                padding: EdgeInsets.all(UtilsReponsive.width(12, context)),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.grey[300]!,
+                    width: 1,
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: UtilsReponsive.width(28, context),
-                        height: UtilsReponsive.height(28, context),
-                        decoration: BoxDecoration(
-                          color: ColorsManager.primary.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: ColorsManager.primary,
-                            width: 2,
-                          ),
-                        ),
-                        child: Center(
-                          child: TextConstant.subTile3(
-                            context,
-                            text: option.optionLabel,
-                            color: ColorsManager.primary,
-                            fontWeight: FontWeight.bold,
-                            size: 13,
-                          ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: UtilsReponsive.width(28, context),
+                      height: UtilsReponsive.height(28, context),
+                      decoration: BoxDecoration(
+                        color: ColorsManager.primary.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: ColorsManager.primary,
+                          width: 2,
                         ),
                       ),
-                      SizedBox(width: UtilsReponsive.width(12, context)),
-                      Expanded(
-                        child: TextConstant.subTile2(
+                      child: Center(
+                        child: TextConstant.subTile3(
                           context,
-                          text: option.optionText.isEmpty ? "No answer" : option.optionText,
-                          color: Colors.black,
+                          text: option.optionLabel,
+                          color: ColorsManager.primary,
+                          fontWeight: FontWeight.bold,
+                          size: 13,
                         ),
                       ),
-                    ],
-                  ),
-                );
+                    ),
+                    SizedBox(width: UtilsReponsive.width(12, context)),
+                    Expanded(
+                      child: TextConstant.subTile2(
+                        context,
+                        text: option.optionText.isEmpty ? "No answer" : option.optionText,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              );
               }).toList();
             })(),
           ],

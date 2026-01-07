@@ -294,14 +294,14 @@ class LoginView extends GetView<LoginController> {
         Obx(
           () => InkWell(
             onTap: controller.isLoading.value ? null : controller.loginWithGoogle,
-            child: Container(
+          child: Container(
               width: double.infinity,
               height: UtilsReponsive.height(48, context),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(10),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(10),
                 color: Colors.white,
-              ),
+            ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
