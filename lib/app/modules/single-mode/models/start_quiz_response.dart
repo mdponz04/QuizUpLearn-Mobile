@@ -67,6 +67,7 @@ class Data {
 class Question {
     String? id;
     String? quizSetId;
+    String? quizGroupItemId;
     String? questionText;
     String? correctAnswer;
     String? audioUrl;
@@ -84,6 +85,7 @@ class Question {
     Question({
         this.id,
         this.quizSetId,
+        this.quizGroupItemId,
         this.questionText,
         this.correctAnswer,
         this.audioUrl,
@@ -102,6 +104,7 @@ class Question {
     factory Question.fromJson(Map<String, dynamic> json) => Question(
         id: json["id"],
         quizSetId: json["quizSetId"],
+        quizGroupItemId: json["quizGroupItemId"],
         questionText: json["questionText"],
         correctAnswer: json["correctAnswer"],
         audioUrl: json["audioURL"],
@@ -120,6 +123,7 @@ class Question {
     Map<String, dynamic> toJson() => {
         "id": id,
         "quizSetId": quizSetId,
+        "quizGroupItemId": quizGroupItemId,
         "questionText": questionText,
         "correctAnswer": correctAnswer,
         "audioURL": audioUrl,

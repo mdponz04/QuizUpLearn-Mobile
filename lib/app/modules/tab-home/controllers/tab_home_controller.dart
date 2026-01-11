@@ -22,6 +22,8 @@ import 'package:quizkahoot/app/resource/text_style.dart';
 import 'package:quizkahoot/app/service/basecommon.dart';
 import 'package:quizkahoot/app/service/url_handler_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:quizkahoot/app/modules/notification/data/notification_api.dart';
+import 'package:quizkahoot/app/modules/notification/data/notification_service.dart';
 
 const baseUrl = 'https://qul-api.onrender.com/api';
 
@@ -47,6 +49,10 @@ class TabHomeController extends GetxController {
   late DashboardService dashboardService;
   var dashboardData = Rxn<DashboardData>();
   var isLoadingDashboard = false.obs;
+
+  // Notifications
+  late NotificationService notificationService;
+  var unreadNotificationCount = 0.obs;
 
   // Placement Tests
   QuizSetService? _quizSetService;
@@ -726,12 +732,8 @@ class TabHomeController extends GetxController {
   }
 
   void showNotifications() {
-    // TODO: Show notifications
-    Get.snackbar(
-      "Notifications",
-      "No new notifications",
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    // Navigate to notification page
+    Get.toNamed('/notification');
   }
 
   // Calculate progress percentage
@@ -748,9 +750,11 @@ class TabHomeController extends GetxController {
     super.onInit();
     _initializeSubscriptionPlanService();
     _initializeDashboardService();
+    _initializeNotificationService();
     loadSubscriptionPlans();
     loadUserSubscription();
     loadDashboard();
+    loadNotificationCount();
   }
 
   void _initializeSubscriptionPlanService() {
@@ -770,6 +774,25 @@ class TabHomeController extends GetxController {
     dashboardService = DashboardService(
       dashboardApi: DashboardApi(dio, baseUrl: baseUrl),
     );
+  }
+
+  void _initializeNotificationService() {
+    Dio dio = Dio();
+    dio.interceptors.add(DioIntercepTorCustom());
+    notificationService = NotificationService(
+      notificationApi: NotificationApi(dio, baseUrl: baseUrl),
+    );
+  }
+
+  Future<void> loadNotificationCount() async {
+    try {
+      final response = await notificationService.getUserNotifications();
+      if (response.isSuccess && response.data != null) {
+        unreadNotificationCount.value = response.data!.where((n) => !n.isRead).length;
+      }
+    } catch (e) {
+      log('Error loading notification count: $e');
+    }
   }
 
 

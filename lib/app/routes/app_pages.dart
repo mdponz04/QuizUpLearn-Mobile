@@ -48,6 +48,8 @@ import '../modules/tournament/views/tournament_view.dart';
 import '../modules/tournament/views/tournament_detail_view.dart';
 import '../modules/home/bindings/event_detail_binding.dart';
 import '../modules/home/views/event_detail_view.dart';
+import '../modules/notification/bindings/notification_binding.dart';
+import '../modules/notification/views/notification_view.dart';
 
 part 'app_routes.dart';
 
@@ -182,6 +184,11 @@ class AppPages {
       name: _Paths.EVENT_DETAIL,
       page: () => const EventDetailView(),
       binding: EventDetailBinding(),
+    ),
+    GetPage(
+      name: _Paths.NOTIFICATION,
+      page: () => const NotificationView(),
+      binding: NotificationBinding(),
     ),
   ];
 }

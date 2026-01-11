@@ -30,6 +30,7 @@ abstract class Routes {
   static const TOURNAMENT = _Paths.TOURNAMENT;
   static const TOURNAMENT_DETAIL = _Paths.TOURNAMENT_DETAIL;
   static const EVENT_DETAIL = _Paths.EVENT_DETAIL;
+  static const NOTIFICATION = _Paths.NOTIFICATION;
 }
 
 abstract class _Paths {
@@ -61,4 +62,5 @@ abstract class _Paths {
   static const TOURNAMENT = '/tournament';
   static const TOURNAMENT_DETAIL = '/tournament-detail';
   static const EVENT_DETAIL = '/event-detail';
+  static const NOTIFICATION = '/notification';
 }

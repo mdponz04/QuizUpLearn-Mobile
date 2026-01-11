@@ -30,13 +30,48 @@ class TabHomeView extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          IconButton(
-            onPressed: tabController.showNotifications,
-            icon: Icon(
-              Icons.notifications_outlined,
-              color: ColorsManager.primary,
-            ),
-          ),
+          Obx(() => Stack(
+            children: [
+              IconButton(
+                onPressed: tabController.showNotifications,
+                icon: Icon(
+                  Icons.notifications_outlined,
+                  color: ColorsManager.primary,
+                ),
+              ),
+              if (tabController.unreadNotificationCount.value > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: EdgeInsets.all(
+                      tabController.unreadNotificationCount.value > 9 
+                          ? UtilsReponsive.width(3, context) 
+                          : UtilsReponsive.width(5, context),
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: BoxConstraints(
+                      minWidth: UtilsReponsive.width(16, context),
+                      minHeight: UtilsReponsive.width(16, context),
+                    ),
+                    child: Center(
+                      child: TextConstant.subTile4(
+                        context,
+                        text: tabController.unreadNotificationCount.value > 99 
+                            ? '99+' 
+                            : '${tabController.unreadNotificationCount.value}',
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        size: 8,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          )),
         ],
       ),
       body: SingleChildScrollView(

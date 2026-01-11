@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'quiz_set_comment_api.dart';
+part of 'notification_api.dart';
 
 // dart format off
 
@@ -10,8 +10,8 @@ part of 'quiz_set_comment_api.dart';
 
 // ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers,unused_element,unnecessary_string_interpolations,unused_element_parameter
 
-class _QuizSetCommentApi implements QuizSetCommentApi {
-  _QuizSetCommentApi(this._dio, {this.baseUrl, this.errorLogger});
+class _NotificationApi implements NotificationApi {
+  _NotificationApi(this._dio, {this.baseUrl, this.errorLogger});
 
   final Dio _dio;
 
@@ -20,32 +20,25 @@ class _QuizSetCommentApi implements QuizSetCommentApi {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<QuizSetCommentResponse> getQuizSetComments(
-    String id,
-    bool includeDeleted,
-    Map<String, dynamic> body,
-  ) async {
+  Future<NotificationResponse> getUserNotifications() async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{
-      r'includeDeleted': includeDeleted,
-    };
+    final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    final _data = <String, dynamic>{};
-    _data.addAll(body);
-    final _options = _setStreamType<QuizSetCommentResponse>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<NotificationResponse>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/quizsetcomment/quizset/${id}/search',
+            '/usernotification/user',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late QuizSetCommentResponse _value;
+    late NotificationResponse _value;
     try {
-      _value = QuizSetCommentResponse.fromJson(_result.data!);
+      _value = NotificationResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -54,28 +47,52 @@ class _QuizSetCommentApi implements QuizSetCommentApi {
   }
 
   @override
-  Future<CreateQuizSetCommentResponse> createComment(
-    Map<String, dynamic> body,
-  ) async {
+  Future<MarkAsReadResponse> markAsRead(String id) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    final _data = <String, dynamic>{};
-    _data.addAll(body);
-    final _options = _setStreamType<CreateQuizSetCommentResponse>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<MarkAsReadResponse>(
+      Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/quizsetcomment',
+            '/usernotification/${id}/mark-as-read',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late CreateQuizSetCommentResponse _value;
+    late MarkAsReadResponse _value;
     try {
-      _value = CreateQuizSetCommentResponse.fromJson(_result.data!);
+      _value = MarkAsReadResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<MarkAsReadResponse> markAllAsRead() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<MarkAsReadResponse>(
+      Options(method: 'PATCH', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/usernotification/user/mark-all-read',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late MarkAsReadResponse _value;
+    try {
+      _value = MarkAsReadResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;

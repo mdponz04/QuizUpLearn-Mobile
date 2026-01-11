@@ -7,6 +7,7 @@ import 'package:quizkahoot/app/modules/single-mode/models/start_quiz_request.dar
 import 'package:quizkahoot/app/modules/single-mode/models/start_quiz_response.dart';
 import 'package:quizkahoot/app/modules/single-mode/models/submit_all_answers_request.dart';
 import 'package:quizkahoot/app/modules/single-mode/models/submit_all_answers_response.dart';
+import 'package:quizkahoot/app/modules/single-mode/models/quiz_group_item_model.dart';
 
 class SingleModeService {
   SingleModeService({required this.singleModeApi});
@@ -103,6 +104,32 @@ class SingleModeService {
     } on DioException catch (e) {
       return BaseResponse.error(
         e.response?.data['message'] ?? 'An error occurred while submitting placement test',
+      );
+    }
+  }
+
+  Future<BaseResponse<QuizGroupItemResponse>> getQuizGroupItem(String id) async {
+    try {
+      final response = await singleModeApi.getQuizGroupItem(id);
+      log("Get quiz group item response: ${response.toString()}");
+      
+      if (response.success == false) {
+        final errorMessage = response.message?.toString();
+        final errorText = errorMessage != null && errorMessage.isNotEmpty
+            ? errorMessage
+            : (response.error?.toString() ?? 'Failed to get quiz group item');
+        return BaseResponse.error(errorText);
+      }
+      
+      return BaseResponse(
+        isSuccess: true,
+        message: 'Quiz group item retrieved successfully',
+        data: response,
+      );
+    } on DioException catch (e) {
+      log("Error getting quiz group item: ${e.response?.data}");
+      return BaseResponse.error(
+        e.response?.data['message'] ?? 'An error occurred while getting quiz group item',
       );
     }
   }

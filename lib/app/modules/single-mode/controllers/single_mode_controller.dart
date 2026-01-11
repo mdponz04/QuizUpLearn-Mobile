@@ -33,6 +33,9 @@ class SingleModeController extends GetxController {
   var userAnswers = <String, String>{}.obs;
   var questionStartTimes = <String, DateTime>{}.obs;
   
+  // Quiz Group Audio (for entire quiz set)
+  var quizGroupAudioUrl = ''.obs;
+  
   // Timer
   Timer? _timer;
   
@@ -124,6 +127,10 @@ class SingleModeController extends GetxController {
       
       if (response.isSuccess && response.data != null) {
         quizData.value = response.data!;
+        
+        // Load quiz group audio if available
+        await _loadQuizGroupAudio();
+        
         _initializeQuiz();
         Get.toNamed('/quiz-playing');
       } else {
@@ -147,6 +154,39 @@ class SingleModeController extends GetxController {
     }
   }
 
+  Future<void> _loadQuizGroupAudio() async {
+    try {
+      // Get first question's quizGroupItemId
+      final questions = quizData.value?.data?.questions;
+      if (questions == null || questions.isEmpty) {
+        return;
+      }
+      
+      final firstQuizGroupItemId = questions.first.quizGroupItemId;
+      if (firstQuizGroupItemId == null || firstQuizGroupItemId.isEmpty) {
+        log('No quizGroupItemId found in first question');
+        return;
+      }
+      
+      log('Loading quiz group item: $firstQuizGroupItemId');
+      
+      // Call API to get quiz group item
+      final response = await singleModeService.getQuizGroupItem(firstQuizGroupItemId);
+      
+      if (response.isSuccess && response.data != null && response.data!.data != null) {
+        final audioUrl = response.data!.data!.audioUrl;
+        if (audioUrl.isNotEmpty) {
+          quizGroupAudioUrl.value = audioUrl;
+          log('Quiz group audio URL loaded: $audioUrl');
+        }
+      } else {
+        log('Failed to load quiz group item: ${response.message}');
+      }
+    } catch (e) {
+      log('Error loading quiz group audio: $e');
+    }
+  }
+  
   void _initializeQuiz() {
     initializeQuiz();
   }
@@ -159,6 +199,7 @@ class SingleModeController extends GetxController {
     isQuizCompleted.value = false;
     userAnswers.clear();
     questionStartTimes.clear();
+    quizGroupAudioUrl.value = ''; // Reset group audio URL
     
     // Set a default time limit since it's not in the new response structure
     timeRemaining.value = 30 * 60; // 30 minutes default
@@ -185,15 +226,21 @@ class SingleModeController extends GetxController {
       return;
     }
     
-    // Stop current audio if playing
-    stopAudio();
+    // Only stop audio if not using quiz group audio (whole quiz audio)
+    // If using quiz group audio, let it play continuously
+    if (quizGroupAudioUrl.value.isEmpty) {
+      stopAudio();
+    }
     
     final question = quizData.value!.data!.questions![currentQuestionIndex.value];
     currentQuestion.value = question;
     selectedAnswer.value = userAnswers[question.id ?? ''] ?? '';
     
     // Reset audio played flag for new question (for placement test)
-    hasAudioPlayed.value = false;
+    // Only reset if not using quiz group audio
+    if (quizGroupAudioUrl.value.isEmpty) {
+      hasAudioPlayed.value = false;
+    }
     
     // Record question start time
     if (question.id != null) {
@@ -202,7 +249,11 @@ class SingleModeController extends GetxController {
   }
   
   Future<void> playAudio() async {
-    final audioUrl = currentQuestion.value?.audioUrl;
+    // Priority: Use quiz group audio if available, otherwise use question audio
+    String? audioUrl = quizGroupAudioUrl.value.isNotEmpty 
+        ? quizGroupAudioUrl.value 
+        : currentQuestion.value?.audioUrl;
+    
     if (audioUrl == null || audioUrl.isEmpty) {
       Get.snackbar(
         'Info',

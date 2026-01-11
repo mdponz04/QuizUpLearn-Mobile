@@ -3,6 +3,7 @@ import 'package:quizkahoot/app/modules/single-mode/models/start_quiz_request.dar
 import 'package:quizkahoot/app/modules/single-mode/models/start_quiz_response.dart';
 import 'package:quizkahoot/app/modules/single-mode/models/submit_all_answers_request.dart';
 import 'package:quizkahoot/app/modules/single-mode/models/submit_all_answers_response.dart';
+import 'package:quizkahoot/app/modules/single-mode/models/quiz_group_item_model.dart';
 import 'package:retrofit/retrofit.dart';
 
 part 'single_mode_api.g.dart';
@@ -19,5 +20,8 @@ abstract class SingleModeApi {
 
   @POST('/quizattemptdetail/submit-placement-test')
   Future<SubmitAllAnswersResponse> submitPlacementTest(@Body() SubmitAllAnswersRequest request);
+
+  @GET('/quizgroupitem/{id}')
+  Future<QuizGroupItemResponse> getQuizGroupItem(@Path('id') String id);
 
 }
